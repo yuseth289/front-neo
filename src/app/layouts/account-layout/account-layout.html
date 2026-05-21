@@ -1,0 +1,98 @@
+<div class="min-h-screen bg-bg-base text-text-primary flex flex-col">
+
+  <header class="sticky top-0 z-50 bg-bg-surface/95 backdrop-blur border-b border-border">
+    <nav class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
+
+      <a routerLink="/" class="font-black text-xl tracking-tight shrink-0 select-none">
+        NEO<span class="text-accent">GAMING</span>
+      </a>
+
+      <div class="flex items-center gap-2 shrink-0">
+        <a routerLink="/cart"
+           class="relative flex items-center gap-1.5 text-text-secondary hover:text-text-primary transition-colors px-3 py-1.5 rounded-lg hover:bg-bg-subtle text-sm">
+          <ng-icon name="lucideShoppingCart" size="18" />
+          @if ((cartCount$ | async) ?? 0 > 0) {
+            <span class="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 rounded-full bg-accent text-white text-[10px] font-bold flex items-center justify-center px-1">
+              {{ cartCount$ | async }}
+            </span>
+          }
+          <span class="hidden sm:inline">Carrito</span>
+        </a>
+        <div class="flex items-center gap-2 px-3 py-1.5 text-sm text-text-secondary">
+          <ng-icon name="lucideUser" size="18" />
+          <span class="hidden sm:inline max-w-[140px] truncate">{{ displayName$ | async }}</span>
+        </div>
+      </div>
+
+    </nav>
+  </header>
+
+  <div class="max-w-7xl mx-auto w-full px-4 py-8 flex gap-8 flex-1">
+
+    <aside class="w-52 shrink-0 hidden md:block">
+      <nav class="bg-bg-surface rounded-xl border border-border p-3 space-y-0.5 sticky top-24">
+
+        <a routerLink="/account"
+           routerLinkActive="bg-bg-subtle text-text-primary border-l-2 border-accent"
+           [routerLinkActiveOptions]="{ exact: true }"
+           class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-text-secondary hover:bg-bg-subtle hover:text-text-primary transition-colors">
+          <ng-icon name="lucideUser" size="15" />
+          Perfil
+        </a>
+        <a routerLink="/account/addresses"
+           routerLinkActive="bg-bg-subtle text-text-primary border-l-2 border-accent"
+           class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-text-secondary hover:bg-bg-subtle hover:text-text-primary transition-colors">
+          <ng-icon name="lucideMapPin" size="15" />
+          Direcciones
+        </a>
+        <a routerLink="/orders"
+           routerLinkActive="bg-bg-subtle text-text-primary border-l-2 border-accent"
+           class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-text-secondary hover:bg-bg-subtle hover:text-text-primary transition-colors">
+          <ng-icon name="lucideClipboardList" size="15" />
+          Mis órdenes
+        </a>
+        <a routerLink="/wishlists"
+           routerLinkActive="bg-bg-subtle text-text-primary border-l-2 border-accent"
+           class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-text-secondary hover:bg-bg-subtle hover:text-text-primary transition-colors">
+          <ng-icon name="lucideHeart" size="15" />
+          Mis wishlists
+        </a>
+        <a routerLink="/invoices"
+           routerLinkActive="bg-bg-subtle text-text-primary border-l-2 border-accent"
+           class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-text-secondary hover:bg-bg-subtle hover:text-text-primary transition-colors">
+          <ng-icon name="lucideReceipt" size="15" />
+          Mis facturas
+        </a>
+        <a routerLink="/reviews/me"
+           routerLinkActive="bg-bg-subtle text-text-primary border-l-2 border-accent"
+           class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-text-secondary hover:bg-bg-subtle hover:text-text-primary transition-colors">
+          <ng-icon name="lucideStar" size="15" />
+          Mis reseñas
+        </a>
+
+        @if ((role$ | async) === 'SELLER') {
+          <a routerLink="/seller/dashboard"
+             class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-neon-cyan hover:bg-bg-subtle transition-colors">
+            <ng-icon name="lucideLayoutDashboard" size="15" />
+            Panel Seller
+          </a>
+        }
+
+        <div class="border-t border-border pt-2 mt-2">
+          <button
+            (click)="logout()"
+            class="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-error hover:bg-bg-subtle transition-colors">
+            <ng-icon name="lucideLogOut" size="15" />
+            Cerrar sesión
+          </button>
+        </div>
+      </nav>
+    </aside>
+
+    <main class="flex-1 min-w-0">
+      <router-outlet />
+    </main>
+
+  </div>
+
+</div>

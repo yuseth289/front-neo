@@ -1,0 +1,38 @@
+@import "tailwindcss";
+
+@theme {
+  /* ── Fondos ── */
+  --color-bg-base:       #000000;
+  --color-bg-surface:    #121212;
+  --color-bg-elevated:   #1A1A1A;
+  --color-bg-subtle:     #222222;
+
+  /* ── Acento primario ── */
+  --color-accent:        #FF003C;
+  --color-accent-hover:  #CC0030;
+  --color-accent-glow:   #FF003C40;
+
+  /* ── Efectos RGB / Tech ── */
+  --color-neon-cyan:     #00D4FF;
+  --color-neon-violet:   #9B30FF;
+  --color-neon-purple:   #C44DFF;
+
+  /* Gradiente banner hero */
+  --gradient-hero: linear-gradient(135deg, #9B30FF 0%, #00D4FF 100%);
+  --gradient-card-border: linear-gradient(135deg, #FF003C, #9B30FF, #00D4FF);
+
+  /* ── Textos ── */
+  --color-text-primary:  #FFFFFF;
+  --color-text-secondary:#A0A0A0;
+  --color-text-muted:    #555555;
+
+  /* ── Feedback ── */
+  --color-star:          #D4A017;
+  --color-success:       #00C896;
+  --color-warning:       #FF8C00;
+  --color-error:         #FF003C;
+
+  /* ── Bordes ── */
+  --color-border:        #2A2A2A;
+  --color-border-active: #FF003C;
+}

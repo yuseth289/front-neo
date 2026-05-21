@@ -1,0 +1,104 @@
+<div class="min-h-screen bg-bg-base text-text-primary flex flex-col">
+
+  <header class="sticky top-0 z-50 bg-bg-surface/95 backdrop-blur border-b border-border">
+    <nav class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
+
+      <a routerLink="/" class="font-black text-xl tracking-tight shrink-0 select-none">
+        NEO<span class="text-accent">GAMING</span>
+      </a>
+
+      <div class="hidden md:flex items-center gap-6 text-sm text-text-secondary">
+        <a routerLink="/catalog" class="hover:text-text-primary transition-colors">Catálogo</a>
+      </div>
+
+      <div class="flex items-center gap-2 shrink-0">
+
+        @if (isAuthenticated$ | async) {
+
+          <!-- Usuario autenticado -->
+          <a routerLink="/cart"
+             class="relative flex items-center gap-1.5 text-text-secondary hover:text-text-primary transition-colors px-3 py-1.5 rounded-lg hover:bg-bg-subtle text-sm">
+            <ng-icon name="lucideShoppingCart" size="18" />
+            @if ((cartCount$ | async) ?? 0 > 0) {
+              <span class="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 rounded-full bg-accent text-white text-[10px] font-bold flex items-center justify-center px-1">
+                {{ cartCount$ | async }}
+              </span>
+            }
+            <span class="hidden sm:inline">Carrito</span>
+          </a>
+
+          @if ((role$ | async) === 'SELLER') {
+            <a routerLink="/seller/dashboard"
+               class="hidden sm:flex items-center gap-1.5 text-neon-cyan hover:text-neon-cyan/80 transition-colors px-3 py-1.5 rounded-lg hover:bg-bg-subtle text-sm font-medium">
+              <ng-icon name="lucideLayoutDashboard" size="16" />
+              <span>Panel Seller</span>
+            </a>
+          }
+
+          @if ((role$ | async) === 'ADMIN') {
+            <a routerLink="/admin"
+               class="hidden sm:flex items-center gap-1.5 text-accent hover:text-accent-hover transition-colors px-3 py-1.5 rounded-lg hover:bg-bg-subtle text-sm font-medium">
+              <ng-icon name="lucideShield" size="16" />
+              <span>Admin</span>
+            </a>
+          }
+
+          <a routerLink="/account"
+             class="flex items-center gap-1.5 text-text-secondary hover:text-text-primary transition-colors px-3 py-1.5 rounded-lg hover:bg-bg-subtle text-sm">
+            <ng-icon name="lucideUser" size="18" />
+            <span class="hidden md:inline max-w-[120px] truncate">{{ displayName$ | async }}</span>
+          </a>
+
+          <button
+            (click)="logout()"
+            class="flex items-center gap-1.5 text-text-secondary hover:text-error transition-colors px-3 py-1.5 rounded-lg hover:bg-bg-subtle text-sm">
+            <ng-icon name="lucideLogOut" size="18" />
+            <span class="hidden sm:inline">Salir</span>
+          </button>
+
+        } @else {
+
+          <!-- Guest -->
+          <a routerLink="/cart"
+             class="relative flex items-center gap-1.5 text-text-secondary hover:text-text-primary transition-colors px-3 py-1.5 rounded-lg hover:bg-bg-subtle text-sm">
+            <ng-icon name="lucideShoppingCart" size="18" />
+            @if ((cartCount$ | async) ?? 0 > 0) {
+              <span class="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 rounded-full bg-accent text-white text-[10px] font-bold flex items-center justify-center px-1">
+                {{ cartCount$ | async }}
+              </span>
+            }
+            <span class="hidden sm:inline">Carrito</span>
+          </a>
+          <a routerLink="/login"
+             class="flex items-center gap-1.5 text-text-secondary hover:text-text-primary transition-colors px-3 py-1.5 rounded-lg hover:bg-bg-subtle text-sm">
+            <ng-icon name="lucideLogIn" size="18" />
+            <span class="hidden sm:inline">Ingresar</span>
+          </a>
+          <a routerLink="/register"
+             class="flex items-center gap-1.5 bg-accent hover:bg-accent-hover transition-colors px-4 py-1.5 rounded-lg font-semibold text-white text-sm shadow-[0_0_16px_var(--color-accent-glow)]">
+            <ng-icon name="lucideUserPlus" size="16" />
+            <span>Registrarse</span>
+          </a>
+
+        }
+
+      </div>
+
+    </nav>
+  </header>
+
+  <main class="flex-1">
+    <router-outlet />
+  </main>
+
+  <footer class="bg-bg-surface border-t border-border py-10 mt-16">
+    <div class="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4">
+      <span class="font-black text-lg select-none">
+        NEO<span class="text-accent">GAMING</span>
+      </span>
+      <p class="text-text-muted text-sm">© 2026 NeoGaming · Marketplace Gaming Colombia</p>
+      <p class="text-text-muted text-sm">Bogotá, Colombia</p>
+    </div>
+  </footer>
+
+</div>

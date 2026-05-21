@@ -1,0 +1,77 @@
+<div class="flex h-screen bg-bg-base text-text-primary overflow-hidden">
+
+  <aside class="w-60 bg-bg-surface border-r border-border flex flex-col shrink-0">
+
+    <div class="h-16 flex items-center px-5 border-b border-border shrink-0">
+      <a routerLink="/" class="font-black text-base tracking-tight select-none">
+        NEO<span class="text-accent">GAMING</span>
+        <span class="ml-2 text-xs font-medium text-neon-cyan bg-neon-cyan/10 px-1.5 py-0.5 rounded align-middle">
+          Seller
+        </span>
+      </a>
+    </div>
+
+    <nav class="flex-1 p-3 space-y-0.5 overflow-y-auto">
+      <a routerLink="/seller/dashboard"
+         routerLinkActive="bg-bg-subtle text-text-primary border-l-2 border-accent"
+         class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-text-secondary hover:bg-bg-subtle hover:text-text-primary transition-colors">
+        <ng-icon name="lucideLayoutDashboard" size="16" />
+        Dashboard
+      </a>
+      <a routerLink="/seller/products"
+         routerLinkActive="bg-bg-subtle text-text-primary border-l-2 border-accent"
+         class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-text-secondary hover:bg-bg-subtle hover:text-text-primary transition-colors">
+        <ng-icon name="lucidePackage" size="16" />
+        Productos
+      </a>
+      <a routerLink="/seller/orders"
+         routerLinkActive="bg-bg-subtle text-text-primary border-l-2 border-accent"
+         class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-text-secondary hover:bg-bg-subtle hover:text-text-primary transition-colors">
+        <ng-icon name="lucideClipboardList" size="16" />
+        Órdenes
+      </a>
+      <a routerLink="/seller/analytics"
+         routerLinkActive="bg-bg-subtle text-text-primary border-l-2 border-accent"
+         class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-text-secondary hover:bg-bg-subtle hover:text-text-primary transition-colors">
+        <ng-icon name="lucideTrendingUp" size="16" />
+        Analytics
+      </a>
+      <div class="border-t border-border pt-2 mt-2">
+        <a routerLink="/seller/profile"
+           routerLinkActive="bg-bg-subtle text-text-primary border-l-2 border-accent"
+           class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-text-secondary hover:bg-bg-subtle hover:text-text-primary transition-colors">
+          <ng-icon name="lucideStore" size="16" />
+          Mi tienda
+        </a>
+        <a routerLink="/seller/accounts"
+           routerLinkActive="bg-bg-subtle text-text-primary border-l-2 border-accent"
+           class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-text-secondary hover:bg-bg-subtle hover:text-text-primary transition-colors">
+          <ng-icon name="lucideCreditCard" size="16" />
+          Cuentas bancarias
+        </a>
+      </div>
+    </nav>
+
+    <div class="p-3 border-t border-border shrink-0">
+      <!-- Phase 2: info del seller autenticado -->
+      <p class="px-3 py-2 text-xs text-text-muted">Seller Panel</p>
+    </div>
+
+  </aside>
+
+  <div class="flex flex-col flex-1 min-w-0">
+
+    <header class="h-16 bg-bg-surface border-b border-border flex items-center justify-between px-6 shrink-0">
+      <span class="text-sm font-medium text-text-secondary">Panel de vendedor</span>
+      <a routerLink="/" class="text-xs text-text-muted hover:text-text-secondary transition-colors">
+        Ver tienda pública →
+      </a>
+    </header>
+
+    <main class="flex-1 overflow-y-auto p-6">
+      <router-outlet />
+    </main>
+
+  </div>
+
+</div>
