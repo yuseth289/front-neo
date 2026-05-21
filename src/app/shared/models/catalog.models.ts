@@ -19,6 +19,8 @@ export interface ProductSummary {
   finalPrice: number;
   status: ProductStatus;
   primaryImageUrl: string | null;
+  averageRating?: number | null;
+  totalReviews?: number | null;
 }
 
 export interface ProductDetail {
