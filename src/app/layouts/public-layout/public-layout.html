@@ -1,103 +1,278 @@
 <div class="min-h-screen bg-bg-base text-text-primary flex flex-col">
 
-  <header class="sticky top-0 z-50 bg-bg-surface/95 backdrop-blur border-b border-border">
-    <nav class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
+  <!-- ── HEADER ──────────────────────────────────────────────────── -->
+  <header class="neo-app-header">
+    <nav class="max-w-7xl mx-auto px-6 h-[72px] flex items-center gap-4">
 
-      <a routerLink="/" class="font-black text-xl tracking-tight shrink-0 select-none">
-        NEO<span class="text-accent">GAMING</span>
+      <!-- Logo -->
+      <a routerLink="/" class="flex items-center gap-2.5 shrink-0">
+        <img src="neogaming-mark.png" alt="" class="w-7 h-7 object-contain" />
+        <span class="neo-wordmark text-[19px] tracking-[0.02em]">
+          NEO<span class="accent">GAMING</span>
+        </span>
+        @if ((role$ | async) === 'SELLER') {
+          <span class="ml-1 font-mono text-[10px] font-semibold uppercase tracking-[0.08em]
+                       text-neon-cyan bg-neon-cyan/10 px-2 py-0.5 rounded border border-neon-cyan/25">
+            Seller
+          </span>
+        }
       </a>
 
-      <div class="hidden md:flex items-center gap-6 text-sm text-text-secondary">
-        <a routerLink="/catalog" class="hover:text-text-primary transition-colors">Catálogo</a>
+      <!-- Desktop nav -->
+      <div class="hidden md:flex items-center gap-6 ml-2">
+        <a routerLink="/" routerLinkActive="text-text-primary"
+           [routerLinkActiveOptions]="{ exact: true }"
+           class="relative text-sm font-medium text-text-secondary hover:text-text-primary transition-colors py-2
+                  after:absolute after:left-0 after:right-0 after:-bottom-1.5 after:h-0.5 after:rounded-full
+                  after:bg-accent after:shadow-[0_0_12px_var(--color-accent-glow)]
+                  after:scale-x-0 after:transition-transform after:duration-300
+                  hover:after:scale-x-100 [&.text-text-primary]:after:scale-x-100">
+          Inicio
+        </a>
+        <a routerLink="/catalog" routerLinkActive="text-text-primary"
+           class="relative text-sm font-medium text-text-secondary hover:text-text-primary transition-colors py-2
+                  after:absolute after:left-0 after:right-0 after:-bottom-1.5 after:h-0.5 after:rounded-full
+                  after:bg-accent after:shadow-[0_0_12px_var(--color-accent-glow)]
+                  after:scale-x-0 after:transition-transform after:duration-300
+                  hover:after:scale-x-100 [&.text-text-primary]:after:scale-x-100">
+          Catálogo
+        </a>
       </div>
 
-      <div class="flex items-center gap-2 shrink-0">
+      <!-- Search bar (desktop) -->
+      <form class="hidden md:flex flex-1 max-w-[520px] mx-6 relative"
+            (submit)="submitSearch(); $event.preventDefault()">
+        <ng-icon name="lucideSearch" size="16"
+                 class="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" />
+        <input
+          #searchInput
+          type="search"
+          [(ngModel)]="searchQuery"
+          name="q"
+          placeholder="Buscar mouse, teclado, consolas…"
+          aria-label="Buscar en el catálogo"
+          class="w-full h-10 pl-10 pr-14 bg-bg-elevated/70 border border-border-strong rounded-[10px]
+                 text-sm text-text-primary placeholder:text-text-muted outline-none
+                 focus:border-accent focus:ring-[3px] focus:ring-accent/8 focus:shadow-[0_0_16px_var(--color-accent-glow)]
+                 transition-all duration-200" />
+        <kbd class="absolute right-3 top-1/2 -translate-y-1/2 font-mono text-[11px] text-text-muted
+                    bg-bg-elevated border border-border rounded px-1.5 py-0.5 pointer-events-none">
+          /
+        </kbd>
+      </form>
+
+      <!-- Right side -->
+      <div class="flex items-center gap-1.5 shrink-0 ml-auto">
+
+        <a routerLink="/cart" aria-label="Carrito"
+           class="relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-text-secondary
+                  hover:text-text-primary hover:bg-bg-subtle transition-colors">
+          <ng-icon name="lucideShoppingCart" size="18" />
+          <span class="hidden sm:inline">Carrito</span>
+          @if ((cartCount$ | async) ?? 0 > 0) {
+            <span class="absolute top-0.5 left-[22px] min-w-[16px] h-4 px-1 rounded-full
+                         bg-accent text-white text-[10px] font-bold leading-none
+                         flex items-center justify-center shadow-[0_0_8px_var(--color-accent-glow)]">
+              {{ cartCount$ | async }}
+            </span>
+          }
+        </a>
 
         @if (isAuthenticated$ | async) {
 
-          <!-- Usuario autenticado -->
-          <a routerLink="/cart"
-             class="relative flex items-center gap-1.5 text-text-secondary hover:text-text-primary transition-colors px-3 py-1.5 rounded-lg hover:bg-bg-subtle text-sm">
-            <ng-icon name="lucideShoppingCart" size="18" />
-            @if ((cartCount$ | async) ?? 0 > 0) {
-              <span class="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 rounded-full bg-accent text-white text-[10px] font-bold flex items-center justify-center px-1">
-                {{ cartCount$ | async }}
-              </span>
-            }
-            <span class="hidden sm:inline">Carrito</span>
-          </a>
-
           @if ((role$ | async) === 'SELLER') {
             <a routerLink="/seller/dashboard"
-               class="hidden sm:flex items-center gap-1.5 text-neon-cyan hover:text-neon-cyan/80 transition-colors px-3 py-1.5 rounded-lg hover:bg-bg-subtle text-sm font-medium">
+               class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
+                      text-neon-cyan hover:text-neon-cyan/80 hover:bg-bg-subtle transition-colors">
               <ng-icon name="lucideLayoutDashboard" size="16" />
-              <span>Panel Seller</span>
+              <span>Seller</span>
             </a>
           }
 
           @if ((role$ | async) === 'ADMIN') {
             <a routerLink="/admin"
-               class="hidden sm:flex items-center gap-1.5 text-accent hover:text-accent-hover transition-colors px-3 py-1.5 rounded-lg hover:bg-bg-subtle text-sm font-medium">
+               class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
+                      text-accent hover:text-accent-hover hover:bg-bg-subtle transition-colors">
               <ng-icon name="lucideShield" size="16" />
               <span>Admin</span>
             </a>
           }
 
           <a routerLink="/account"
-             class="flex items-center gap-1.5 text-text-secondary hover:text-text-primary transition-colors px-3 py-1.5 rounded-lg hover:bg-bg-subtle text-sm">
-            <ng-icon name="lucideUser" size="18" />
-            <span class="hidden md:inline max-w-[120px] truncate">{{ displayName$ | async }}</span>
+             class="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-text-secondary
+                    hover:text-text-primary hover:bg-bg-subtle transition-colors">
+            <ng-icon name="lucideCircleUserRound" size="18" />
+            <span class="max-w-[120px] truncate">{{ displayName$ | async }}</span>
           </a>
-
-          <button
-            (click)="logout()"
-            class="flex items-center gap-1.5 text-text-secondary hover:text-error transition-colors px-3 py-1.5 rounded-lg hover:bg-bg-subtle text-sm">
+          <button (click)="logout()" aria-label="Salir"
+                  class="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm
+                         text-text-secondary hover:text-error hover:bg-bg-subtle transition-colors">
             <ng-icon name="lucideLogOut" size="18" />
-            <span class="hidden sm:inline">Salir</span>
           </button>
 
         } @else {
 
-          <!-- Guest -->
-          <a routerLink="/cart"
-             class="relative flex items-center gap-1.5 text-text-secondary hover:text-text-primary transition-colors px-3 py-1.5 rounded-lg hover:bg-bg-subtle text-sm">
-            <ng-icon name="lucideShoppingCart" size="18" />
-            @if ((cartCount$ | async) ?? 0 > 0) {
-              <span class="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 rounded-full bg-accent text-white text-[10px] font-bold flex items-center justify-center px-1">
-                {{ cartCount$ | async }}
-              </span>
-            }
-            <span class="hidden sm:inline">Carrito</span>
-          </a>
           <a routerLink="/login"
-             class="flex items-center gap-1.5 text-text-secondary hover:text-text-primary transition-colors px-3 py-1.5 rounded-lg hover:bg-bg-subtle text-sm">
-            <ng-icon name="lucideLogIn" size="18" />
-            <span class="hidden sm:inline">Ingresar</span>
+             class="hidden md:inline-flex items-center px-3 py-1.5 rounded-lg text-sm
+                    text-text-secondary hover:text-text-primary hover:bg-bg-subtle transition-colors">
+            Ingresar
           </a>
           <a routerLink="/register"
-             class="flex items-center gap-1.5 bg-accent hover:bg-accent-hover transition-colors px-4 py-1.5 rounded-lg font-semibold text-white text-sm shadow-[0_0_16px_var(--color-accent-glow)]">
-            <ng-icon name="lucideUserPlus" size="16" />
-            <span>Registrarse</span>
+             class="hidden md:inline-flex neo-btn-primary !text-[13px] !py-2 !px-3.5">
+            <ng-icon name="lucideUserPlus" size="14" />
+            Registrarse
           </a>
 
         }
 
-      </div>
+        <!-- Mobile menu trigger -->
+        <button class="md:hidden p-2 rounded-lg text-text-secondary hover:text-text-primary hover:bg-bg-subtle
+                       transition-colors" (click)="mobileOpen.set(true)" aria-label="Abrir menú">
+          <ng-icon name="lucideMenu" size="20" />
+        </button>
 
+      </div>
     </nav>
   </header>
 
+  <!-- ── MOBILE SHEET ────────────────────────────────────────────── -->
+  @if (mobileOpen()) {
+    <div class="fixed inset-0 z-[80] bg-black/60 backdrop-blur-md animate-[neo-fade-in_220ms_ease]"
+         (click)="mobileOpen.set(false)" role="dialog" aria-modal="true">
+      <div class="absolute top-0 right-0 bottom-0 w-[85%] max-w-[360px] bg-bg-surface
+                  border-l border-border p-6 flex flex-col gap-4
+                  animate-[neo-slide-in-right_320ms_var(--ease-out-snappy)]"
+           (click)="$event.stopPropagation()">
+
+        <div class="flex justify-between items-center mb-2">
+          <span class="neo-wordmark text-lg">NEO<span class="accent">GAMING</span></span>
+          <button class="p-2 text-text-muted hover:text-text-primary" (click)="mobileOpen.set(false)"
+                  aria-label="Cerrar menú">
+            <ng-icon name="lucideX" size="20" />
+          </button>
+        </div>
+
+        <!-- Mobile search -->
+        <form class="relative" (submit)="submitSearch(); mobileOpen.set(false); $event.preventDefault()">
+          <ng-icon name="lucideSearch" size="16"
+                   class="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" />
+          <input type="search" [(ngModel)]="searchQuery" name="q"
+                 placeholder="Buscar productos…"
+                 class="w-full h-10 pl-10 pr-3 bg-bg-elevated border border-border rounded-[10px]
+                        text-sm text-text-primary placeholder:text-text-muted outline-none
+                        focus:border-accent focus:ring-[3px] focus:ring-accent/8" />
+        </form>
+
+        <div class="h-px bg-border my-2"></div>
+
+        <a routerLink="/" routerLinkActive="bg-bg-elevated text-text-primary border-l-2 border-accent"
+           [routerLinkActiveOptions]="{ exact: true }"
+           (click)="mobileOpen.set(false)"
+           class="flex items-center gap-3 px-3.5 py-3 rounded-lg text-sm font-medium text-text-secondary
+                  hover:bg-bg-elevated hover:text-text-primary border-l-2 border-transparent transition-colors">
+          <ng-icon name="lucideHouse" size="18" /> Inicio
+        </a>
+        <a routerLink="/catalog" routerLinkActive="bg-bg-elevated text-text-primary border-l-2 border-accent"
+           (click)="mobileOpen.set(false)"
+           class="flex items-center gap-3 px-3.5 py-3 rounded-lg text-sm font-medium text-text-secondary
+                  hover:bg-bg-elevated hover:text-text-primary border-l-2 border-transparent transition-colors">
+          <ng-icon name="lucideLayoutGrid" size="18" /> Catálogo
+        </a>
+        <a routerLink="/cart" routerLinkActive="bg-bg-elevated text-text-primary border-l-2 border-accent"
+           (click)="mobileOpen.set(false)"
+           class="flex items-center gap-3 px-3.5 py-3 rounded-lg text-sm font-medium text-text-secondary
+                  hover:bg-bg-elevated hover:text-text-primary border-l-2 border-transparent transition-colors">
+          <ng-icon name="lucideShoppingCart" size="18" /> Carrito
+        </a>
+
+        @if (isAuthenticated$ | async) {
+          <a routerLink="/account" (click)="mobileOpen.set(false)"
+             class="flex items-center gap-3 px-3.5 py-3 rounded-lg text-sm font-medium text-text-secondary
+                    hover:bg-bg-elevated hover:text-text-primary border-l-2 border-transparent transition-colors">
+            <ng-icon name="lucideCircleUserRound" size="18" /> Mi cuenta
+          </a>
+          @if ((role$ | async) === 'SELLER') {
+            <a routerLink="/seller/dashboard" (click)="mobileOpen.set(false)"
+               class="flex items-center gap-3 px-3.5 py-3 rounded-lg text-sm font-medium
+                      text-neon-cyan hover:bg-bg-elevated border-l-2 border-transparent transition-colors">
+              <ng-icon name="lucideLayoutDashboard" size="18" /> Panel Seller
+            </a>
+          }
+          @if ((role$ | async) === 'ADMIN') {
+            <a routerLink="/admin" (click)="mobileOpen.set(false)"
+               class="flex items-center gap-3 px-3.5 py-3 rounded-lg text-sm font-medium
+                      text-accent hover:bg-bg-elevated border-l-2 border-transparent transition-colors">
+              <ng-icon name="lucideShield" size="18" /> Admin
+            </a>
+          }
+        } @else {
+          <a routerLink="/login" (click)="mobileOpen.set(false)"
+             class="flex items-center gap-3 px-3.5 py-3 rounded-lg text-sm font-medium text-text-secondary
+                    hover:bg-bg-elevated hover:text-text-primary border-l-2 border-transparent transition-colors">
+            <ng-icon name="lucideLogIn" size="18" /> Ingresar
+          </a>
+          <a routerLink="/register" (click)="mobileOpen.set(false)"
+             class="neo-btn-primary justify-center mt-2">
+            <ng-icon name="lucideUserPlus" size="14" /> Crear cuenta
+          </a>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- ── MAIN ───────────────────────────────────────────────────── -->
   <main class="flex-1">
     <router-outlet />
   </main>
 
-  <footer class="bg-bg-surface border-t border-border py-10 mt-16">
-    <div class="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4">
-      <span class="font-black text-lg select-none">
-        NEO<span class="text-accent">GAMING</span>
-      </span>
-      <p class="text-text-muted text-sm">© 2026 NeoGaming · Marketplace Gaming Colombia</p>
-      <p class="text-text-muted text-sm">Bogotá, Colombia</p>
+  <!-- ── FOOTER ─────────────────────────────────────────────────── -->
+  <footer class="border-t border-border bg-bg-surface relative pt-14 pb-10 px-6 mt-20">
+    <div class="absolute inset-0 pointer-events-none
+                bg-[radial-gradient(ellipse_60%_80%_at_50%_0%,var(--color-accent-soft),transparent_60%)]"></div>
+
+    <div class="relative max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_1fr] gap-8">
+      <div>
+        <div class="flex items-center gap-2.5 mb-3">
+          <img src="neogaming-mark.png" alt="" class="w-7 h-7" />
+          <span class="neo-wordmark text-[22px]">NEO<span class="accent">GAMING</span></span>
+        </div>
+        <p class="text-sm text-text-secondary max-w-[360px] leading-relaxed">
+          El marketplace gamer de Colombia. Equipos, periféricos y videojuegos de los mejores vendedores
+          del país.
+        </p>
+      </div>
+
+      <div>
+        <p class="neo-stat-label mb-3">Comprar</p>
+        <ul class="flex flex-col gap-2 text-sm text-text-secondary">
+          <li><a routerLink="/catalog" class="hover:text-text-primary transition-colors">Catálogo</a></li>
+          <li class="text-text-dim">Ofertas</li>
+          <li class="text-text-dim">Marcas</li>
+        </ul>
+      </div>
+
+      <div>
+        <p class="neo-stat-label mb-3">Vender</p>
+        <ul class="flex flex-col gap-2 text-sm text-text-secondary">
+          <li><a routerLink="/become-seller" class="hover:text-text-primary transition-colors">Conviértete en seller</a></li>
+          <li><a routerLink="/seller/dashboard" class="hover:text-text-primary transition-colors">Panel seller</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <p class="neo-stat-label mb-3">Compañía</p>
+        <ul class="flex flex-col gap-2 text-sm text-text-secondary">
+          <li class="text-text-dim">Ayuda</li>
+          <li class="text-text-dim">Términos</li>
+          <li class="text-text-dim">Privacidad</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="relative max-w-7xl mx-auto mt-8 pt-6 border-t border-border
+                flex justify-between gap-4 text-xs text-text-muted">
+      <span>© 2026 NeoGaming · Marketplace Gaming Colombia</span>
+      <span>Bogotá, Colombia</span>
     </div>
   </footer>
 
