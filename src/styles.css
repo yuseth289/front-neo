@@ -1,38 +1,339 @@
+/* ─────────────────────────────────────────────────────────────────────
+   NeoGaming · Tailwind v4 theme + design tokens
+   ───────────────────────────────────────────────────────────────────── */
+
+@import url("https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap");
 @import "tailwindcss";
 
 @theme {
-  /* ── Fondos ── */
+  /* ── Backgrounds ──────────────────────────────────────────────── */
   --color-bg-base:       #000000;
   --color-bg-surface:    #121212;
   --color-bg-elevated:   #1A1A1A;
   --color-bg-subtle:     #222222;
+  --color-bg-overlay:    rgba(18, 18, 18, 0.72);
 
-  /* ── Acento primario ── */
+  /* ── Accent ───────────────────────────────────────────────────── */
   --color-accent:        #FF003C;
   --color-accent-hover:  #CC0030;
   --color-accent-glow:   #FF003C40;
+  --color-accent-soft:   rgba(255, 0, 60, 0.08);
+  --color-accent-ring:   rgba(255, 0, 60, 0.35);
 
-  /* ── Efectos RGB / Tech ── */
+  /* ── RGB / Tech ──────────────────────────────────────────────── */
   --color-neon-cyan:     #00D4FF;
   --color-neon-violet:   #9B30FF;
   --color-neon-purple:   #C44DFF;
 
-  /* Gradiente banner hero */
-  --gradient-hero: linear-gradient(135deg, #9B30FF 0%, #00D4FF 100%);
+  /* ── Gradients ────────────────────────────────────────────────── */
+  --gradient-hero:        linear-gradient(135deg, #9B30FF 0%, #00D4FF 100%);
   --gradient-card-border: linear-gradient(135deg, #FF003C, #9B30FF, #00D4FF);
 
-  /* ── Textos ── */
-  --color-text-primary:  #FFFFFF;
-  --color-text-secondary:#A0A0A0;
-  --color-text-muted:    #555555;
+  /* ── Text ─────────────────────────────────────────────────────── */
+  --color-text-primary:   #FFFFFF;
+  --color-text-secondary: #B5B5B5;
+  --color-text-muted:     #6B6B6B;
+  --color-text-dim:       #3A3A3A;
 
-  /* ── Feedback ── */
+  /* ── Feedback ─────────────────────────────────────────────────── */
   --color-star:          #D4A017;
   --color-success:       #00C896;
   --color-warning:       #FF8C00;
   --color-error:         #FF003C;
 
-  /* ── Bordes ── */
+  /* ── Borders ──────────────────────────────────────────────────── */
   --color-border:        #2A2A2A;
+  --color-border-strong: #3A3A3A;
   --color-border-active: #FF003C;
+
+  /* ── Fonts ────────────────────────────────────────────────────── */
+  --font-display: "Chakra Petch", "Inter Tight", "Inter", -apple-system, sans-serif;
+  --font-sans:    "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono:    "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  /* ── Radius ───────────────────────────────────────────────────── */
+  --radius-md:   8px;
+  --radius-lg:  12px;
+  --radius-xl:  16px;
+  --radius-2xl: 24px;
+
+  /* ── Shadows ──────────────────────────────────────────────────── */
+  --shadow-glow-accent:    0 0 20px var(--color-accent-glow);
+  --shadow-glow-accent-sm: 0 0 16px var(--color-accent-glow);
+  --shadow-glow-accent-lg: 0 0 32px rgba(255, 0, 60, 0.35);
+  --shadow-card-lift:
+    0 1px 0 rgba(255, 255, 255, 0.04) inset,
+    0 24px 48px -24px rgba(0, 0, 0, 0.8),
+    0 0 0 1px rgba(255, 0, 60, 0.18),
+    0 0 32px rgba(255, 0, 60, 0.20);
+  --shadow-card-rest:
+    0 1px 0 rgba(255, 255, 255, 0.03) inset,
+    0 8px 24px -12px rgba(0, 0, 0, 0.6);
+
+  /* ── Motion ───────────────────────────────────────────────────── */
+  --ease-out-snappy: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-out-soft:   cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   Global defaults
+   ───────────────────────────────────────────────────────────────────── */
+
+html { color-scheme: dark; }
+body {
+  background: var(--color-bg-base);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+::selection { background: var(--color-accent); color: #fff; }
+
+/* ─────────────────────────────────────────────────────────────────────
+   Keyframes
+   ───────────────────────────────────────────────────────────────────── */
+
+@keyframes neo-reveal-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes neo-letter-up {
+  from { opacity: 0; transform: translateY(110%) rotate(8deg); }
+  to   { opacity: 1; transform: translateY(0) rotate(0deg); }
+}
+@keyframes neo-float {
+  from { transform: translate(0, 0)   scale(1);    }
+  to   { transform: translate(20px, -24px) scale(1.06); }
+}
+@keyframes neo-orbit { to { transform: rotate(360deg); } }
+@keyframes neo-shimmer {
+  from { background-position: 200% 0; }
+  to   { background-position: -200% 0; }
+}
+@keyframes neo-marquee {
+  from { transform: translate(0, -50%); }
+  to   { transform: translate(calc(-50% - 12px), -50%); }
+}
+@keyframes neo-spin { to { transform: rotate(360deg); } }
+@keyframes neo-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes neo-slide-in-right { from { transform: translateX(100%); } to { transform: translateX(0); } }
+
+/* ─────────────────────────────────────────────────────────────────────
+   Component-layer utilities
+   ───────────────────────────────────────────────────────────────────── */
+
+@layer components {
+
+  .neo-wordmark {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    user-select: none;
+  }
+  .neo-wordmark .accent { color: var(--color-accent); }
+
+  .neo-app-header {
+    position: sticky; top: 0; z-index: 50;
+    background: var(--color-bg-overlay);
+    -webkit-backdrop-filter: saturate(160%) blur(12px);
+            backdrop-filter: saturate(160%) blur(12px);
+    border-bottom: 1px solid var(--color-border);
+  }
+  .neo-app-header::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--color-accent-ring) 50%, transparent);
+    opacity: 0.6; pointer-events: none;
+  }
+
+  .neo-card {
+    background: var(--color-bg-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+  }
+  .neo-card-premium {
+    background: var(--color-bg-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card-rest);
+    transition: transform 220ms var(--ease-out-snappy),
+                border-color 220ms var(--ease-out-snappy),
+                box-shadow 220ms var(--ease-out-snappy);
+    will-change: transform;
+  }
+  .neo-card-premium:hover {
+    transform: translateY(-4px);
+    border-color: rgba(255, 0, 60, 0.5);
+    box-shadow: var(--shadow-card-lift);
+  }
+
+  .neo-btn-primary {
+    position: relative;
+    background: var(--color-accent);
+    color: #fff;
+    font-weight: 600; font-size: 14px;
+    padding: 12px 22px;
+    border-radius: 10px;
+    box-shadow: var(--shadow-glow-accent);
+    transition: all 220ms var(--ease-out-snappy);
+    display: inline-flex; align-items: center; gap: 8px;
+    overflow: hidden; isolation: isolate;
+  }
+  .neo-btn-primary::before {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(100deg, transparent 30%, rgba(255,255,255,0.25) 50%, transparent 70%);
+    transform: translateX(-120%);
+    transition: transform 700ms var(--ease-out-soft);
+    pointer-events: none; z-index: 1;
+  }
+  .neo-btn-primary:hover { background: var(--color-accent-hover); box-shadow: var(--shadow-glow-accent-lg); transform: translateY(-1px); }
+  .neo-btn-primary:hover::before { transform: translateX(120%); }
+  .neo-btn-primary > * { position: relative; z-index: 2; }
+
+  .neo-btn-outline {
+    background: transparent;
+    border: 1px solid var(--color-border-strong);
+    color: var(--color-text-secondary);
+    font-weight: 500; font-size: 14px;
+    padding: 11px 22px;
+    border-radius: 10px;
+    transition: all 220ms var(--ease-out-snappy);
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .neo-btn-outline:hover {
+    border-color: rgba(255, 0, 60, 0.5);
+    color: var(--color-text-primary);
+    background: var(--color-accent-soft);
+    transform: translateY(-1px);
+  }
+
+  .neo-input {
+    width: 100%;
+    background: var(--color-bg-elevated);
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    padding: 11px 14px;
+    color: var(--color-text-primary);
+    font-size: 14px; outline: none;
+    transition: all 220ms var(--ease-out-snappy);
+  }
+  .neo-input::placeholder { color: var(--color-text-muted); }
+  .neo-input:focus {
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px var(--color-accent-soft), var(--shadow-glow-accent-sm);
+    background: var(--color-bg-surface);
+  }
+
+  .neo-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12px; font-weight: 500;
+    color: var(--color-text-secondary);
+    background: var(--color-bg-elevated);
+    border: 1px solid var(--color-border);
+    padding: 5px 12px;
+    border-radius: 9999px;
+    transition: all 220ms var(--ease-out-snappy);
+    cursor: pointer;
+  }
+  .neo-chip:hover { color: var(--color-text-primary); border-color: var(--color-border-strong); }
+  .neo-chip-active {
+    color: #fff;
+    background: var(--color-accent-soft);
+    border-color: var(--color-accent);
+    box-shadow: inset 0 0 0 1px var(--color-accent), 0 0 16px var(--color-accent-glow);
+  }
+
+  .neo-stat-label {
+    font-size: 11px;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 500;
+    font-family: var(--font-mono);
+  }
+
+  .neo-reveal {
+    animation: neo-reveal-up 700ms var(--ease-out-soft) backwards;
+    animation-delay: calc(var(--i, 0) * 70ms);
+  }
+  .neo-stagger > * { --i: 0; animation-delay: calc(var(--i) * 70ms); }
+  .neo-stagger > *:nth-child(1)  { --i: 1; }
+  .neo-stagger > *:nth-child(2)  { --i: 2; }
+  .neo-stagger > *:nth-child(3)  { --i: 3; }
+  .neo-stagger > *:nth-child(4)  { --i: 4; }
+  .neo-stagger > *:nth-child(5)  { --i: 5; }
+  .neo-stagger > *:nth-child(6)  { --i: 6; }
+  .neo-stagger > *:nth-child(7)  { --i: 7; }
+  .neo-stagger > *:nth-child(8)  { --i: 8; }
+
+  .neo-letter {
+    display: inline-block;
+    animation: neo-letter-up 700ms var(--ease-out-soft) backwards;
+    animation-delay: var(--d, 0ms);
+  }
+
+  .neo-ambient { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+  .neo-orb { position: absolute; border-radius: 9999px; filter: blur(72px); opacity: 0.55; animation: neo-float 11s var(--ease-out-soft) infinite alternate; }
+  .neo-orb.red    { background: #FF003C; }
+  .neo-orb.violet { background: #9B30FF; }
+  .neo-orb.cyan   { background: #00D4FF; }
+
+  .neo-grid-bg {
+    background-image:
+      linear-gradient(rgba(255,255,255,0.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.045) 1px, transparent 1px);
+    background-size: 48px 48px;
+    -webkit-mask-image: radial-gradient(ellipse 70% 70% at 50% 38%, #000 30%, transparent 80%);
+            mask-image: radial-gradient(ellipse 70% 70% at 50% 38%, #000 30%, transparent 80%);
+  }
+
+  .neo-glow-orbit {
+    position: absolute;
+    width: 1100px; height: 1100px;
+    border-radius: 9999px;
+    background: conic-gradient(from 0deg, transparent 0%, rgba(255,0,60,0.18) 25%, transparent 50%, rgba(0,212,255,0.12) 75%, transparent 100%);
+    filter: blur(40px);
+    opacity: 0.55;
+    animation: neo-orbit 26s linear infinite;
+    pointer-events: none;
+  }
+
+  .neo-marquee {
+    display: flex; gap: 24px;
+    animation: neo-marquee 38s linear infinite;
+    mask-image: linear-gradient(90deg, transparent 0%, #000 18%, #000 82%, transparent 100%);
+    -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 18%, #000 82%, transparent 100%);
+  }
+
+  .neo-skeleton {
+    position: relative;
+    background: var(--color-bg-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+  .neo-skeleton::after {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(100deg, transparent 40%, rgba(255,255,255,0.06) 50%, transparent 60%);
+    background-size: 200% 100%;
+    animation: neo-shimmer 1.6s linear infinite;
+  }
+
+  .neo-spin { animation: neo-spin 1s linear infinite; }
+
+  .neo-text-grad-accent {
+    background: linear-gradient(180deg, #FF4D6D 0%, #FF003C 100%);
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent; color: transparent;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   Reduced motion
+   ───────────────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
 }
