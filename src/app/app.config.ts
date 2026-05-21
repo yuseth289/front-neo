@@ -17,6 +17,13 @@ import {
   lucideSettings, lucidePlus, lucideTrash2, lucideCheck, lucideClipboardX,
   lucideHeartCrack, lucideImage, lucideReceipt, lucideShieldCheck,
   lucideUserCheck, lucideZap,
+  lucideCircleUserRound, lucideLayoutGrid, lucideMail, lucideLock,
+  lucideEye, lucideEyeOff, lucideArrowRight, lucideSparkles,
+  lucideChevronDown, lucideCircleAlert, lucidePhone, lucideHome,
+  lucideArrowUpNarrowWide, lucideList, lucideInfo, lucideTrendingDown,
+  lucideLink, lucideBadge, lucideDollarSign, lucideRocket, lucideGamepad2,
+  lucideMouse, lucideKeyboard, lucideHeadphones, lucideMonitor, lucideJoystick,
+  lucideLaptop, lucideBoxes, lucideGlobe, lucideUploadCloud,
 } from '@ng-icons/lucide';
 import { routes } from './app.routes';
 import { environment } from '../environments/environment';
@@ -55,6 +62,13 @@ export const appConfig: ApplicationConfig = {
       lucideSettings, lucidePlus, lucideTrash2, lucideCheck, lucideClipboardX,
       lucideHeartCrack, lucideImage, lucideReceipt, lucideShieldCheck,
       lucideUserCheck, lucideZap,
+      lucideCircleUserRound, lucideLayoutGrid, lucideMail, lucideLock,
+      lucideEye, lucideEyeOff, lucideArrowRight, lucideSparkles,
+      lucideChevronDown, lucideCircleAlert, lucidePhone, lucideHome,
+      lucideArrowUpNarrowWide, lucideList, lucideInfo, lucideTrendingDown,
+      lucideLink, lucideBadge, lucideDollarSign, lucideRocket, lucideGamepad2,
+      lucideMouse, lucideKeyboard, lucideHeadphones, lucideMonitor, lucideJoystick,
+      lucideLaptop, lucideBoxes, lucideGlobe, lucideUploadCloud,
     }),
   ],
 };
