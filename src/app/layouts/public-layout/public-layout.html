@@ -11,10 +11,7 @@
           NEO<span class="accent">GAMING</span>
         </span>
         @if ((role$ | async) === 'SELLER') {
-          <span class="ml-1 font-mono text-[10px] font-semibold uppercase tracking-[0.08em]
-                       text-neon-cyan bg-neon-cyan/10 px-2 py-0.5 rounded border border-neon-cyan/25">
-            Seller
-          </span>
+          <span class="chip-seller ml-1">Seller</span>
         }
       </a>
 
@@ -238,7 +235,7 @@
         </div>
         <p class="text-sm text-text-secondary max-w-[360px] leading-relaxed">
           El marketplace gamer de Colombia. Equipos, periféricos y videojuegos de los mejores vendedores
-          del país.
+          del país, con IA que entiende lo que buscas.
         </p>
       </div>
 
@@ -248,6 +245,7 @@
           <li><a routerLink="/catalog" class="hover:text-text-primary transition-colors">Catálogo</a></li>
           <li class="text-text-dim">Ofertas</li>
           <li class="text-text-dim">Marcas</li>
+          <li class="text-text-dim">Llegadas nuevas</li>
         </ul>
       </div>
 
@@ -256,6 +254,7 @@
         <ul class="flex flex-col gap-2 text-sm text-text-secondary">
           <li><a routerLink="/become-seller" class="hover:text-text-primary transition-colors">Conviértete en seller</a></li>
           <li><a routerLink="/seller/dashboard" class="hover:text-text-primary transition-colors">Panel seller</a></li>
+          <li class="text-text-dim">Comisiones</li>
         </ul>
       </div>
 
