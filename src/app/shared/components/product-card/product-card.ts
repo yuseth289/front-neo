@@ -75,14 +75,14 @@ const PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9I
       </div>
 
       <!-- Info -->
-      <div class="p-4 flex flex-col gap-1 flex-1">
-        <p class="font-mono text-[10px] uppercase tracking-[0.08em] text-text-muted truncate">
+      <div class="p-4 flex flex-col h-[122px]">
+        <p class="font-mono text-[10px] uppercase tracking-[0.08em] text-text-muted truncate shrink-0">
           {{ product.brand }}
         </p>
-        <h3 class="text-[13px] font-medium text-text-primary line-clamp-2 leading-snug">
+        <h3 class="text-[13px] font-medium text-text-primary line-clamp-2 leading-snug h-[34px] overflow-hidden mt-0.5 shrink-0">
           {{ product.name }}
         </h3>
-        <div class="flex items-center gap-1.5 mt-0.5">
+        <div class="flex items-center gap-1.5 mt-1 shrink-0">
           <span class="inline-flex gap-px">
             @for (i of [1,2,3,4,5]; track i) {
               <ng-icon name="lucideStar" size="11"
@@ -94,7 +94,7 @@ const PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9I
             <span class="text-[11px] text-text-muted">({{ product.totalReviews ?? 0 }})</span>
           }
         </div>
-        <div class="mt-auto pt-2.5">
+        <div class="mt-auto">
           <p class="font-display text-lg font-bold text-text-primary tracking-[-0.01em]">
             {{ product.finalPrice | copCurrency }}
           </p>
