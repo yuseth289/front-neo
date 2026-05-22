@@ -128,7 +128,48 @@ import { PageResponse } from '../../../shared/models/api.models';
                 </div>
               </div>
 
-              <!-- Categories -->
+              <!-- Marca -->
+              <div class="mb-5">
+                <p class="text-[12px] font-semibold text-text-primary mb-2.5">Marca</p>
+                <div class="flex flex-col gap-1.5">
+                  @for (brand of filterBrands; track brand) {
+                    <label class="flex items-center gap-2 text-[13px] text-text-secondary cursor-pointer
+                                  hover:text-text-primary transition-colors">
+                      <input type="checkbox"
+                             [checked]="selectedBrands.has(brand)"
+                             (change)="toggleBrand(brand)"
+                             class="rounded" style="accent-color: var(--color-accent);" />
+                      {{ brand }}
+                    </label>
+                  }
+                </div>
+              </div>
+
+              <!-- Calificación -->
+              <div class="mb-5">
+                <p class="text-[12px] font-semibold text-text-primary mb-2.5">Calificación</p>
+                <div class="flex flex-col gap-1.5">
+                  @for (r of [5,4,3]; track r) {
+                    <label class="flex items-center gap-2 text-[13px] text-text-secondary cursor-pointer
+                                  hover:text-text-primary transition-colors">
+                      <input type="checkbox"
+                             [checked]="selectedRatings.has(r)"
+                             (change)="toggleRating(r)"
+                             style="accent-color: var(--color-accent);" />
+                      <span class="inline-flex gap-px">
+                        @for (i of [1,2,3,4,5]; track i) {
+                          <ng-icon name="lucideStar" size="11"
+                            [class.text-star]="i <= r"
+                            [class.text-border-strong]="i > r" />
+                        }
+                      </span>
+                      <span class="text-[11px] text-text-muted">y más</span>
+                    </label>
+                  }
+                </div>
+              </div>
+
+              <!-- Categorías -->
               <div>
                 <p class="text-[12px] font-semibold text-text-primary mb-2.5">Categoría</p>
                 <nav class="flex flex-col gap-0.5">
@@ -256,8 +297,11 @@ export class CatalogPageComponent implements OnInit, OnDestroy {
   sortValue = '';
   priceMin = '';
   priceMax = '';
+  selectedBrands = new Set<string>();
+  selectedRatings = new Set<number>();
 
   readonly skeletons = Array(12);
+  readonly filterBrands = ['Razer', 'Logitech G', 'ASUS ROG', 'Sony', 'Samsung'];
 
   activeCategoryName = computed(() => {
     if (!this.activeCategoryId()) return null;
@@ -321,11 +365,29 @@ export class CatalogPageComponent implements OnInit, OnDestroy {
     this.loadProducts(this.searchQuery.trim() || undefined);
   }
 
+  toggleBrand(brand: string): void {
+    if (this.selectedBrands.has(brand)) this.selectedBrands.delete(brand);
+    else this.selectedBrands.add(brand);
+    this.selectedBrands = new Set(this.selectedBrands);
+    this.currentPage.set(0);
+    this.loadProducts(this.searchQuery.trim() || undefined);
+  }
+
+  toggleRating(r: number): void {
+    if (this.selectedRatings.has(r)) this.selectedRatings.delete(r);
+    else this.selectedRatings.add(r);
+    this.selectedRatings = new Set(this.selectedRatings);
+    this.currentPage.set(0);
+    this.loadProducts(this.searchQuery.trim() || undefined);
+  }
+
   clearFilters(): void {
     this.searchQuery = '';
     this.sortValue = '';
     this.priceMin = '';
     this.priceMax = '';
+    this.selectedBrands = new Set();
+    this.selectedRatings = new Set();
     this.currentPage.set(0);
     this.loadProducts();
   }
