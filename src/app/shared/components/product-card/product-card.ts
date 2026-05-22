@@ -75,7 +75,7 @@ const PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9I
       </div>
 
       <!-- Info -->
-      <div class="p-4 flex flex-col h-[122px]">
+      <div class="p-4 flex flex-col h-[140px]">
         <p class="font-mono text-[10px] uppercase tracking-[0.08em] text-text-muted truncate shrink-0">
           {{ product.brand }}
         </p>
