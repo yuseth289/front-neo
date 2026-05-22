@@ -82,18 +82,18 @@ const PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9I
         <h3 class="text-[13px] font-medium text-text-primary line-clamp-2 leading-snug">
           {{ product.name }}
         </h3>
-        @if (product.averageRating != null) {
-          <div class="flex items-center gap-1.5 mt-0.5">
-            <span class="inline-flex gap-px text-star">
-              @for (i of [1,2,3,4,5]; track i) {
-                <ng-icon name="lucideStar" size="11"
-                  [class.text-star]="i <= product.averageRating!"
-                  [class.text-text-muted]="i > product.averageRating!" />
-              }
-            </span>
+        <div class="flex items-center gap-1.5 mt-0.5">
+          <span class="inline-flex gap-px">
+            @for (i of [1,2,3,4,5]; track i) {
+              <ng-icon name="lucideStar" size="11"
+                [class.text-star]="product.averageRating != null && i <= product.averageRating!"
+                [class.text-border-strong]="product.averageRating == null || i > product.averageRating!" />
+            }
+          </span>
+          @if (product.averageRating != null) {
             <span class="text-[11px] text-text-muted">({{ product.totalReviews ?? 0 }})</span>
-          </div>
-        }
+          }
+        </div>
         <div class="mt-auto pt-2.5">
           <p class="font-display text-lg font-bold text-text-primary tracking-[-0.01em]">
             {{ product.finalPrice | copCurrency }}
