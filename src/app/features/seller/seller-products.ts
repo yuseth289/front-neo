@@ -2,131 +2,171 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { NgIcon } from '@ng-icons/core';
+import { CopCurrencyPipe } from '../../shared/pipes/cop-currency.pipe';
 import { SellerProductService } from '../../core/seller/seller-product.service';
 import { ProductSummaryResponse } from '../../shared/models/product.models';
 import { ProductStatus } from '../../shared/models/enums';
 
-const STATUS_LABEL: Record<ProductStatus, string> = {
-  DRAFT: 'Borrador',
-  ACTIVE: 'Activo',
-  PAUSED: 'Pausado',
-  DELETED: 'Eliminado',
-};
-
-const STATUS_CLASS: Record<ProductStatus, string> = {
-  DRAFT: 'bg-bg-elevated text-text-muted',
-  ACTIVE: 'bg-green-500/15 text-green-400',
-  PAUSED: 'bg-yellow-500/15 text-yellow-400',
-  DELETED: 'bg-red-500/15 text-red-400',
+const STATUS_MAP: Record<ProductStatus, { color: string; bg: string; border: string; label: string }> = {
+  DRAFT:   { color: 'var(--color-text-muted)',  bg: 'var(--color-bg-elevated)', border: 'var(--color-border)',         label: 'Borrador'  },
+  ACTIVE:  { color: 'var(--color-success)',      bg: 'rgba(0,200,150,0.12)',     border: 'rgba(0,200,150,0.25)',        label: 'Activo'    },
+  PAUSED:  { color: '#FF8C00',                  bg: 'rgba(255,140,0,0.12)',     border: 'rgba(255,140,0,0.25)',        label: 'Pausado'   },
+  DELETED: { color: 'var(--color-error)',        bg: 'rgba(255,0,60,0.12)',      border: 'rgba(255,0,60,0.25)',         label: 'Eliminado' },
 };
 
 @Component({
   selector: 'app-seller-products',
   standalone: true,
-  imports: [CommonModule, RouterLink, NgIcon],
+  imports: [CommonModule, RouterLink, NgIcon, CopCurrencyPipe],
   template: `
-    <div>
-      <div class="flex items-center justify-between mb-6">
-        <h1 class="text-xl font-bold text-text-primary">Mis productos</h1>
-        <a routerLink="/seller/products/new"
-          class="flex items-center gap-2 px-4 py-2 rounded-lg bg-accent hover:bg-accent-hover text-white text-sm font-medium transition-colors">
-          <ng-icon name="lucidePlus" size="14" />
-          Nuevo producto
-        </a>
+    <div class="relative">
+      <!-- Ambient backdrop -->
+      <div class="absolute inset-0 pointer-events-none overflow-hidden -z-[1]">
+        <div class="neo-grid-bg absolute inset-0 opacity-20"></div>
       </div>
 
-      @if (loading()) {
-        <div class="space-y-3">
-          @for (_ of [1,2,3,4]; track $index) {
-            <div class="h-16 rounded-xl bg-bg-surface border border-border animate-pulse"></div>
-          }
+      <div class="relative max-w-[1100px] mx-auto">
+
+        <!-- Header -->
+        <div class="neo-reveal flex flex-wrap items-center justify-between gap-4 mb-6">
+          <div>
+            <p class="neo-stat-label">Gestión</p>
+            <h1 class="font-display text-[28px] font-bold tracking-[-0.02em] text-text-primary mt-0.5">
+              Mis productos
+            </h1>
+          </div>
+          <a routerLink="/seller/products/new"
+             class="neo-btn-primary !text-[13px] !py-2 !px-4">
+            <ng-icon name="lucidePlus" size="14" />
+            Nuevo producto
+          </a>
         </div>
-      } @else if (products().length === 0) {
-        <div class="flex flex-col items-center gap-3 py-16 text-text-muted">
-          <ng-icon name="lucidePackage" size="40" />
-          <p>No tienes productos todavía.</p>
-          <a routerLink="/seller/products/new" class="text-sm text-accent hover:underline">Crear el primero →</a>
-        </div>
-      } @else {
-        <div class="bg-bg-surface border border-border rounded-xl overflow-hidden">
-          <table class="w-full text-sm">
-            <thead>
-              <tr class="border-b border-border text-left">
-                <th class="px-4 py-3 text-xs text-text-muted font-medium">Producto</th>
-                <th class="px-4 py-3 text-xs text-text-muted font-medium hidden sm:table-cell">Precio</th>
-                <th class="px-4 py-3 text-xs text-text-muted font-medium">Estado</th>
-                <th class="px-4 py-3 text-xs text-text-muted font-medium w-10"></th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-border">
+
+        <!-- Loading skeletons -->
+        @if (loading()) {
+          <div class="neo-card-premium overflow-hidden neo-reveal">
+            <div class="p-4 space-y-2">
+              @for (_ of [1,2,3,4,5]; track $index) {
+                <div class="h-14 rounded-[10px] bg-bg-elevated animate-pulse"></div>
+              }
+            </div>
+          </div>
+
+        <!-- Empty state -->
+        } @else if (products().length === 0) {
+          <div class="neo-card-premium p-12 flex flex-col items-center gap-4 text-center neo-reveal">
+            <div class="w-16 h-16 rounded-2xl bg-bg-elevated border border-border flex items-center justify-center">
+              <ng-icon name="lucidePackage" size="28" class="text-text-muted" />
+            </div>
+            <div>
+              <p class="text-base font-semibold text-text-primary">No tienes productos todavía</p>
+              <p class="text-sm text-text-muted mt-1">Crea tu primer producto para empezar a vender.</p>
+            </div>
+            <a routerLink="/seller/products/new" class="neo-btn-primary !text-[13px] !py-2 !px-4 mt-1">
+              <ng-icon name="lucidePlus" size="14" />
+              Crear primer producto
+            </a>
+          </div>
+
+        <!-- Products table -->
+        } @else {
+          <div class="neo-card-premium overflow-hidden neo-reveal">
+            <!-- Table header -->
+            <div class="bg-bg-elevated border-b border-border">
+              <div class="grid grid-cols-[1fr_auto_auto_auto] items-center px-5 py-2.5 gap-4">
+                <span class="text-[11px] font-semibold uppercase tracking-[0.06em] text-text-muted font-mono">Producto</span>
+                <span class="text-[11px] font-semibold uppercase tracking-[0.06em] text-text-muted font-mono hidden sm:block w-28 text-right">Precio</span>
+                <span class="text-[11px] font-semibold uppercase tracking-[0.06em] text-text-muted font-mono w-24 text-center">Estado</span>
+                <span class="w-8"></span>
+              </div>
+            </div>
+
+            <!-- Rows -->
+            <div class="divide-y divide-border">
               @for (p of products(); track p.id) {
-                <tr class="hover:bg-bg-elevated transition-colors">
-                  <td class="px-4 py-3">
-                    <div class="flex items-center gap-3">
+                <div class="grid grid-cols-[1fr_auto_auto_auto] items-center px-5 py-3 gap-4
+                             transition-colors hover:bg-bg-elevated/50">
+
+                  <!-- Product info -->
+                  <div class="flex items-center gap-3 min-w-0">
+                    <div class="w-10 h-10 rounded-[10px] overflow-hidden bg-bg-elevated border border-border shrink-0">
                       @if (p.primaryImageUrl) {
                         <img [src]="p.primaryImageUrl" [alt]="p.name"
-                          class="w-9 h-9 rounded-lg object-cover bg-bg-elevated shrink-0" loading="lazy" />
+                          class="w-full h-full object-cover" loading="lazy" />
                       } @else {
-                        <div class="w-9 h-9 rounded-lg bg-bg-elevated flex items-center justify-center shrink-0">
+                        <div class="w-full h-full flex items-center justify-center">
                           <ng-icon name="lucideImage" size="14" class="text-text-muted" />
                         </div>
                       }
-                      <div>
-                        <p class="font-medium text-text-primary">{{ p.name }}</p>
-                        <p class="text-xs text-text-muted">{{ p.brand }}</p>
-                      </div>
                     </div>
-                  </td>
-                  <td class="px-4 py-3 hidden sm:table-cell text-text-secondary">
-                    {{ p.finalPrice | currency:'COP':'symbol-narrow':'1.0-0':'es' }}
-                  </td>
-                  <td class="px-4 py-3">
-                    <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full"
-                      [ngClass]="statusClass(p.status)">
+                    <div class="min-w-0">
+                      <p class="text-sm font-medium text-text-primary truncate">{{ p.name }}</p>
+                      <p class="text-xs text-text-muted font-mono">{{ p.brand }}</p>
+                    </div>
+                  </div>
+
+                  <!-- Price -->
+                  <span class="hidden sm:block text-sm font-semibold text-text-primary w-28 text-right tabular-nums">
+                    {{ p.finalPrice | copCurrency }}
+                  </span>
+
+                  <!-- Status pill -->
+                  <div class="w-24 flex justify-center">
+                    <span class="text-[11px] font-semibold px-[10px] py-[3px] rounded-full border whitespace-nowrap"
+                      [style.color]="statusColor(p.status)"
+                      [style.background]="statusBg(p.status)"
+                      [style.border-color]="statusBorder(p.status)">
                       {{ statusLabel(p.status) }}
                     </span>
-                  </td>
-                  <td class="px-4 py-3">
+                  </div>
+
+                  <!-- Edit action -->
+                  <div class="w-8 flex justify-center">
                     <a [routerLink]="['/seller/products', p.id]"
-                      class="p-1.5 rounded-lg text-text-muted hover:text-text-primary hover:bg-bg-elevated transition-colors inline-flex">
+                      class="p-1.5 rounded-lg text-text-muted hover:text-text-primary hover:bg-bg-elevated
+                             transition-colors inline-flex" aria-label="Editar">
                       <ng-icon name="lucideSettings" size="15" />
                     </a>
-                  </td>
-                </tr>
+                  </div>
+                </div>
               }
-            </tbody>
-          </table>
-        </div>
-
-        @if (totalPages() > 1) {
-          <div class="flex items-center justify-center gap-3 mt-5">
-            <button (click)="prevPage()" [disabled]="page() === 0"
-              class="px-3 py-1.5 rounded-lg border border-border text-sm text-text-secondary
-                     hover:bg-bg-subtle disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
-              Anterior
-            </button>
-            <span class="text-sm text-text-muted">{{ page() + 1 }} / {{ totalPages() }}</span>
-            <button (click)="nextPage()" [disabled]="page() + 1 >= totalPages()"
-              class="px-3 py-1.5 rounded-lg border border-border text-sm text-text-secondary
-                     hover:bg-bg-subtle disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
-              Siguiente
-            </button>
+            </div>
           </div>
+
+          <!-- Pagination -->
+          @if (totalPages() > 1) {
+            <div class="flex items-center justify-center gap-3 mt-5">
+              <button (click)="prevPage()" [disabled]="page() === 0"
+                class="neo-btn-outline !text-[13px] !py-1.5 !px-3 disabled:opacity-40 disabled:cursor-not-allowed">
+                <ng-icon name="lucideChevronLeft" size="14" />
+                Anterior
+              </button>
+              <span class="text-sm text-text-muted font-mono">{{ page() + 1 }} / {{ totalPages() }}</span>
+              <button (click)="nextPage()" [disabled]="page() + 1 >= totalPages()"
+                class="neo-btn-outline !text-[13px] !py-1.5 !px-3 disabled:opacity-40 disabled:cursor-not-allowed">
+                Siguiente
+                <ng-icon name="lucideChevronRight" size="14" />
+              </button>
+            </div>
+          }
         }
-      }
+
+      </div>
     </div>
   `,
 })
 export class SellerProductsComponent implements OnInit {
   private productService = inject(SellerProductService);
 
-  products = signal<ProductSummaryResponse[]>([]);
-  loading = signal(true);
-  page = signal(0);
+  products   = signal<ProductSummaryResponse[]>([]);
+  loading    = signal(true);
+  page       = signal(0);
   totalPages = signal(0);
 
-  statusLabel(s: ProductStatus): string { return STATUS_LABEL[s] ?? s; }
-  statusClass(s: ProductStatus): string { return STATUS_CLASS[s] ?? ''; }
+  statusColor(s: ProductStatus):  string { return (STATUS_MAP[s] ?? STATUS_MAP.DRAFT).color;  }
+  statusBg(s: ProductStatus):     string { return (STATUS_MAP[s] ?? STATUS_MAP.DRAFT).bg;     }
+  statusBorder(s: ProductStatus): string { return (STATUS_MAP[s] ?? STATUS_MAP.DRAFT).border; }
+  statusLabel(s: ProductStatus):  string { return (STATUS_MAP[s] ?? STATUS_MAP.DRAFT).label;  }
 
   ngOnInit(): void { this.load(); }
 
