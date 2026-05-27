@@ -13,6 +13,7 @@ export interface UserResponse {
   firstName: string;
   lastName: string;
   phone: string;
+  avatarUrl?: string;
   role: Role;
   createdAt: string;
 }

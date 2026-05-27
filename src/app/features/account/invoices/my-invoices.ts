@@ -2,128 +2,149 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { NgIcon } from '@ng-icons/core';
+import { CopCurrencyPipe } from '../../../shared/pipes/cop-currency.pipe';
 import { InvoiceService } from '../../../core/account/invoice.service';
 import { Invoice } from '../../../shared/models/invoice.models';
 import { InvoiceStatus } from '../../../shared/models/enums';
 
-const STATUS_LABEL: Record<InvoiceStatus, string> = {
-  DRAFT: 'Borrador',
-  ISSUED: 'Emitida',
-  CANCELLED: 'Anulada',
-};
+type StatusMeta = { label: string; color: string; bg: string; border: string };
 
-const STATUS_CLASS: Record<InvoiceStatus, string> = {
-  DRAFT: 'bg-yellow-500/15 text-yellow-400',
-  ISSUED: 'bg-green-500/15 text-green-400',
-  CANCELLED: 'bg-red-500/15 text-red-400',
+const STATUS_MAP: Record<InvoiceStatus, StatusMeta> = {
+  DRAFT:     { label: 'Borrador', color: 'var(--color-warning)',    bg: 'rgba(245,158,11,0.1)', border: 'rgba(245,158,11,0.3)' },
+  ISSUED:    { label: 'Emitida',  color: 'var(--color-success)',    bg: 'rgba(0,200,120,0.1)',  border: 'rgba(0,200,120,0.3)'  },
+  CANCELLED: { label: 'Anulada',  color: 'var(--color-error)',      bg: 'rgba(239,68,68,0.1)',  border: 'rgba(239,68,68,0.3)'  },
 };
 
 @Component({
   selector: 'app-my-invoices',
   standalone: true,
-  imports: [CommonModule, RouterLink, NgIcon],
+  imports: [CommonModule, RouterLink, NgIcon, CopCurrencyPipe],
   template: `
     <div class="max-w-3xl">
-      <h1 class="text-xl font-bold text-text-primary mb-6">Mis facturas</h1>
+
+      <!-- Header -->
+      <div class="mb-6">
+        <p class="neo-stat-label">Cuenta</p>
+        <h1 class="font-display text-[26px] font-bold tracking-[-0.02em] text-text-primary mt-0.5">
+          Mis facturas
+        </h1>
+      </div>
 
       @if (loading()) {
-        <div class="space-y-3">
+        <div class="flex flex-col gap-3">
           @for (_ of [1,2,3]; track $index) {
-            <div class="h-20 rounded-xl bg-bg-surface border border-border animate-pulse"></div>
+            <div class="h-20 rounded-2xl bg-bg-surface border border-border animate-pulse"></div>
           }
         </div>
+
       } @else if (invoices().length === 0) {
-        <div class="flex flex-col items-center gap-3 py-16 text-text-muted">
-          <ng-icon name="lucideReceipt" size="40" />
-          <p>No tienes facturas todavía.</p>
-          <a routerLink="/orders" class="text-sm text-accent hover:text-accent-hover">
+        <div class="neo-card-premium p-14 flex flex-col items-center gap-4 text-center">
+          <div class="w-14 h-14 rounded-2xl bg-bg-elevated border border-border flex items-center justify-center">
+            <ng-icon name="lucideReceipt" size="26" class="text-text-muted" />
+          </div>
+          <div>
+            <p class="text-base font-semibold text-text-primary">Sin facturas todavía</p>
+            <p class="text-sm text-text-muted mt-1">Las facturas se generan con cada compra completada.</p>
+          </div>
+          <a routerLink="/orders" class="neo-btn-outline !text-[13px] !py-2.5 !px-5 mt-1">
+            <ng-icon name="lucideClipboardList" size="14" />
             Ver mis órdenes
           </a>
         </div>
+
       } @else {
-        <div class="bg-bg-surface border border-border rounded-xl overflow-hidden">
+        <div class="neo-card-premium overflow-hidden">
           @for (invoice of invoices(); track invoice.id; let last = $last) {
-            <div class="px-5 py-4 flex items-center justify-between gap-4 flex-wrap"
-              [class.border-b]="!last" [class.border-border]="!last">
+            <div [class.border-b]="!last" [class.border-border]="!last">
 
-              <!-- Info principal -->
-              <div class="flex flex-col gap-0.5 min-w-0">
-                <div class="flex items-center gap-2 flex-wrap">
-                  <span class="text-sm font-semibold text-text-primary font-mono">
-                    {{ invoice.invoiceNumber }}
-                  </span>
-                  <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full"
-                    [ngClass]="statusClass(invoice.status)">
-                    {{ statusLabel(invoice.status) }}
-                  </span>
-                </div>
-                <p class="text-xs text-text-muted">
-                  {{ invoice.issuedAt | date:'d MMM yyyy, HH:mm':'':'es' }}
-                  · Orden #{{ invoice.orderId.slice(-8).toUpperCase() }}
-                </p>
-              </div>
-
-              <!-- Total + acciones -->
-              <div class="flex items-center gap-4 shrink-0">
-                <div class="text-right">
-                  <p class="text-sm font-bold text-text-primary">
-                    {{ invoice.total | currency:'COP':'symbol-narrow':'1.0-0':'es' }}
-                  </p>
-                  <p class="text-xs text-text-muted">
-                    IVA: {{ invoice.taxAmount | currency:'COP':'symbol-narrow':'1.0-0':'es' }}
+              <!-- Row -->
+              <div class="flex items-center justify-between gap-4 px-5 py-4 flex-wrap">
+                <div class="flex flex-col gap-0.5 min-w-0 flex-1">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <span class="text-[13px] font-semibold font-mono text-text-primary">
+                      {{ invoice.invoiceNumber }}
+                    </span>
+                    <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full border"
+                      [style.color]="statusMeta(invoice.status).color"
+                      [style.background]="statusMeta(invoice.status).bg"
+                      [style.border-color]="statusMeta(invoice.status).border">
+                      {{ statusMeta(invoice.status).label }}
+                    </span>
+                  </div>
+                  <p class="text-[12px] text-text-muted">
+                    {{ invoice.issuedAt | date:'d MMM yyyy, HH:mm':'':'es' }}
+                    · Orden #{{ invoice.orderId.slice(-8).toUpperCase() }}
                   </p>
                 </div>
-                <button (click)="toggle(invoice.id)"
-                  class="p-2 rounded-lg border border-border hover:border-accent/50 text-text-muted
-                         hover:text-accent transition-colors">
-                  <ng-icon
-                    [name]="expanded() === invoice.id ? 'lucideChevronUp' : 'lucideChevronDown'"
-                    size="14" />
-                </button>
+
+                <div class="flex items-center gap-3 shrink-0">
+                  <div class="text-right">
+                    <p class="text-sm font-bold text-text-primary tabular-nums">
+                      {{ invoice.total | copCurrency }}
+                    </p>
+                    <p class="text-[11px] text-text-muted">
+                      IVA: {{ invoice.taxAmount | copCurrency }}
+                    </p>
+                  </div>
+                  <button (click)="toggle(invoice.id)"
+                    class="p-2 rounded-[10px] border border-border hover:border-accent/40 text-text-muted
+                           hover:text-accent transition-colors">
+                    <ng-icon
+                      [name]="expanded() === invoice.id ? 'lucideChevronUp' : 'lucideChevronDown'"
+                      size="14" />
+                  </button>
+                </div>
               </div>
 
-              <!-- Detalle expandible -->
+              <!-- Expandible detail -->
               @if (expanded() === invoice.id) {
-                <div class="w-full mt-2 pt-3 border-t border-border">
-                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4 text-xs text-text-secondary">
-                    <div>
-                      <p class="text-text-muted mb-0.5">Comprador</p>
-                      <p class="text-text-primary font-medium">{{ invoice.buyerName }}</p>
-                      <p>{{ invoice.buyerEmail }}</p>
-                      <p>Doc: {{ invoice.buyerDocument }}</p>
+                <div class="px-5 pb-5 border-t border-border pt-4 bg-bg-elevated/40">
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4 text-xs text-text-secondary">
+                    <div class="bg-bg-elevated rounded-[10px] border border-border p-3.5">
+                      <p class="text-[11px] font-mono uppercase tracking-wide text-text-muted mb-2">Comprador</p>
+                      <p class="text-text-primary font-semibold">{{ invoice.buyerName }}</p>
+                      <p class="mt-0.5">{{ invoice.buyerEmail }}</p>
+                      <p class="mt-0.5 font-mono">{{ invoice.buyerDocument }}</p>
                     </div>
-                    <div>
-                      <p class="text-text-muted mb-0.5">Totales</p>
-                      <p>Subtotal: {{ invoice.subtotal | currency:'COP':'symbol-narrow':'1.0-0':'es' }}</p>
-                      <p>IVA: {{ invoice.taxAmount | currency:'COP':'symbol-narrow':'1.0-0':'es' }}</p>
-                      <p class="font-semibold text-text-primary">
-                        Total: {{ invoice.total | currency:'COP':'symbol-narrow':'1.0-0':'es' }}
-                      </p>
+                    <div class="bg-bg-elevated rounded-[10px] border border-border p-3.5">
+                      <p class="text-[11px] font-mono uppercase tracking-wide text-text-muted mb-2">Totales</p>
+                      <div class="flex justify-between">
+                        <span>Subtotal</span>
+                        <span class="text-text-primary tabular-nums">{{ invoice.subtotal | copCurrency }}</span>
+                      </div>
+                      <div class="flex justify-between mt-0.5">
+                        <span>IVA</span>
+                        <span class="text-text-primary tabular-nums">{{ invoice.taxAmount | copCurrency }}</span>
+                      </div>
+                      <div class="flex justify-between mt-1.5 pt-1.5 border-t border-border font-semibold text-text-primary">
+                        <span>Total</span>
+                        <span class="tabular-nums">{{ invoice.total | copCurrency }}</span>
+                      </div>
                     </div>
                   </div>
 
                   <table class="w-full text-xs">
                     <thead>
                       <tr class="border-b border-border text-text-muted">
-                        <th class="pb-1.5 text-left font-medium">Producto</th>
-                        <th class="pb-1.5 text-right font-medium">Cant.</th>
-                        <th class="pb-1.5 text-right font-medium">Precio</th>
-                        <th class="pb-1.5 text-right font-medium">Subtotal</th>
+                        <th class="pb-2 text-left font-medium">Producto</th>
+                        <th class="pb-2 text-right font-medium">Cant.</th>
+                        <th class="pb-2 text-right font-medium">Precio</th>
+                        <th class="pb-2 text-right font-medium">Subtotal</th>
                       </tr>
                     </thead>
-                    <tbody class="divide-y divide-border">
+                    <tbody>
                       @for (item of invoice.items; track item.productId) {
-                        <tr>
-                          <td class="py-1.5 text-text-primary">
+                        <tr class="border-b border-border last:border-0">
+                          <td class="py-2 text-text-primary">
                             {{ item.productName }}
-                            <span class="text-text-muted ml-1">{{ item.productSku }}</span>
+                            <span class="text-text-muted ml-1 font-mono">{{ item.productSku }}</span>
                           </td>
-                          <td class="py-1.5 text-right text-text-secondary">{{ item.quantity }}</td>
-                          <td class="py-1.5 text-right text-text-secondary">
-                            {{ item.unitPrice | currency:'COP':'symbol-narrow':'1.0-0':'es' }}
+                          <td class="py-2 text-right text-text-secondary tabular-nums">{{ item.quantity }}</td>
+                          <td class="py-2 text-right text-text-secondary tabular-nums">
+                            {{ item.unitPrice | copCurrency }}
                           </td>
-                          <td class="py-1.5 text-right text-text-primary font-medium">
-                            {{ item.subtotal | currency:'COP':'symbol-narrow':'1.0-0':'es' }}
+                          <td class="py-2 text-right text-text-primary font-semibold tabular-nums">
+                            {{ item.subtotal | copCurrency }}
                           </td>
                         </tr>
                       }
@@ -131,7 +152,7 @@ const STATUS_CLASS: Record<InvoiceStatus, string> = {
                   </table>
 
                   @if (invoice.cancelReason) {
-                    <p class="mt-3 text-xs text-error flex items-center gap-1">
+                    <p class="mt-3 text-xs text-error flex items-center gap-1.5">
                       <ng-icon name="lucideTriangleAlert" size="12" />
                       Motivo de anulación: {{ invoice.cancelReason }}
                     </p>
@@ -142,16 +163,17 @@ const STATUS_CLASS: Record<InvoiceStatus, string> = {
           }
         </div>
 
-        <!-- Paginación -->
+        <!-- Cargar más -->
         @if (hasMore()) {
           <div class="mt-4 text-center">
             <button (click)="loadMore()" [disabled]="loadingMore()"
-              class="px-5 py-2 rounded-lg border border-border text-text-secondary hover:text-text-primary
-                     text-sm transition-colors flex items-center gap-2 mx-auto disabled:opacity-50">
+              class="neo-btn-outline !py-2.5 !px-5 !text-[13px] disabled:opacity-50 mx-auto">
               @if (loadingMore()) {
-                <ng-icon name="lucideRefreshCw" size="14" class="animate-spin" />
+                <ng-icon name="lucideRefreshCw" size="14" class="neo-spin" />
+                Cargando…
+              } @else {
+                Cargar más
               }
-              Cargar más
             </button>
           </div>
         }
@@ -162,19 +184,16 @@ const STATUS_CLASS: Record<InvoiceStatus, string> = {
 export class MyInvoicesComponent implements OnInit {
   private invoiceService = inject(InvoiceService);
 
-  invoices = signal<Invoice[]>([]);
-  loading = signal(true);
+  invoices    = signal<Invoice[]>([]);
+  loading     = signal(true);
   loadingMore = signal(false);
-  hasMore = signal(false);
-  expanded = signal<string | null>(null);
+  hasMore     = signal(false);
+  expanded    = signal<string | null>(null);
   private page = 0;
 
-  statusLabel(s: InvoiceStatus): string { return STATUS_LABEL[s] ?? s; }
-  statusClass(s: InvoiceStatus): string { return STATUS_CLASS[s] ?? ''; }
+  statusMeta(s: InvoiceStatus): StatusMeta { return STATUS_MAP[s] ?? STATUS_MAP.DRAFT; }
 
-  toggle(id: string): void {
-    this.expanded.set(this.expanded() === id ? null : id);
-  }
+  toggle(id: string): void { this.expanded.set(this.expanded() === id ? null : id); }
 
   ngOnInit(): void {
     this.invoiceService.getMyInvoices(0).subscribe({
@@ -191,7 +210,7 @@ export class MyInvoicesComponent implements OnInit {
     this.loadingMore.set(true);
     this.page++;
     this.invoiceService.getMyInvoices(this.page).subscribe({
-      next: (res) => {
+      next:  (res) => {
         this.invoices.update(list => [...list, ...res.data.content]);
         this.hasMore.set(!res.data.last);
         this.loadingMore.set(false);

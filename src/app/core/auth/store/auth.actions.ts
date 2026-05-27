@@ -58,4 +58,14 @@ export const loadUserSuccess = createAction(
 
 export const loadUserFailure = createAction('[Auth] Load User Failure');
 
+export const googleLogin = createAction(
+  '[Auth] Google Login',
+  props<{ idToken: string }>(),
+);
+
+export const googleLoginFailure = createAction(
+  '[Auth] Google Login Failure',
+  props<{ error: string }>(),
+);
+
 export const clearError = createAction('[Auth] Clear Error');

@@ -1,185 +1,295 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterLink } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Store } from '@ngrx/store';
 import { NgIcon } from '@ng-icons/core';
 import { CopCurrencyPipe } from '../../shared/pipes/cop-currency.pipe';
 import { CheckoutService } from '../../core/cart/checkout.service';
+import { PaymentService } from '../../core/cart/payment.service';
 import { AddressService } from '../../core/account/address.service';
 import { selectCartItems, selectCartTotal } from '../../core/cart/store/cart.selectors';
-import * as CartActions from '../../core/cart/store/cart.actions';
 import { AddressResponse } from '../../shared/models/auth.models';
 import { PaymentMethod } from '../../shared/models/enums';
 
-const PAYMENT_LABELS: Record<PaymentMethod, string> = {
-  MP_CREDIT_CARD: 'Tarjeta de crédito',
-  MP_DEBIT_CARD: 'Tarjeta débito',
-  MP_PSE: 'PSE',
-  MP_EFECTY: 'Efecty',
-  MP_NEQUI: 'Nequi',
-  MP_ACCOUNT_MONEY: 'Dinero en cuenta MercadoPago',
-};
+const PAYMENT_OPTIONS: { value: PaymentMethod; label: string; icon: string }[] = [
+  { value: 'MP_CREDIT_CARD',    label: 'Tarjeta crédito', icon: 'lucideCreditCard' },
+  { value: 'MP_DEBIT_CARD',     label: 'Tarjeta débito',  icon: 'lucideCreditCard' },
+  { value: 'MP_PSE',            label: 'PSE',             icon: 'lucideBuilding2'  },
+  { value: 'MP_NEQUI',          label: 'Nequi',           icon: 'lucidePhone'      },
+  { value: 'MP_EFECTY',         label: 'Efecty',          icon: 'lucideBanknote'   },
+  { value: 'MP_ACCOUNT_MONEY',  label: 'Dinero en cuenta', icon: 'lucideWallet'    },
+];
 
 @Component({
   selector: 'app-checkout-page',
   standalone: true,
   imports: [CommonModule, RouterLink, ReactiveFormsModule, NgIcon, CopCurrencyPipe],
   template: `
-    <div class="max-w-5xl mx-auto px-4 py-8">
-      <h1 class="text-2xl font-bold text-text-primary mb-6">Checkout</h1>
+    <div class="relative">
+      <!-- Ambient backdrop -->
+      <div class="absolute inset-0 pointer-events-none overflow-hidden -z-[1]">
+        <div class="neo-grid-bg absolute inset-0 opacity-20"></div>
+        <span class="neo-orb red"  style="width:400px;height:400px;top:-5%;right:-5%;opacity:0.1;"></span>
+        <span class="neo-orb cyan" style="width:320px;height:320px;bottom:0%;left:-5%;opacity:0.08;animation-delay:2s;"></span>
+      </div>
 
-      <div class="grid lg:grid-cols-3 gap-6">
+      <div class="relative max-w-[1100px] mx-auto px-4 py-8">
 
-        <!-- Formulario -->
-        <div class="lg:col-span-2 flex flex-col gap-5">
+        <!-- Header -->
+        <div class="neo-reveal mb-6">
+          <p class="neo-stat-label">Pago seguro</p>
+          <h1 class="font-display text-[32px] font-bold tracking-[-0.02em] text-text-primary mt-1">
+            Finaliza tu compra
+          </h1>
+        </div>
 
-          <!-- Error global -->
-          @if (error()) {
-            <div class="flex items-center gap-2 rounded-lg bg-error/10 border border-error/30 px-4 py-3 text-sm text-error">
-              <ng-icon name="lucideTriangleAlert" size="16" />
-              {{ error() }}
-            </div>
-          }
-
-          <!-- Dirección de entrega -->
-          <section class="bg-bg-surface border border-border rounded-xl p-5">
-            <h2 class="text-base font-semibold text-text-primary mb-4 flex items-center gap-2">
-              <ng-icon name="lucideMapPin" size="18" class="text-accent" />
-              Dirección de entrega
-            </h2>
-
-            @if (loadingAddresses()) {
-              <div class="h-20 rounded-lg bg-bg-elevated animate-pulse"></div>
-            } @else if (addresses().length === 0) {
-              <div class="text-sm text-text-muted flex flex-col gap-2">
-                <p>No tienes direcciones guardadas.</p>
-                <a routerLink="/account/addresses" class="text-accent hover:text-accent-hover text-sm">
-                  + Agregar dirección
-                </a>
-              </div>
-            } @else {
-              <div class="flex flex-col gap-2" [formGroup]="form">
-                @for (addr of addresses(); track addr.id) {
-                  <label
-                    class="flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors"
-                    [class.border-accent]="form.get('addressId')?.value === addr.id"
-                    [class.bg-bg-elevated]="form.get('addressId')?.value === addr.id"
-                    [class.border-border]="form.get('addressId')?.value !== addr.id">
-                    <input
-                      type="radio"
-                      formControlName="addressId"
-                      [value]="addr.id"
-                      class="mt-0.5 accent-red-500"
-                    />
-                    <div>
-                      <p class="text-sm font-medium text-text-primary">
-                        {{ addr.label }}
-                        @if (addr.primary) {
-                          <span class="ml-1 text-xs text-accent">(Principal)</span>
-                        }
-                      </p>
-                      <p class="text-xs text-text-secondary mt-0.5">
-                        {{ addr.street }} {{ addr.number }}
-                        @if (addr.apartment) { , Apto {{ addr.apartment }} }
-                        — {{ addr.city }}, {{ addr.department }}
-                      </p>
-                    </div>
-                  </label>
+        <!-- Step indicator -->
+        <div class="neo-reveal mb-7">
+          <div class="flex items-center gap-0">
+            @for (step of steps; track $index) {
+              <div class="flex items-center"
+                   [class.flex-1]="$index < steps.length - 1">
+                <!-- Step pill -->
+                <div class="flex items-center gap-2 shrink-0">
+                  <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border transition-all"
+                    [style.background]="$index < currentStep() ? 'var(--color-success)' :
+                                        $index === currentStep() ? 'var(--color-accent)' : 'var(--color-bg-elevated)'"
+                    [style.border-color]="$index < currentStep() ? 'var(--color-success)' :
+                                          $index === currentStep() ? 'var(--color-accent)' : 'var(--color-border)'"
+                    [style.box-shadow]="$index === currentStep() ? '0 0 12px var(--color-accent-glow)' : 'none'"
+                    [style.color]="$index <= currentStep() ? 'white' : 'var(--color-text-muted)'">
+                    @if ($index < currentStep()) {
+                      <ng-icon name="lucideCheck" size="12" />
+                    } @else {
+                      {{ $index + 1 }}
+                    }
+                  </div>
+                  <span class="text-[12px] font-medium hidden sm:block"
+                    [style.color]="$index === currentStep() ? 'var(--color-text-primary)' : 'var(--color-text-muted)'">
+                    {{ step }}
+                  </span>
+                </div>
+                <!-- Connector line -->
+                @if ($index < steps.length - 1) {
+                  <div class="flex-1 h-px mx-3 transition-colors"
+                    [style.background]="$index < currentStep() ? 'var(--color-success)' : 'var(--color-border)'">
+                  </div>
                 }
               </div>
             }
-          </section>
-
-          <!-- Método de pago -->
-          <section class="bg-bg-surface border border-border rounded-xl p-5" [formGroup]="form">
-            <h2 class="text-base font-semibold text-text-primary mb-4 flex items-center gap-2">
-              <ng-icon name="lucideCreditCard" size="18" class="text-accent" />
-              Método de pago
-            </h2>
-            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              @for (method of paymentMethods; track method.value) {
-                <label
-                  class="flex items-center gap-2 p-3 rounded-lg border cursor-pointer transition-colors text-sm"
-                  [class.border-accent]="form.get('paymentMethod')?.value === method.value"
-                  [class.bg-bg-elevated]="form.get('paymentMethod')?.value === method.value"
-                  [class.text-text-primary]="form.get('paymentMethod')?.value === method.value"
-                  [class.border-border]="form.get('paymentMethod')?.value !== method.value"
-                  [class.text-text-secondary]="form.get('paymentMethod')?.value !== method.value">
-                  <input type="radio" formControlName="paymentMethod" [value]="method.value" class="accent-red-500" />
-                  {{ method.label }}
-                </label>
-              }
-            </div>
-          </section>
+          </div>
         </div>
 
-        <!-- Resumen del pedido -->
-        <aside>
-          <div class="bg-bg-surface border border-border rounded-xl p-5 sticky top-20">
-            <h2 class="text-base font-semibold text-text-primary mb-4">Tu pedido</h2>
+        <!-- Error -->
+        @if (error()) {
+          <div class="mb-5 flex items-center gap-2 rounded-[10px] bg-error/10 border border-error/30
+                      px-3.5 py-2.5 text-sm text-error neo-reveal">
+            <ng-icon name="lucideTriangleAlert" size="16" /><span>{{ error() }}</span>
+          </div>
+        }
 
-            <div class="flex flex-col gap-2 mb-4">
-              @for (item of items$ | async; track item.id) {
-                <div class="flex justify-between text-sm text-text-secondary gap-2">
-                  <span class="truncate flex-1">{{ item.productName }} × {{ item.quantity }}</span>
-                  <span class="shrink-0 text-text-primary">{{ item.subtotal | copCurrency }}</span>
+        <div class="grid lg:grid-cols-[1fr_360px] gap-6 items-start">
+
+          <!-- Left: form -->
+          <div class="flex flex-col gap-5 neo-reveal" [formGroup]="form">
+
+            <!-- Dirección de entrega -->
+            <div class="neo-card-premium p-5">
+              <div class="flex items-start gap-3 mb-4">
+                <div class="w-8 h-8 rounded-lg bg-accent/15 border border-accent/25 flex items-center justify-center shrink-0">
+                  <ng-icon name="lucideMapPin" size="15" class="text-accent" />
+                </div>
+                <div>
+                  <h2 class="text-sm font-semibold text-text-primary">Dirección de entrega</h2>
+                  <p class="text-[12px] text-text-muted mt-0.5">¿Dónde enviamos tu pedido?</p>
+                </div>
+              </div>
+
+              @if (loadingAddresses()) {
+                <div class="h-20 rounded-[10px] bg-bg-elevated animate-pulse"></div>
+              } @else if (addresses().length === 0) {
+                <div class="flex flex-col gap-2 py-2">
+                  <p class="text-sm text-text-muted">No tienes direcciones guardadas.</p>
+                  <a routerLink="/account/addresses"
+                     class="neo-btn-outline !text-[12px] !py-1.5 !px-3 self-start">
+                    <ng-icon name="lucidePlus" size="12" /> Agregar dirección
+                  </a>
+                </div>
+              } @else {
+                <div class="flex flex-col gap-2">
+                  @for (addr of addresses(); track addr.id) {
+                    <label class="flex items-start gap-3 p-3.5 rounded-[10px] border cursor-pointer
+                                  transition-all duration-200"
+                      [style.border-color]="form.get('addressId')?.value === addr.id
+                        ? 'var(--color-accent)' : 'var(--color-border)'"
+                      [style.background]="form.get('addressId')?.value === addr.id
+                        ? 'var(--color-accent-soft)' : 'transparent'"
+                      [style.box-shadow]="form.get('addressId')?.value === addr.id
+                        ? '0 0 12px var(--color-accent-glow)' : 'none'">
+                      <input type="radio" formControlName="addressId" [value]="addr.id"
+                             class="mt-0.5 accent-[var(--color-accent)] shrink-0" />
+                      <div class="min-w-0">
+                        <p class="text-sm font-medium text-text-primary flex items-center gap-1.5 flex-wrap">
+                          {{ addr.label }}
+                          @if (addr.primary) {
+                            <span class="text-[10px] text-accent font-semibold font-mono uppercase tracking-wide">Principal</span>
+                          }
+                        </p>
+                        <p class="text-xs text-text-secondary mt-0.5 leading-snug">
+                          {{ addr.street }} {{ addr.number }}
+                          @if (addr.apartment) { , Apto {{ addr.apartment }} }
+                          — {{ addr.city }}, {{ addr.department }}
+                        </p>
+                      </div>
+                    </label>
+                  }
                 </div>
               }
             </div>
 
-            <div class="border-t border-border pt-4 flex justify-between font-bold text-text-primary mb-5">
-              <span>Total</span>
-              <span>{{ total$ | async | copCurrency }}</span>
+            <!-- Método de pago -->
+            <div class="neo-card-premium p-5">
+              <div class="flex items-start gap-3 mb-4">
+                <div class="w-8 h-8 rounded-lg bg-neon-cyan/10 border border-neon-cyan/20 flex items-center justify-center shrink-0">
+                  <ng-icon name="lucideCreditCard" size="15" class="text-neon-cyan" />
+                </div>
+                <div>
+                  <h2 class="text-sm font-semibold text-text-primary">Método de pago</h2>
+                  <p class="text-[12px] text-text-muted mt-0.5">Aceptamos PSE, tarjetas, Nequi y más.</p>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                @for (method of paymentOptions; track method.value) {
+                  <label class="flex items-center gap-2.5 p-3 rounded-[10px] border cursor-pointer
+                                transition-all duration-200 text-sm"
+                    [style.border-color]="form.get('paymentMethod')?.value === method.value
+                      ? 'var(--color-accent)' : 'var(--color-border)'"
+                    [style.background]="form.get('paymentMethod')?.value === method.value
+                      ? 'var(--color-accent-soft)' : 'var(--color-bg-elevated)'"
+                    [style.box-shadow]="form.get('paymentMethod')?.value === method.value
+                      ? '0 0 10px var(--color-accent-glow)' : 'none'"
+                    [style.color]="form.get('paymentMethod')?.value === method.value
+                      ? 'var(--color-text-primary)' : 'var(--color-text-secondary)'">
+                    <input type="radio" formControlName="paymentMethod" [value]="method.value"
+                           class="sr-only" />
+                    <ng-icon [name]="method.icon" size="14" class="shrink-0" />
+                    <span class="leading-tight">{{ method.label }}</span>
+                  </label>
+                }
+              </div>
             </div>
 
-            <button
-              (click)="submit()"
-              [disabled]="form.invalid || submitting()"
-              class="w-full py-3 rounded-lg bg-accent hover:bg-accent-hover disabled:opacity-50 disabled:cursor-not-allowed
-                     text-white text-sm font-semibold transition-colors shadow-[0_0_20px_theme(colors.accent-glow)]
-                     flex items-center justify-center gap-2">
-              @if (submitting()) {
-                <ng-icon name="lucideRefreshCw" size="16" class="animate-spin" />
-                Procesando...
-              } @else {
-                <ng-icon name="lucideShield" size="16" />
-                Confirmar pedido
-              }
-            </button>
+            <!-- Actions -->
+            <div class="flex items-center gap-3">
+              <button type="button" (click)="submit()"
+                [disabled]="form.invalid || submitting()"
+                class="neo-btn-primary !py-3.5 !px-6 disabled:opacity-50 disabled:cursor-not-allowed">
+                @if (submitting()) {
+                  <ng-icon name="lucideRefreshCw" size="15" class="neo-spin" />
+                  Procesando…
+                } @else {
+                  <ng-icon name="lucideShield" size="15" />
+                  Confirmar y pagar
+                  <ng-icon name="lucideArrowRight" size="14" />
+                }
+              </button>
+              <a routerLink="/cart" class="neo-btn-outline !py-3.5 !px-4">
+                <ng-icon name="lucideChevronLeft" size="14" />
+                Carrito
+              </a>
+            </div>
 
-            <p class="text-xs text-text-muted text-center mt-3">
-              Tu pedido tendrá 30 minutos para completar el pago.
-            </p>
-          </div>
-        </aside>
+          </div><!-- /left -->
 
+          <!-- Right: sticky summary -->
+          <aside style="position:sticky;top:92px;">
+
+            <!-- Order items -->
+            <div class="neo-card-premium p-5 neo-reveal">
+              <p class="text-[13px] font-semibold text-text-primary mb-4">Resumen del pedido</p>
+
+              <div class="flex flex-col gap-3 mb-4">
+                @for (item of items$ | async; track item.id) {
+                  <div class="flex gap-2.5 items-start">
+                    <div class="w-12 h-12 shrink-0 rounded-lg overflow-hidden bg-bg-elevated border border-border">
+                      @if (item.productImageUrl) {
+                        <img [src]="item.productImageUrl" [alt]="item.productName"
+                             class="w-full h-full object-cover" />
+                      } @else {
+                        <div class="w-full h-full flex items-center justify-center">
+                          <ng-icon name="lucidePackage" size="16" class="text-text-muted" />
+                        </div>
+                      }
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <p class="text-[12px] text-text-secondary leading-snug line-clamp-2">
+                        {{ item.productName }}
+                      </p>
+                      <p class="text-[11px] text-text-muted font-mono mt-0.5">× {{ item.quantity }}</p>
+                    </div>
+                    <span class="text-[13px] font-semibold text-text-primary tabular-nums shrink-0">
+                      {{ item.subtotal | copCurrency }}
+                    </span>
+                  </div>
+                }
+              </div>
+
+              <div class="border-t border-border pt-4 flex flex-col gap-2 text-[13px]">
+                <div class="flex justify-between text-text-secondary">
+                  <span>Subtotal</span>
+                  <span class="text-text-primary tabular-nums">{{ total$ | async | copCurrency }}</span>
+                </div>
+                <div class="flex justify-between text-text-secondary">
+                  <span>Envío</span>
+                  <span class="text-success font-medium">A confirmar</span>
+                </div>
+                <div class="flex justify-between items-baseline pt-3 border-t border-border mt-1">
+                  <span class="font-semibold text-text-primary">Total</span>
+                  <span class="font-display text-[20px] font-bold text-text-primary tabular-nums">
+                    {{ total$ | async | copCurrency }}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Security badge -->
+            <div class="flex items-center gap-2.5 mt-3 px-4 py-3 rounded-[10px]
+                        bg-bg-surface border border-border neo-reveal">
+              <ng-icon name="lucideShieldCheck" size="16" class="text-success shrink-0" />
+              <p class="text-xs text-text-secondary leading-snug">
+                Tu pago está protegido con cifrado 3-D Secure.
+                <a class="text-accent hover:underline ml-0.5">Política de devoluciones</a>
+              </p>
+            </div>
+
+          </aside>
+        </div>
       </div>
     </div>
   `,
 })
 export class CheckoutPageComponent implements OnInit {
-  private store = inject(Store);
-  private fb = inject(FormBuilder);
+  private store           = inject(Store);
+  private fb              = inject(FormBuilder);
   private checkoutService = inject(CheckoutService);
-  private addressService = inject(AddressService);
-  private router = inject(Router);
-
+  private paymentService  = inject(PaymentService);
+  private addressService  = inject(AddressService);
   items$ = this.store.select(selectCartItems);
   total$ = this.store.select(selectCartTotal);
 
-  addresses = signal<AddressResponse[]>([]);
+  addresses        = signal<AddressResponse[]>([]);
   loadingAddresses = signal(true);
-  submitting = signal(false);
-  error = signal<string | null>(null);
+  submitting       = signal(false);
+  error            = signal<string | null>(null);
+  currentStep      = signal(1);
 
-  readonly paymentMethods = (Object.keys(PAYMENT_LABELS) as PaymentMethod[]).map((v) => ({
-    value: v,
-    label: PAYMENT_LABELS[v],
-  }));
+  readonly steps = ['Carrito', 'Pago', 'Confirmación'];
+  readonly paymentOptions = PAYMENT_OPTIONS;
 
   form = this.fb.nonNullable.group({
-    addressId: ['', Validators.required],
+    addressId:     ['', Validators.required],
     paymentMethod: ['' as PaymentMethod, Validators.required],
   });
 
@@ -196,18 +306,33 @@ export class CheckoutPageComponent implements OnInit {
   }
 
   submit(): void {
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
-      return;
-    }
+    if (this.form.invalid) { this.form.markAllAsTouched(); return; }
     this.submitting.set(true);
     this.error.set(null);
     const { addressId, paymentMethod } = this.form.getRawValue();
 
+    // Paso 1: crear el checkout en el backend
     this.checkoutService.initCheckout({ addressId, paymentMethod }).subscribe({
-      next: () => {
-        this.store.dispatch(CartActions.clearCartState());
-        this.router.navigate(['/checkout/result'], { queryParams: { status: 'pending' } });
+      next: (checkoutRes) => {
+        const checkoutId = checkoutRes.data?.id;
+        if (!checkoutId) {
+          this.error.set('No se pudo obtener el checkout. Inténtalo de nuevo.');
+          this.submitting.set(false);
+          return;
+        }
+
+        // Paso 2: crear preferencia de pago en MP y redirigir al Checkout Pro
+        // El carrito se limpia cuando MP retorna a back_url con status=success
+        this.paymentService.iniciarYRedirigir(checkoutId).subscribe({
+          next: () => {
+            // La redirección ya ocurrió en paymentService.redirectToMercadoPago().
+            // El carrito se limpia en checkout-result solo cuando MP confirma éxito.
+          },
+          error: (err) => {
+            this.error.set(err.error?.message ?? 'Error al conectar con Mercado Pago. Inténtalo de nuevo.');
+            this.submitting.set(false);
+          },
+        });
       },
       error: (err) => {
         this.error.set(err.error?.message ?? 'Error al procesar el pedido');

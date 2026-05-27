@@ -1,14 +1,20 @@
-import { Component, inject, OnInit, OnDestroy, signal, computed } from '@angular/core';
+import { ApplicationRef, Component, inject, OnInit, OnDestroy, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink, ActivatedRoute } from '@angular/router';
+import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
+import { Subject, combineLatest, debounceTime, distinctUntilChanged, skip, takeUntil } from 'rxjs';
 import { NgIcon } from '@ng-icons/core';
 import { ProductCardComponent } from '../../../shared/components/product-card/product-card';
 import { ProductService } from '../../../core/catalog/product.service';
 import { CategoryService } from '../../../core/catalog/category.service';
+import { SellerService } from '../../../core/seller/seller.service';
 import { ProductSummary, Category } from '../../../shared/models/catalog.models';
+import { PublicSellerResponse } from '../../../shared/models/seller.models';
 import { PageResponse } from '../../../shared/models/api.models';
+import { Store } from '@ngrx/store';
+import * as CartActions from '../../../core/cart/store/cart.actions';
+import { selectIsAuthenticated } from '../../../core/auth/store/auth.selectors';
+import { WishlistStateService } from '../../../core/account/wishlist-state.service';
 
 @Component({
   selector: 'app-catalog-page',
@@ -93,6 +99,80 @@ import { PageResponse } from '../../../shared/models/api.models';
             </a>
           }
         </div>
+
+        <!-- ── STORE RESULTS ─────────────────────────────────────────── -->
+        @if (searchQuery && (stores().length > 0 || loadingStores())) {
+          <div class="neo-reveal mb-6">
+            <div class="flex items-center justify-between mb-3">
+              <p class="neo-stat-label flex items-center gap-2">
+                <ng-icon name="lucideStore" size="14" class="text-accent" />
+                Tiendas encontradas
+                @if (!loadingStores() && stores().length > 0) {
+                  <span class="px-2 py-0.5 rounded-md bg-bg-elevated border border-border
+                               text-[11px] font-mono text-text-muted normal-case tracking-normal font-normal">
+                    {{ stores().length }}
+                  </span>
+                }
+              </p>
+            </div>
+
+            @if (loadingStores()) {
+              <div class="flex gap-3 overflow-x-auto pb-1">
+                @for (_ of [1,2,3,4]; track $index) {
+                  <div class="shrink-0 w-52 h-24 rounded-xl bg-bg-surface border border-border animate-pulse"></div>
+                }
+              </div>
+            } @else {
+              <div class="flex gap-3 overflow-x-auto pb-1 -mx-1 px-1">
+                @for (seller of stores(); track seller.id) {
+                  <a [routerLink]="['/store', seller.storeSlug]"
+                     class="group shrink-0 flex items-center gap-3 px-4 py-3 w-64
+                            rounded-xl border border-border bg-bg-surface
+                            hover:border-accent/50 hover:bg-bg-elevated
+                            transition-all duration-200 cursor-pointer">
+                    <!-- Logo -->
+                    <div class="w-11 h-11 rounded-xl border border-border bg-bg-elevated
+                                overflow-hidden shrink-0 flex items-center justify-center">
+                      @if (seller.storeLogoUrl) {
+                        <img [src]="seller.storeLogoUrl" [alt]="seller.storeName"
+                             class="w-full h-full object-cover" />
+                      } @else {
+                        <ng-icon name="lucideStore" size="18" class="text-text-muted" />
+                      }
+                    </div>
+                    <!-- Info -->
+                    <div class="min-w-0 flex-1">
+                      <p class="text-[13px] font-semibold text-text-primary truncate
+                                group-hover:text-accent transition-colors">
+                        {{ seller.storeName }}
+                      </p>
+                      @if (seller.averageRating) {
+                        <div class="flex items-center gap-1 mt-0.5">
+                          <span class="inline-flex gap-px">
+                            @for (i of [1,2,3,4,5]; track i) {
+                              <ng-icon name="lucideStar" size="10"
+                                [class.text-star]="i <= seller.averageRating!"
+                                [class.text-border-strong]="i > seller.averageRating!" />
+                            }
+                          </span>
+                          <span class="text-[11px] text-text-muted">{{ seller.averageRating | number:'1.1-1' }}</span>
+                        </div>
+                      }
+                      <p class="text-[11px] text-text-muted mt-0.5 truncate">
+                        <ng-icon name="lucideMapPin" size="10" class="inline mr-0.5" />
+                        {{ seller.city }}
+                      </p>
+                    </div>
+                    <ng-icon name="lucideChevronRight" size="14" class="text-text-muted shrink-0
+                              group-hover:text-accent group-hover:translate-x-0.5 transition-all" />
+                  </a>
+                }
+              </div>
+            }
+
+            <div class="mt-4 border-t border-border"></div>
+          </div>
+        }
 
         <div class="flex gap-6">
 
@@ -244,7 +324,11 @@ import { PageResponse } from '../../../shared/models/api.models';
                      : 'flex flex-col gap-4'">
                 @for (p of products(); track p.id) {
                   <div class="neo-reveal">
-                    <app-product-card [product]="p" />
+                    <app-product-card [product]="p"
+                      [inWishlist]="wishlistState.isInWishlist(p.id)"
+                      (addToCart)="onAddToCart($event)"
+                      (quickView)="onQuickView($event)"
+                      (favorite)="onFavorite($event)" />
                   </div>
                 }
               </div>
@@ -280,17 +364,25 @@ import { PageResponse } from '../../../shared/models/api.models';
   `,
 })
 export class CatalogPageComponent implements OnInit, OnDestroy {
-  private productService = inject(ProductService);
+  private productService  = inject(ProductService);
   private categoryService = inject(CategoryService);
-  private route = inject(ActivatedRoute);
+  private sellerService   = inject(SellerService);
+  private route  = inject(ActivatedRoute);
+  private router = inject(Router);
+  private appRef = inject(ApplicationRef);
+  private store  = inject(Store);
+  readonly isAuthenticated = this.store.selectSignal(selectIsAuthenticated);
+  readonly wishlistState   = inject(WishlistStateService);
   private destroy$ = new Subject<void>();
   private search$ = new Subject<string>();
 
-  products = signal<ProductSummary[]>([]);
-  categories = signal<Category[]>([]);
-  page = signal<PageResponse<ProductSummary> | null>(null);
-  loading = signal(true);
-  currentPage = signal(0);
+  products      = signal<ProductSummary[]>([]);
+  stores        = signal<PublicSellerResponse[]>([]);
+  categories    = signal<Category[]>([]);
+  page          = signal<PageResponse<ProductSummary> | null>(null);
+  loading       = signal(true);
+  loadingStores = signal(false);
+  currentPage   = signal(0);
   activeCategoryId = signal<string | null>(null);
   viewMode = signal<'grid' | 'list'>('grid');
   searchQuery = '';
@@ -321,22 +413,26 @@ export class CatalogPageComponent implements OnInit, OnDestroy {
       error: () => {},
     });
 
-    this.route.paramMap.pipe(takeUntil(this.destroy$)).subscribe((params) => {
-      const categoryId = params.get('categoryId');
-      this.activeCategoryId.set(categoryId);
-      this.currentPage.set(0);
-      this.searchQuery = '';
-      this.loadProducts();
-    });
+    // Carga inicial usando snapshot (siempre sincrónico, no depende de observables)
+    const snap = this.route.snapshot;
+    const initCategoryId = snap.paramMap.get('categoryId');
+    const initQ = snap.queryParamMap.get('q') ?? '';
+    this.activeCategoryId.set(initCategoryId);
+    this.searchQuery = initQ;
+    this.currentPage.set(0);
+    this.loadProducts(initQ || undefined);
 
-    this.route.queryParamMap.pipe(takeUntil(this.destroy$)).subscribe((qp) => {
-      const q = qp.get('q') ?? '';
-      if (q !== this.searchQuery) {
-        this.searchQuery = q;
+    // Reacciona a cambios de ruta posteriores (cuando el mismo componente se reutiliza)
+    combineLatest([this.route.paramMap, this.route.queryParamMap])
+      .pipe(skip(1), takeUntil(this.destroy$))
+      .subscribe(([params, qp]) => {
+        const categoryId = params.get('categoryId');
+        const q = qp.get('q') ?? '';
+        this.activeCategoryId.set(categoryId);
         this.currentPage.set(0);
+        this.searchQuery = q;
         this.loadProducts(q || undefined);
-      }
-    });
+      });
 
     this.search$.pipe(
       debounceTime(350),
@@ -404,6 +500,16 @@ export class CatalogPageComponent implements OnInit, OnDestroy {
     const categoryId = this.activeCategoryId();
     const sort = this.sortValue || undefined;
 
+    if (q) {
+      this.loadingStores.set(true);
+      this.sellerService.searchStores(q).subscribe({
+        next: (res) => { this.stores.set(res.data.content); this.loadingStores.set(false); },
+        error: () => { this.stores.set([]); this.loadingStores.set(false); },
+      });
+    } else {
+      this.stores.set([]);
+    }
+
     const request$ = q
       ? this.productService.search(q, { page, sort })
       : categoryId
@@ -415,8 +521,28 @@ export class CatalogPageComponent implements OnInit, OnDestroy {
         this.products.set(res.data.content);
         this.page.set(res.data);
         this.loading.set(false);
+        this.appRef.tick();
       },
-      error: () => this.loading.set(false),
+      error: () => {
+        this.loading.set(false);
+        this.appRef.tick();
+      },
     });
+  }
+
+  onAddToCart(product: ProductSummary): void {
+    this.store.dispatch(CartActions.addItem({ request: { productId: product.id, quantity: 1 } }));
+  }
+
+  onQuickView(product: ProductSummary): void {
+    this.router.navigate(['/product', product.slug]);
+  }
+
+  onFavorite(product: ProductSummary): void {
+    if (!this.isAuthenticated()) {
+      this.router.navigate(['/login']);
+      return;
+    }
+    this.wishlistState.toggle(product.id);
   }
 }

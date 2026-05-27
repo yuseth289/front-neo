@@ -49,11 +49,12 @@ export class ProductService {
     return this.http.get<ApiResponse<ProductDetail>>(`${this.base}/products/${slug}`);
   }
 
-  getBySeller(sellerId: string, page = 0, size = 20): Observable<ApiResponse<PageResponse<ProductSummary>>> {
+  getBySeller(sellerId: string, page = 0, size = 20, sortField = 'createdAt', sortDir = 'desc'): Observable<ApiResponse<PageResponse<ProductSummary>>> {
     const params = new HttpParams()
       .set('sellerId', sellerId)
       .set('page', page)
-      .set('size', size);
+      .set('size', size)
+      .set('sort', `${sortField},${sortDir}`);
     return this.http.get<ApiResponse<PageResponse<ProductSummary>>>(`${this.base}/products`, { params });
   }
 }

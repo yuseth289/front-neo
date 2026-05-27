@@ -41,6 +41,13 @@ export class AuthService {
     return this.http.post<ApiResponse<void>>(`${this.base}/auth/logout`, {});
   }
 
+  googleLogin(idToken: string): Observable<ApiResponse<TokenResponse>> {
+    return this.http.post<ApiResponse<TokenResponse>>(
+      `${this.base}/auth/google`,
+      { idToken },
+    );
+  }
+
   getMe(): Observable<ApiResponse<UserResponse>> {
     return this.http.get<ApiResponse<UserResponse>>(`${this.base}/users/me`);
   }

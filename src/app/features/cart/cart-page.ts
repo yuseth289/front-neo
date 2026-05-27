@@ -6,7 +6,6 @@ import { NgIcon } from '@ng-icons/core';
 import { CopCurrencyPipe } from '../../shared/pipes/cop-currency.pipe';
 import * as CartActions from '../../core/cart/store/cart.actions';
 import {
-  selectCart,
   selectCartItems,
   selectCartTotal,
   selectCartLoading,
@@ -18,150 +17,198 @@ import {
   standalone: true,
   imports: [CommonModule, RouterLink, NgIcon, CopCurrencyPipe],
   template: `
-    <div class="max-w-5xl mx-auto px-4 py-8">
-      <h1 class="text-2xl font-bold text-text-primary mb-6">Mi carrito</h1>
+    <div class="relative">
+      <!-- Ambient backdrop -->
+      <div class="absolute inset-0 pointer-events-none overflow-hidden -z-[1]">
+        <div class="neo-grid-bg absolute inset-0 opacity-20"></div>
+        <span class="neo-orb red" style="width:420px;height:420px;top:-10%;right:-5%;opacity:0.1;"></span>
+      </div>
 
-      @if (loading$ | async) {
-        <div class="space-y-3">
-          @for (_ of [1,2,3]; track $index) {
-            <div class="h-24 rounded-xl bg-bg-surface border border-border animate-pulse"></div>
-          }
+      <div class="relative max-w-[1024px] mx-auto px-4 py-8">
+
+        <!-- Header -->
+        <div class="neo-reveal mb-6">
+          <p class="neo-stat-label">Compras</p>
+          <h1 class="font-display text-[28px] font-bold tracking-[-0.02em] text-text-primary mt-0.5">
+            Mi carrito
+          </h1>
         </div>
 
-      } @else if ((items$ | async)?.length === 0) {
-        <div class="flex flex-col items-center gap-4 py-20 text-text-muted">
-          <ng-icon name="lucideShoppingCart" size="52" />
-          <p class="text-lg font-medium text-text-primary">Tu carrito está vacío</p>
-          <p class="text-sm">Agrega productos desde el catálogo para comenzar.</p>
-          <a routerLink="/catalog"
-             class="mt-2 px-5 py-2.5 rounded-lg bg-accent hover:bg-accent-hover text-white text-sm font-semibold transition-colors">
-            Explorar catálogo
-          </a>
-        </div>
-
-      } @else {
-        <div class="grid lg:grid-cols-3 gap-6">
-
-          <!-- Lista de ítems -->
-          <div class="lg:col-span-2 flex flex-col gap-3">
-
-            @if (hasPriceChanges$ | async) {
-              <div class="flex items-center gap-2 rounded-lg bg-warning/10 border border-warning/30 px-4 py-3 text-sm text-warning">
-                <ng-icon name="lucideTriangleAlert" size="16" />
-                Algunos precios cambiaron desde que los agregaste.
-              </div>
+        <!-- Loading -->
+        @if (loading$ | async) {
+          <div class="flex flex-col gap-3">
+            @for (_ of [1,2,3]; track $index) {
+              <div class="h-24 rounded-2xl bg-bg-surface border border-border animate-pulse"></div>
             }
+          </div>
 
-            @for (item of items$ | async; track item.id) {
-              <div class="flex gap-4 bg-bg-surface border border-border rounded-xl p-4">
-                <!-- Imagen -->
-                <div class="w-20 h-20 shrink-0 rounded-lg overflow-hidden bg-bg-elevated">
-                  @if (item.productImageUrl) {
-                    <img [src]="item.productImageUrl" [alt]="item.productName" class="w-full h-full object-cover" />
-                  } @else {
-                    <div class="w-full h-full flex items-center justify-center">
-                      <ng-icon name="lucidePackage" size="24" class="text-text-muted" />
-                    </div>
-                  }
+        <!-- Empty -->
+        } @else if ((items$ | async)?.length === 0) {
+          <div class="neo-card-premium p-14 flex flex-col items-center gap-4 text-center neo-reveal">
+            <div class="w-16 h-16 rounded-2xl bg-bg-elevated border border-border flex items-center justify-center">
+              <ng-icon name="lucideShoppingCart" size="28" class="text-text-muted" />
+            </div>
+            <div>
+              <p class="text-base font-semibold text-text-primary">Tu carrito está vacío</p>
+              <p class="text-sm text-text-muted mt-1">Agrega productos desde el catálogo para comenzar.</p>
+            </div>
+            <a routerLink="/catalog" class="neo-btn-primary !text-[13px] !py-2.5 !px-5 mt-1">
+              <ng-icon name="lucideLayoutGrid" size="14" />
+              Explorar catálogo
+            </a>
+          </div>
+
+        <!-- Items -->
+        } @else {
+          <div class="grid lg:grid-cols-[2fr_1fr] gap-6 items-start">
+
+            <!-- Left: items list -->
+            <div class="flex flex-col gap-3 neo-reveal">
+
+              <!-- Price change warning -->
+              @if (hasPriceChanges$ | async) {
+                <div class="flex items-center gap-2.5 rounded-[10px] bg-warning/10 border border-warning/30
+                            px-3.5 py-2.5 text-sm text-warning">
+                  <ng-icon name="lucideTriangleAlert" size="16" />
+                  Algunos precios cambiaron desde que los agregaste.
                 </div>
+              }
 
-                <!-- Info -->
-                <div class="flex-1 min-w-0">
-                  <p class="text-sm font-medium text-text-primary line-clamp-2 leading-snug">
-                    {{ item.productName }}
-                  </p>
-                  <div class="flex items-center gap-2 mt-1">
-                    <p class="text-sm font-bold text-text-primary">
-                      {{ item.unitPrice | copCurrency }}
-                    </p>
-                    @if (item.priceChanged) {
-                      <span class="text-xs text-warning">
-                        Nuevo: {{ item.currentPrice | copCurrency }}
-                      </span>
+              <!-- Cart items -->
+              @for (item of items$ | async; track item.id) {
+                <div class="neo-card-premium flex gap-4 p-4">
+                  <!-- Image -->
+                  <div class="w-20 h-20 shrink-0 rounded-[10px] overflow-hidden bg-bg-elevated border border-border">
+                    @if (item.productImageUrl) {
+                      <img [src]="item.productImageUrl" [alt]="item.productName"
+                           class="w-full h-full object-cover" />
+                    } @else {
+                      <div class="w-full h-full flex items-center justify-center">
+                        <ng-icon name="lucidePackage" size="22" class="text-text-muted" />
+                      </div>
                     }
                   </div>
 
-                  <!-- Cantidad -->
-                  <div class="flex items-center gap-2 mt-2">
-                    <button
-                      (click)="updateQty(item.id, item.quantity - 1)"
-                      [disabled]="item.quantity <= 1"
-                      class="w-7 h-7 rounded-lg border border-border text-text-secondary hover:border-accent/60 hover:text-text-primary
-                             disabled:opacity-30 disabled:cursor-not-allowed transition-colors flex items-center justify-center text-lg leading-none">
-                      −
-                    </button>
-                    <span class="w-6 text-center text-sm font-medium text-text-primary">{{ item.quantity }}</span>
-                    <button
-                      (click)="updateQty(item.id, item.quantity + 1)"
-                      class="w-7 h-7 rounded-lg border border-border text-text-secondary hover:border-accent/60 hover:text-text-primary
-                             transition-colors flex items-center justify-center text-lg leading-none">
-                      +
-                    </button>
-                    <button
-                      (click)="remove(item.id)"
-                      class="ml-2 text-text-muted hover:text-error transition-colors">
-                      <ng-icon name="lucideX" size="16" />
-                    </button>
+                  <!-- Info -->
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-text-primary line-clamp-2 leading-snug">
+                      {{ item.productName }}
+                    </p>
+                    <div class="flex items-center gap-2 mt-1">
+                      <p class="text-sm font-bold text-text-primary">
+                        {{ item.unitPrice | copCurrency }}
+                      </p>
+                      @if (item.priceChanged) {
+                        <span class="text-xs text-warning">
+                          Nuevo: {{ item.currentPrice | copCurrency }}
+                        </span>
+                      }
+                    </div>
+
+                    <!-- Qty controls -->
+                    <div class="flex items-center gap-2 mt-2.5">
+                      <div class="flex items-center rounded-[10px] border border-border overflow-hidden">
+                        <button
+                          (click)="updateQty(item.id, item.quantity - 1)"
+                          [disabled]="item.quantity <= 1"
+                          class="w-8 h-8 flex items-center justify-center text-text-secondary
+                                 hover:bg-bg-elevated hover:text-text-primary transition-colors
+                                 disabled:opacity-30 disabled:cursor-not-allowed">
+                          <ng-icon name="lucideMinus" size="13" />
+                        </button>
+                        <span class="w-9 text-center text-sm font-semibold text-text-primary tabular-nums">
+                          {{ item.quantity }}
+                        </span>
+                        <button
+                          (click)="updateQty(item.id, item.quantity + 1)"
+                          class="w-8 h-8 flex items-center justify-center text-text-secondary
+                                 hover:bg-bg-elevated hover:text-text-primary transition-colors">
+                          <ng-icon name="lucidePlus" size="13" />
+                        </button>
+                      </div>
+                      <button (click)="remove(item.id)"
+                        class="p-1.5 rounded-lg text-text-muted hover:text-error hover:bg-error/10 transition-colors ml-1">
+                        <ng-icon name="lucideTrash2" size="14" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Subtotal -->
+                  <div class="shrink-0 text-right self-center">
+                    <p class="text-sm font-bold text-text-primary tabular-nums">
+                      {{ item.subtotal | copCurrency }}
+                    </p>
+                  </div>
+                </div>
+              }
+
+              <!-- Clear cart -->
+              <button (click)="clearCart()"
+                class="self-start text-xs text-text-muted hover:text-error transition-colors mt-1 flex items-center gap-1">
+                <ng-icon name="lucideX" size="12" /> Vaciar carrito
+              </button>
+            </div>
+
+            <!-- Right: sticky summary -->
+            <aside style="position:sticky;top:92px;">
+              <div class="neo-card-premium p-5 neo-reveal">
+                <p class="text-[13px] font-semibold text-text-primary mb-4">Resumen del pedido</p>
+
+                <div class="flex flex-col gap-2.5 text-sm">
+                  <div class="flex justify-between text-text-secondary">
+                    <span>Subtotal</span>
+                    <span class="text-text-primary font-medium tabular-nums">
+                      {{ total$ | async | copCurrency }}
+                    </span>
+                  </div>
+                  <div class="flex justify-between text-text-secondary">
+                    <span>Envío</span>
+                    <span class="text-success font-medium">A confirmar</span>
                   </div>
                 </div>
 
-                <!-- Subtotal -->
-                <div class="shrink-0 text-right">
-                  <p class="text-sm font-bold text-text-primary">{{ item.subtotal | copCurrency }}</p>
+                <div class="border-t border-border mt-4 pt-4 flex justify-between items-baseline">
+                  <span class="text-sm font-semibold text-text-primary">Total estimado</span>
+                  <span class="font-display text-[20px] font-bold text-text-primary tabular-nums">
+                    {{ total$ | async | copCurrency }}
+                  </span>
                 </div>
-              </div>
-            }
 
-            <!-- Vaciar carrito -->
-            <button
-              (click)="clearCart()"
-              class="self-start text-xs text-text-muted hover:text-error transition-colors mt-1">
-              Vaciar carrito
-            </button>
+                <a routerLink="/checkout"
+                   class="neo-btn-primary w-full justify-center !py-3.5 mt-5">
+                  <ng-icon name="lucideShield" size="15" />
+                  Proceder al pago
+                  <ng-icon name="lucideArrowRight" size="14" />
+                </a>
+                <a routerLink="/catalog"
+                   class="block text-center mt-2.5 text-xs text-text-muted hover:text-text-primary transition-colors py-1">
+                  Seguir comprando
+                </a>
+              </div>
+
+              <!-- Security note -->
+              <div class="flex items-center gap-2.5 mt-3 px-4 py-3 rounded-[10px]
+                          bg-bg-surface border border-border neo-reveal">
+                <ng-icon name="lucideShieldCheck" size="16" class="text-success shrink-0" />
+                <p class="text-xs text-text-secondary leading-snug">
+                  Pago 100% seguro y encriptado.
+                  <a class="text-accent hover:underline ml-0.5">Política de devoluciones</a>
+                </p>
+              </div>
+            </aside>
+
           </div>
-
-          <!-- Resumen -->
-          <aside class="lg:col-span-1">
-            <div class="bg-bg-surface border border-border rounded-xl p-5 sticky top-20">
-              <h2 class="text-base font-semibold text-text-primary mb-4">Resumen del pedido</h2>
-
-              <div class="flex justify-between text-sm text-text-secondary mb-2">
-                <span>Subtotal</span>
-                <span class="text-text-primary font-medium">{{ total$ | async | copCurrency }}</span>
-              </div>
-              <div class="flex justify-between text-sm text-text-secondary mb-4">
-                <span>Envío</span>
-                <span class="text-success font-medium">A confirmar</span>
-              </div>
-
-              <div class="border-t border-border pt-4 flex justify-between font-bold text-text-primary mb-5">
-                <span>Total estimado</span>
-                <span>{{ total$ | async | copCurrency }}</span>
-              </div>
-
-              <a routerLink="/checkout"
-                 class="block w-full text-center py-3 rounded-lg bg-accent hover:bg-accent-hover text-white text-sm font-semibold transition-colors
-                        shadow-[0_0_20px_theme(colors.accent-glow)]">
-                Proceder al pago
-              </a>
-              <a routerLink="/catalog"
-                 class="block w-full text-center mt-2 py-2 text-xs text-text-muted hover:text-text-primary transition-colors">
-                Seguir comprando
-              </a>
-            </div>
-          </aside>
-
-        </div>
-      }
+        }
+      </div>
     </div>
   `,
 })
 export class CartPageComponent {
   private store = inject(Store);
 
-  items$ = this.store.select(selectCartItems);
-  total$ = this.store.select(selectCartTotal);
-  loading$ = this.store.select(selectCartLoading);
+  items$          = this.store.select(selectCartItems);
+  total$          = this.store.select(selectCartTotal);
+  loading$        = this.store.select(selectCartLoading);
   hasPriceChanges$ = this.store.select(selectCartHasPriceChanges);
 
   updateQty(itemId: string, quantity: number): void {

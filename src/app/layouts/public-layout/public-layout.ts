@@ -8,6 +8,7 @@ import { map } from 'rxjs';
 import { selectIsAuthenticated, selectUser, selectRole } from '../../core/auth/store/auth.selectors';
 import { selectCartItems } from '../../core/cart/store/cart.selectors';
 import * as AuthActions from '../../core/auth/store/auth.actions';
+import { ThemeService } from '../../core/theme.service';
 
 @Component({
   selector: 'app-public-layout',
@@ -18,9 +19,12 @@ import * as AuthActions from '../../core/auth/store/auth.actions';
 export class PublicLayoutComponent {
   private store  = inject(Store);
   private router = inject(Router);
+  readonly theme = inject(ThemeService);
 
   isAuthenticated$ = this.store.select(selectIsAuthenticated);
   displayName$     = this.store.select(selectUser).pipe(map(u => u?.firstName ?? u?.email ?? 'Cuenta'));
+  avatarUrl$       = this.store.select(selectUser).pipe(map(u => u?.avatarUrl ?? null));
+  initials$        = this.store.select(selectUser).pipe(map(u => u ? ((u.firstName?.[0] ?? '') + (u.lastName?.[0] ?? '')).toUpperCase() || u.email[0].toUpperCase() : ''));
   role$            = this.store.select(selectRole);
   cartCount$       = this.store.select(selectCartItems).pipe(map(items => items.reduce((s, it) => s + it.quantity, 0)));
 
@@ -40,7 +44,19 @@ export class PublicLayoutComponent {
 
   submitSearch() {
     const q = (this.searchQuery ?? '').trim();
-    this.router.navigate(['/catalog'], { queryParams: q ? { q } : {} });
+    if (!q) return;
+    if (this.isNaturalLanguage(q)) {
+      this.router.navigate(['/search'], { queryParams: { q } });
+    } else {
+      this.router.navigate(['/catalog'], { queryParams: { q } });
+    }
+  }
+
+  private isNaturalLanguage(q: string): boolean {
+    const words = q.split(/\s+/);
+    if (words.length >= 5) return true;
+    const nlPattern = /\b(para|que|con|sin|como|regalo|regalar|madre|padre|papá|mamá|hermano|hijo|qué|cuál|cuales|quiero|busco|necesito|menos de|más de|máximo|mínimo|pesos|presupuesto|jugar|sirve|recomienda|mejor)\b/i;
+    return words.length >= 3 && nlPattern.test(q);
   }
 
   logout() {

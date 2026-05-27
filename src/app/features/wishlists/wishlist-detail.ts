@@ -3,58 +3,60 @@ import { CommonModule } from '@angular/common';
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { NgIcon } from '@ng-icons/core';
+import { CopCurrencyPipe } from '../../shared/pipes/cop-currency.pipe';
 import { WishlistService } from '../../core/account/wishlist.service';
 import { Wishlist, WishlistItem } from '../../shared/models/wishlist.models';
-
-const PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjgwIiBoZWlnaHQ9IjgwIiBmaWxsPSIjMUExQTFBIi8+PC9zdmc+';
 
 @Component({
   selector: 'app-wishlist-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink, ReactiveFormsModule, NgIcon],
+  imports: [CommonModule, RouterLink, ReactiveFormsModule, NgIcon, CopCurrencyPipe],
   template: `
     <div class="max-w-2xl">
 
-      <div class="flex items-center gap-3 mb-6">
-        <a routerLink="/wishlists"
-          class="flex items-center gap-1.5 text-sm text-text-muted hover:text-text-primary transition-colors">
-          <ng-icon name="lucideChevronLeft" size="14" />
-          Mis wishlists
-        </a>
-      </div>
+      <!-- Breadcrumb -->
+      <a routerLink="/wishlists"
+        class="inline-flex items-center gap-1.5 text-[13px] text-text-muted hover:text-text-primary transition-colors mb-5">
+        <ng-icon name="lucideChevronLeft" size="13" />
+        Mis wishlists
+      </a>
 
       @if (loading()) {
-        <div class="space-y-3">
-          <div class="h-16 rounded-xl bg-bg-surface border border-border animate-pulse"></div>
-          <div class="h-32 rounded-xl bg-bg-surface border border-border animate-pulse"></div>
+        <div class="flex flex-col gap-3">
+          <div class="h-16 rounded-2xl bg-bg-surface border border-border animate-pulse"></div>
+          <div class="h-32 rounded-2xl bg-bg-surface border border-border animate-pulse"></div>
         </div>
+
       } @else if (!wishlist()) {
-        <div class="flex flex-col items-center gap-3 py-16 text-text-muted">
-          <ng-icon name="lucideHeartCrack" size="40" />
-          <p>Wishlist no encontrada.</p>
+        <div class="neo-card-premium p-14 flex flex-col items-center gap-4 text-center">
+          <div class="w-14 h-14 rounded-2xl bg-bg-elevated border border-border flex items-center justify-center">
+            <ng-icon name="lucideHeartCrack" size="26" class="text-text-muted" />
+          </div>
+          <p class="text-base font-semibold text-text-primary">Wishlist no encontrada</p>
         </div>
+
       } @else {
-        <!-- Encabezado editable -->
-        <div class="bg-bg-surface border border-border rounded-xl p-5 mb-5">
+        <!-- ── Encabezado ──────────────────────────────────── -->
+        <div class="neo-card-premium p-5 mb-4">
           @if (editingMeta()) {
             <form [formGroup]="metaForm" (ngSubmit)="saveMeta()" novalidate class="flex flex-col gap-3">
               <input type="text" formControlName="name"
-                class="w-full rounded-lg bg-bg-elevated border border-border px-3 py-2 text-text-primary text-sm
-                       focus:outline-none focus:border-accent transition-colors"
-                [class.border-error]="metaForm.get('name')!.invalid && metaForm.get('name')!.touched" />
+                class="w-full rounded-[10px] bg-bg-elevated border px-3.5 py-2.5 text-sm text-text-primary
+                       outline-none transition-all focus:ring-2 focus:ring-accent/8 focus:border-accent"
+                [class.border-error]="metaForm.get('name')!.invalid && metaForm.get('name')!.touched"
+                [class.border-border]="!(metaForm.get('name')!.invalid && metaForm.get('name')!.touched)" />
               <label class="flex items-center gap-2.5 cursor-pointer select-none">
                 <input type="checkbox" formControlName="isPublic"
                   class="w-4 h-4 rounded accent-[var(--color-accent)]" />
-                <span class="text-sm text-text-secondary">Hacer pública</span>
+                <span class="text-[13px] text-text-secondary">Hacer pública</span>
               </label>
               <div class="flex gap-2">
                 <button type="submit" [disabled]="savingMeta()"
-                  class="px-4 py-1.5 rounded-lg bg-accent hover:bg-accent-hover disabled:opacity-50 text-white text-sm font-medium transition-colors flex items-center gap-1.5">
-                  @if (savingMeta()) { <ng-icon name="lucideRefreshCw" size="13" class="animate-spin" /> }
+                  class="neo-btn-primary !text-[13px] !py-2 !px-4 disabled:opacity-50">
+                  @if (savingMeta()) { <ng-icon name="lucideRefreshCw" size="13" class="neo-spin" /> }
                   Guardar
                 </button>
-                <button type="button" (click)="cancelMeta()"
-                  class="px-3 py-1.5 rounded-lg border border-border text-text-secondary text-sm transition-colors">
+                <button type="button" (click)="cancelMeta()" class="neo-btn-outline !text-[13px] !py-2 !px-3">
                   Cancelar
                 </button>
               </div>
@@ -63,55 +65,75 @@ const PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iO
             <div class="flex items-center justify-between gap-4">
               <div>
                 <div class="flex items-center gap-2">
-                  <h1 class="text-lg font-bold text-text-primary">{{ wishlist()!.name }}</h1>
+                  <h1 class="font-display text-[22px] font-bold tracking-[-0.02em] text-text-primary">
+                    {{ wishlist()!.name }}
+                  </h1>
                   @if (wishlist()!.isPublic) {
-                    <span class="text-[10px] font-bold uppercase tracking-wide bg-accent/15 text-accent px-1.5 py-0.5 rounded">
+                    <span class="text-[10px] font-bold uppercase tracking-wide font-mono
+                                 text-accent bg-accent/10 border border-accent/30 px-1.5 py-0.5 rounded-full">
                       Pública
                     </span>
                   }
                 </div>
-                <p class="text-xs text-text-muted mt-0.5">
+                <p class="text-[12px] text-text-muted mt-0.5">
                   {{ wishlist()!.items.length }} {{ wishlist()!.items.length === 1 ? 'producto' : 'productos' }}
                 </p>
               </div>
               <button (click)="startEditMeta()"
                 class="p-1.5 rounded-lg text-text-muted hover:text-text-primary hover:bg-bg-elevated transition-colors">
-                <ng-icon name="lucideSettings" size="16" />
+                <ng-icon name="lucideSettings" size="15" />
               </button>
             </div>
           }
         </div>
 
-        <!-- Items -->
+        <!-- ── Items ──────────────────────────────────────── -->
         @if (wishlist()!.items.length === 0) {
-          <div class="flex flex-col items-center gap-3 py-12 text-text-muted">
-            <ng-icon name="lucideHeart" size="32" />
-            <p class="text-sm">Esta wishlist está vacía.</p>
-            <a routerLink="/catalog"
-              class="text-sm text-accent hover:underline">Explorar productos</a>
+          <div class="neo-card-premium p-12 flex flex-col items-center gap-4 text-center">
+            <div class="w-12 h-12 rounded-2xl bg-bg-elevated border border-border flex items-center justify-center">
+              <ng-icon name="lucideHeart" size="22" class="text-text-muted" />
+            </div>
+            <div>
+              <p class="text-sm font-semibold text-text-primary">Lista vacía</p>
+              <p class="text-[13px] text-text-muted mt-1">Agrega productos desde el catálogo.</p>
+            </div>
+            <a routerLink="/catalog" class="neo-btn-outline !text-[13px] !py-2 !px-4">
+              <ng-icon name="lucideLayoutGrid" size="13" />
+              Explorar catálogo
+            </a>
           </div>
         } @else {
           <div class="flex flex-col gap-3">
             @for (item of wishlist()!.items; track item.itemId) {
-              <div class="bg-bg-surface border border-border rounded-xl p-4 flex items-center gap-4">
+              <div class="neo-card-premium p-4 flex items-center gap-4">
                 <a [routerLink]="['/product', item.productSlug]" class="shrink-0">
-                  <img [src]="item.productImageUrl ?? placeholder" [alt]="item.productName"
-                    class="w-14 h-14 rounded-lg object-cover bg-bg-elevated" loading="lazy" />
+                  <div class="w-16 h-16 rounded-xl overflow-hidden bg-bg-elevated border border-border">
+                    @if (item.productImageUrl) {
+                      <img [src]="item.productImageUrl" [alt]="item.productName"
+                        class="w-full h-full object-cover" loading="lazy" />
+                    } @else {
+                      <div class="w-full h-full flex items-center justify-center">
+                        <ng-icon name="lucidePackage" size="18" class="text-text-muted" />
+                      </div>
+                    }
+                  </div>
                 </a>
+
                 <div class="flex-1 min-w-0">
                   <a [routerLink]="['/product', item.productSlug]"
-                    class="text-sm font-medium text-text-primary hover:text-accent transition-colors line-clamp-2">
+                    class="text-[13px] font-semibold text-text-primary hover:text-accent transition-colors line-clamp-2 leading-snug">
                     {{ item.productName }}
                   </a>
-                  <p class="text-sm font-semibold text-text-primary mt-0.5">
-                    {{ item.finalPrice | currency:'COP':'symbol-narrow':'1.0-0':'es' }}
+                  <p class="text-sm font-bold text-text-primary mt-1 tabular-nums">
+                    {{ item.finalPrice | copCurrency }}
                   </p>
                   @if (!item.inStock) {
-                    <span class="text-[10px] font-semibold uppercase tracking-wide text-error">Sin stock</span>
+                    <span class="text-[11px] font-semibold uppercase tracking-wide text-error">Sin stock</span>
                   }
                 </div>
+
                 <button (click)="removeItem(item)"
-                  class="p-1.5 rounded-lg text-text-muted hover:text-error hover:bg-bg-elevated transition-colors shrink-0">
+                  class="p-1.5 rounded-lg text-text-muted hover:text-error hover:bg-error/10 transition-colors shrink-0">
                   <ng-icon name="lucideX" size="15" />
                 </button>
               </div>
@@ -123,25 +145,24 @@ const PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iO
   `,
 })
 export class WishlistDetailComponent implements OnInit {
-  private route = inject(ActivatedRoute);
+  private route           = inject(ActivatedRoute);
   private wishlistService = inject(WishlistService);
-  private fb = inject(FormBuilder);
+  private fb              = inject(FormBuilder);
 
-  wishlist = signal<Wishlist | null>(null);
-  loading = signal(true);
+  wishlist    = signal<Wishlist | null>(null);
+  loading     = signal(true);
   editingMeta = signal(false);
-  savingMeta = signal(false);
-  readonly placeholder = PLACEHOLDER;
+  savingMeta  = signal(false);
 
   metaForm = this.fb.nonNullable.group({
-    name: ['', Validators.required],
+    name:     ['', Validators.required],
     isPublic: [false],
   });
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id')!;
     this.wishlistService.getById(id).subscribe({
-      next: (res) => { this.wishlist.set(res.data); this.loading.set(false); },
+      next:  (res) => { this.wishlist.set(res.data); this.loading.set(false); },
       error: () => this.loading.set(false),
     });
   }
@@ -159,7 +180,7 @@ export class WishlistDetailComponent implements OnInit {
     const id = this.wishlist()!.id;
     this.savingMeta.set(true);
     this.wishlistService.update(id, this.metaForm.getRawValue()).subscribe({
-      next: (res) => { this.wishlist.set(res.data); this.editingMeta.set(false); this.savingMeta.set(false); },
+      next:  (res) => { this.wishlist.set(res.data); this.editingMeta.set(false); this.savingMeta.set(false); },
       error: () => this.savingMeta.set(false),
     });
   }

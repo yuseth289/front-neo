@@ -41,4 +41,16 @@ export class WishlistService {
   getPublic(id: string): Observable<ApiResponse<Wishlist>> {
     return this.http.get<ApiResponse<Wishlist>>(`${this.base}/wishlists/public/${id}`);
   }
+
+  getMyWishlist(): Observable<ApiResponse<Wishlist>> {
+    return this.http.get<ApiResponse<Wishlist>>(`${this.base}/wishlists/my`);
+  }
+
+  toggleItem(productId: string): Observable<ApiResponse<Wishlist>> {
+    return this.http.post<ApiResponse<Wishlist>>(`${this.base}/wishlists/my/toggle/${productId}`, null);
+  }
+
+  getMyProductIds(): Observable<ApiResponse<string[]>> {
+    return this.http.get<ApiResponse<string[]>>(`${this.base}/wishlists/my/product-ids`);
+  }
 }

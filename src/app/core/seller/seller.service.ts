@@ -1,8 +1,8 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { ApiResponse } from '../../shared/models/api.models';
+import { ApiResponse, PageResponse } from '../../shared/models/api.models';
 import {
   PublicSellerResponse,
   SellerResponse,
@@ -18,6 +18,8 @@ export interface UpdateSellerRequest {
   address?: string;
   city?: string;
   department?: string;
+  storeLogoUrl?: string;
+  storeBannerUrl?: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -57,5 +59,26 @@ export class SellerService {
 
   getPublicProfile(storeSlug: string): Observable<ApiResponse<PublicSellerResponse>> {
     return this.http.get<ApiResponse<PublicSellerResponse>>(`${this.base}/sellers/${storeSlug}`);
+  }
+
+  searchStores(q: string, size = 6, page = 0): Observable<ApiResponse<PageResponse<PublicSellerResponse>>> {
+    const params = new HttpParams().set('q', q).set('size', size).set('page', page);
+    return this.http.get<ApiResponse<PageResponse<PublicSellerResponse>>>(`${this.base}/sellers`, { params });
+  }
+
+  getFollowedStores(): Observable<ApiResponse<PublicSellerResponse[]>> {
+    return this.http.get<ApiResponse<PublicSellerResponse[]>>(`${this.base}/sellers/followed`);
+  }
+
+  isFollowing(sellerId: string): Observable<ApiResponse<boolean>> {
+    return this.http.get<ApiResponse<boolean>>(`${this.base}/sellers/${sellerId}/follow`);
+  }
+
+  follow(sellerId: string): Observable<ApiResponse<void>> {
+    return this.http.post<ApiResponse<void>>(`${this.base}/sellers/${sellerId}/follow`, {});
+  }
+
+  unfollow(sellerId: string): Observable<ApiResponse<void>> {
+    return this.http.delete<ApiResponse<void>>(`${this.base}/sellers/${sellerId}/follow`);
   }
 }

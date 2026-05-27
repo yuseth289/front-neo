@@ -40,6 +40,11 @@ export const routes: Routes = [
         data: { title: 'Producto' },
       },
       {
+        path: 'stores',
+        loadComponent: () => import('./features/catalog/stores-page/stores-page').then((m) => m.StoresPageComponent),
+        data: { title: 'Tiendas' },
+      },
+      {
         path: 'store/:storeSlug',
         loadComponent: () => import('./features/catalog/store-page/store-page').then((m) => m.StorePageComponent),
         data: { title: 'Tienda' },
@@ -61,6 +66,38 @@ export const routes: Routes = [
         loadComponent: () => import('./features/auth/register/register').then((m) => m.RegisterComponent),
         data: { title: 'Crear cuenta' },
       },
+      {
+        path: 'search',
+        loadComponent: () =>
+          import('./features/search/smart-search/smart-search.component').then(
+            (m) => m.SmartSearchComponent,
+          ),
+        data: { title: 'Búsqueda inteligente' },
+      },
+    ],
+  },
+
+  // ─── CARRITO Y CHECKOUT (header público, sin sidebar) ────────────────────
+  {
+    path: '',
+    canActivate: [authGuard],
+    component: PublicLayoutComponent,
+    children: [
+      {
+        path: 'cart',
+        loadComponent: () => import('./features/cart/cart-page').then((m) => m.CartPageComponent),
+        data: { title: 'Carrito' },
+      },
+      {
+        path: 'checkout',
+        loadComponent: () => import('./features/checkout/checkout-page').then((m) => m.CheckoutPageComponent),
+        data: { title: 'Checkout' },
+      },
+      {
+        path: 'checkout/result',
+        loadComponent: () => import('./features/checkout/checkout-result').then((m) => m.CheckoutResultComponent),
+        data: { title: 'Estado del pago' },
+      },
     ],
   },
 
@@ -79,21 +116,6 @@ export const routes: Routes = [
         path: 'account/addresses',
         loadComponent: () => import('./features/account/addresses/addresses').then((m) => m.AddressesComponent),
         data: { title: 'Mis direcciones' },
-      },
-      {
-        path: 'cart',
-        loadComponent: () => import('./features/cart/cart-page').then((m) => m.CartPageComponent),
-        data: { title: 'Carrito' },
-      },
-      {
-        path: 'checkout',
-        loadComponent: () => import('./features/checkout/checkout-page').then((m) => m.CheckoutPageComponent),
-        data: { title: 'Checkout' },
-      },
-      {
-        path: 'checkout/result',
-        loadComponent: () => import('./features/checkout/checkout-result').then((m) => m.CheckoutResultComponent),
-        data: { title: 'Estado del pago' },
       },
       {
         path: 'orders',
@@ -121,6 +143,11 @@ export const routes: Routes = [
         data: { title: 'Mis wishlists' },
       },
       {
+        path: 'followed-stores',
+        loadComponent: () => import('./features/account/followed-stores/followed-stores').then((m) => m.FollowedStoresComponent),
+        data: { title: 'Tiendas seguidas' },
+      },
+      {
         path: 'wishlists/:id',
         loadComponent: () => import('./features/wishlists/wishlist-detail').then((m) => m.WishlistDetailComponent),
         data: { title: 'Wishlist' },
@@ -129,6 +156,17 @@ export const routes: Routes = [
         path: 'become-seller',
         loadComponent: () => import('./features/account/become-seller/become-seller').then((m) => m.BecomeSellerComponent),
         data: { title: 'Convertirme en vendedor' },
+      },
+      {
+        path: 'messages',
+        loadComponent: () => import('./features/chat/chat-shell').then((m) => m.ChatShellComponent),
+        data: { title: 'Mensajes' },
+        children: [
+          {
+            path: ':id',
+            loadComponent: () => import('./features/chat/chat-detail').then((m) => m.ChatDetailComponent),
+          },
+        ],
       },
     ],
   },
@@ -170,6 +208,11 @@ export const routes: Routes = [
         data: { title: 'Crear producto' },
       },
       {
+        path: 'products/:id/preview',
+        loadComponent: () => import('./features/seller/seller-product-preview').then((m) => m.SellerProductPreviewComponent),
+        data: { title: 'Vista previa del producto' },
+      },
+      {
         path: 'products/:id',
         loadComponent: () => import('./features/seller/seller-product-form').then((m) => m.SellerProductFormComponent),
         data: { title: 'Editar producto' },
@@ -193,6 +236,25 @@ export const routes: Routes = [
         path: 'analytics',
         loadComponent: () => import('./features/seller/seller-analytics').then((m) => m.SellerAnalyticsComponent),
         data: { title: 'Analytics' },
+      },
+      {
+        path: 'product-assistant',
+        loadComponent: () =>
+          import('./features/seller/product-assistant/seller-assistant.component').then(
+            (m) => m.SellerAssistantComponent,
+          ),
+        data: { title: 'Asistente de producto IA' },
+      },
+      {
+        path: 'messages',
+        loadComponent: () => import('./features/chat/chat-shell').then((m) => m.ChatShellComponent),
+        data: { title: 'Mensajes' },
+        children: [
+          {
+            path: ':id',
+            loadComponent: () => import('./features/chat/chat-detail').then((m) => m.ChatDetailComponent),
+          },
+        ],
       },
     ],
   },
@@ -233,6 +295,14 @@ export const routes: Routes = [
         path: 'analytics',
         loadComponent: () => import('./features/admin/admin-analytics').then((m) => m.AdminAnalyticsComponent),
         data: { title: 'Analytics global' },
+      },
+      {
+        path: 'analytics-ai',
+        loadComponent: () =>
+          import('./features/admin/analytics-dashboard/analytics-dashboard.component').then(
+            (m) => m.AnalyticsDashboardComponent,
+          ),
+        data: { title: 'Analytics IA' },
       },
     ],
   },
