@@ -7,6 +7,8 @@ export interface WishlistItem {
   finalPrice: number;
   inStock: boolean;
   addedAt: string;
+  priceAtAdding: number | null;
+  onSale: boolean;
 }
 
 export interface Wishlist {

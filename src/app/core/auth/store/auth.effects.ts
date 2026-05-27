@@ -38,6 +38,26 @@ export class AuthEffects {
     ),
   );
 
+  // ── GOOGLE LOGIN ──────────────────────────────────────────────────────────
+
+  readonly googleLogin$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(AuthActions.googleLogin),
+      switchMap(({ idToken }) =>
+        this.authService.googleLogin(idToken).pipe(
+          map((res) => AuthActions.loginSuccess({ tokens: res.data })),
+          catchError((err) =>
+            of(
+              AuthActions.googleLoginFailure({
+                error: err.error?.message ?? 'No se pudo iniciar sesión con Google',
+              }),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+
   // ── REGISTER ──────────────────────────────────────────────────────────────
 
   readonly register$ = createEffect(() =>

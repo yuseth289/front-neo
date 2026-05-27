@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ApiResponse, PageResponse } from '../../shared/models/api.models';
 import {
@@ -76,6 +76,14 @@ export class SellerProductService {
 
   deleteOffer(productId: string, offerId: string): Observable<ApiResponse<void>> {
     return this.http.delete<ApiResponse<void>>(`${this.base}/products/${productId}/offers/${offerId}`);
+  }
+
+  uploadFile(file: File): Observable<string> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http
+      .post<ApiResponse<{ url: string }>>(`${this.base}/files/upload`, formData)
+      .pipe(map((res) => res.data.url));
   }
 
   addImage(productId: string, url: string, altText?: string, sortOrder = 0): Observable<ApiResponse<ProductImageResponse>> {

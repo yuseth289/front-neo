@@ -80,7 +80,107 @@
    Global defaults
    ───────────────────────────────────────────────────────────────────── */
 
-html { color-scheme: dark; }
+html          { color-scheme: dark; }
+html.light    { color-scheme: light; }
+
+/* ─────────────────────────────────────────────────────────────────────
+   Light mode — override all design tokens when html.light is active
+   ───────────────────────────────────────────────────────────────────── */
+html.light {
+  /* Backgrounds */
+  --color-bg-base:     #F4F6F9;
+  --color-bg-surface:  #FFFFFF;
+  --color-bg-elevated: #EBF0F5;
+  --color-bg-subtle:   #DFE5ED;
+  --color-bg-overlay:  rgba(244, 246, 249, 0.75);
+
+  /* Accent */
+  --color-accent:       #E60036;
+  --color-accent-hover: #B3002A;
+  --color-accent-glow:  rgba(230, 0, 54, 0.15);
+  --color-accent-soft:  rgba(230, 0, 54, 0.08);
+  --color-accent-ring:  rgba(230, 0, 54, 0.35);
+
+  /* Neon / Tech */
+  --color-neon-cyan:      #00A3C4;
+  --color-neon-cyan-soft: rgba(0, 163, 196, 0.10);
+  --color-neon-violet:    #7A1FA2;
+  --color-neon-purple:    #9C27B0;
+
+  /* Text */
+  --color-text-primary:   #0B0F19;
+  --color-text-secondary: #4A5568;
+  --color-text-muted:     #718096;
+  --color-text-dim:       #A0AEC0;
+
+  /* Feedback */
+  --color-star:    #D4A017;
+  --color-success: #00A87D;
+  --color-warning: #FF7A00;
+  --color-error:   #E60036;
+
+  /* Borders */
+  --color-border:        #E2E8F0;
+  --color-border-strong: #CBD5E0;
+  --color-border-active: #E60036;
+
+  /* Gradients */
+  --gradient-hero:        linear-gradient(135deg, #7A1FA2 0%, #00A3C4 100%);
+  --gradient-card-border: linear-gradient(135deg, #E60036, #7A1FA2, #00A3C4);
+
+  /* Shadows */
+  --shadow-glow-accent:    0 0 20px rgba(230, 0, 54, 0.12);
+  --shadow-glow-accent-sm: 0 0 16px rgba(230, 0, 54, 0.10);
+  --shadow-glow-accent-lg: 0 0 32px rgba(230, 0, 54, 0.20);
+  --shadow-card-rest:
+    0 1px 0 rgba(255, 255, 255, 0.8) inset,
+    0 10px 30px -5px rgba(11, 15, 25, 0.06),
+    0 4px 12px -4px rgba(11, 15, 25, 0.04);
+  --shadow-card-lift:
+    0 1px 0 rgba(255, 255, 255, 0.9) inset,
+    0 20px 40px -12px rgba(11, 15, 25, 0.14),
+    0 0 0 1px rgba(230, 0, 54, 0.15),
+    0 0 24px rgba(230, 0, 54, 0.08);
+}
+
+/* ── Component-level light-mode adjustments ────────────────────────── */
+
+/* Grid background: switch white lines → soft gray lines */
+html.light .neo-grid-bg {
+  background-image:
+    linear-gradient(rgba(160, 174, 192, 0.35) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(160, 174, 192, 0.35) 1px, transparent 1px);
+}
+
+/* Neon orbs: tone way down so they read as pastel accents */
+html.light .neo-orb { opacity: 0.10 !important; }
+
+/* Ambient orbit ring */
+html.light .neo-glow-orbit {
+  background: conic-gradient(from 0deg,
+    transparent 0%, rgba(230,0,54,0.06) 25%,
+    transparent 50%, rgba(0,163,196,0.05) 75%, transparent 100%);
+  opacity: 0.30;
+}
+
+/* Category chips: white background instead of elevated */
+html.light .neo-chip { background: var(--color-bg-surface); }
+
+/* Active chip: white text is invisible on light bg — use accent color instead */
+html.light .neo-chip-active {
+  color: var(--color-accent);
+  background: rgba(230, 0, 54, 0.06);
+}
+
+/* Card hover: softer accent border for light backgrounds */
+html.light .neo-card-premium:hover { border-color: rgba(230, 0, 54, 0.35); }
+
+/* Skeleton shimmer: dark shimmer on light backgrounds */
+html.light .neo-skeleton::after {
+  background: linear-gradient(
+    100deg, transparent 40%, rgba(11, 15, 25, 0.04) 50%, transparent 60%);
+}
+
 body {
   background: var(--color-bg-base);
   color: var(--color-text-primary);
@@ -206,6 +306,24 @@ body {
     background: var(--color-accent-soft);
     transform: translateY(-1px);
   }
+
+  .neo-btn-accent {
+    background: var(--color-accent-soft);
+    border: 1px solid var(--color-accent-ring);
+    color: var(--color-accent);
+    font-weight: 600; font-size: 13px;
+    padding: 9px 18px;
+    border-radius: 10px;
+    transition: all 220ms var(--ease-out-snappy);
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .neo-btn-accent:hover {
+    background: var(--color-accent);
+    color: #fff;
+    box-shadow: var(--shadow-glow-accent);
+    transform: translateY(-1px);
+  }
+  .neo-btn-accent:disabled { opacity: 0.5; pointer-events: none; }
 
   .neo-input {
     width: 100%;

@@ -34,6 +34,14 @@
                   hover:after:scale-x-100 [&.text-text-primary]:after:scale-x-100">
           Catálogo
         </a>
+        <a routerLink="/stores" routerLinkActive="text-text-primary"
+           class="relative text-sm font-medium text-text-secondary hover:text-text-primary transition-colors py-2
+                  after:absolute after:left-0 after:right-0 after:-bottom-1.5 after:h-0.5 after:rounded-full
+                  after:bg-accent after:shadow-[0_0_12px_var(--color-accent-glow)]
+                  after:scale-x-0 after:transition-transform after:duration-300
+                  hover:after:scale-x-100 [&.text-text-primary]:after:scale-x-100">
+          Tiendas
+        </a>
       </div>
 
       <!-- Search bar (desktop) -->
@@ -60,6 +68,19 @@
 
       <!-- Right side -->
       <div class="flex items-center gap-1.5 shrink-0 ml-auto">
+
+        <!-- Theme toggle -->
+        <button (click)="theme.toggle()"
+          class="flex items-center justify-center w-9 h-9 rounded-lg
+                 text-text-secondary hover:text-text-primary hover:bg-bg-subtle
+                 transition-colors duration-200"
+          [attr.aria-label]="theme.isDark() ? 'Activar modo claro' : 'Activar modo oscuro'">
+          @if (theme.isDark()) {
+            <ng-icon name="lucideSun" size="18" />
+          } @else {
+            <ng-icon name="lucideMoon" size="18" />
+          }
+        </button>
 
         <a routerLink="/cart" aria-label="Carrito"
            class="relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-text-secondary
@@ -98,7 +119,14 @@
           <a routerLink="/account"
              class="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-text-secondary
                     hover:text-text-primary hover:bg-bg-subtle transition-colors">
-            <ng-icon name="lucideCircleUserRound" size="18" />
+            <span class="w-7 h-7 rounded-full overflow-hidden border border-border flex items-center justify-center
+                         bg-accent/20 shrink-0 text-[11px] font-bold text-accent">
+              @if (avatarUrl$ | async; as url) {
+                <img [src]="url" alt="" class="w-full h-full object-cover" />
+              } @else {
+                {{ initials$ | async }}
+              }
+            </span>
             <span class="max-w-[120px] truncate">{{ displayName$ | async }}</span>
           </a>
           <button (click)="logout()" aria-label="Salir"
@@ -186,7 +214,15 @@
           <a routerLink="/account" (click)="mobileOpen.set(false)"
              class="flex items-center gap-3 px-3.5 py-3 rounded-lg text-sm font-medium text-text-secondary
                     hover:bg-bg-elevated hover:text-text-primary border-l-2 border-transparent transition-colors">
-            <ng-icon name="lucideCircleUserRound" size="18" /> Mi cuenta
+            <span class="w-7 h-7 rounded-full overflow-hidden border border-border flex items-center justify-center
+                         bg-accent/20 shrink-0 text-[11px] font-bold text-accent">
+              @if (avatarUrl$ | async; as url) {
+                <img [src]="url" alt="" class="w-full h-full object-cover" />
+              } @else {
+                {{ initials$ | async }}
+              }
+            </span>
+            Mi cuenta
           </a>
           @if ((role$ | async) === 'SELLER') {
             <a routerLink="/seller/dashboard" (click)="mobileOpen.set(false)"

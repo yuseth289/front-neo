@@ -36,6 +36,12 @@
         <ng-icon name="lucideTrendingUp" size="16" />
         Analytics
       </a>
+      <a routerLink="/seller/messages"
+         routerLinkActive="bg-bg-subtle text-text-primary border-l-2 border-accent"
+         class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-text-secondary hover:bg-bg-subtle hover:text-text-primary transition-colors">
+        <ng-icon name="lucideMail" size="16" />
+        Mensajes
+      </a>
       <div class="border-t border-border pt-2 mt-2">
         <a routerLink="/seller/profile"
            routerLinkActive="bg-bg-subtle text-text-primary border-l-2 border-accent"
@@ -63,9 +69,22 @@
 
     <header class="h-16 bg-bg-surface border-b border-border flex items-center justify-between px-6 shrink-0">
       <span class="text-sm font-medium text-text-secondary">Panel de vendedor</span>
-      <a routerLink="/" class="text-xs text-text-muted hover:text-text-secondary transition-colors">
-        Ver tienda pública →
-      </a>
+      <div class="flex items-center gap-3">
+        <button (click)="theme.toggle()"
+          class="flex items-center justify-center w-9 h-9 rounded-lg
+                 text-text-secondary hover:text-text-primary hover:bg-bg-subtle
+                 transition-colors duration-200"
+          [attr.aria-label]="theme.isDark() ? 'Activar modo claro' : 'Activar modo oscuro'">
+          @if (theme.isDark()) {
+            <ng-icon name="lucideSun" size="18" />
+          } @else {
+            <ng-icon name="lucideMoon" size="18" />
+          }
+        </button>
+        <a routerLink="/" class="text-xs text-text-muted hover:text-text-secondary transition-colors">
+          Ver tienda pública →
+        </a>
+      </div>
     </header>
 
     <main class="flex-1 overflow-y-auto p-6">

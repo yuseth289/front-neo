@@ -53,12 +53,12 @@ export interface Category {
 
 export interface Review {
   id: string;
-  productId: string;
+  productId: string | null;
   userId: string;
-  buyerName: string;
-  rating: number;
-  title: string;
-  body: string;
+  buyerName: string | null;
+  rating: number | null;
+  title: string | null;
+  body: string | null;
   status: ReviewStatus;
   rejectReason: string | null;
   createdAt: string;

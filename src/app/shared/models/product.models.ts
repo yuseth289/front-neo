@@ -40,6 +40,7 @@ export interface ProductResponse {
   basePrice: number;
   ivaPercent: number;
   finalPrice: number;
+  condition?: string;
   status: ProductStatus;
   images: ProductImageResponse[];
   createdAt: string;
@@ -53,6 +54,7 @@ export interface CreateProductRequest {
   categoryId: string;
   basePrice: number;
   ivaPercent: number;
+  condition?: string;
 }
 
 export interface OfferResponse {

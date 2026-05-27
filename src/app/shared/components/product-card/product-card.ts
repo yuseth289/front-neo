@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, signal } from '@angular/core';
+import { Component, Input, Output, EventEmitter, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { NgIcon } from '@ng-icons/core';
@@ -48,10 +48,12 @@ const PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9I
         <div class="absolute top-3 right-3 flex flex-col gap-1.5 opacity-0 -translate-y-2
                     transition-[opacity,transform] duration-200 group-hover:opacity-100 group-hover:translate-y-0">
           <button (click)="$event.stopPropagation(); $event.preventDefault(); favorite.emit(product)"
-                  aria-label="Guardar en wishlist"
-                  class="w-8 h-8 rounded-full bg-bg-surface/85 backdrop-blur border border-border-strong
-                         text-text-primary flex items-center justify-center transition-colors
-                         hover:bg-accent hover:border-accent">
+                  [attr.aria-label]="inWishlist ? 'Quitar de wishlist' : 'Guardar en wishlist'"
+                  [ngClass]="inWishlist
+                    ? 'bg-accent border-accent text-white'
+                    : 'bg-bg-surface/85 border-border-strong text-text-primary hover:bg-accent hover:border-accent hover:text-white'"
+                  class="w-8 h-8 rounded-full backdrop-blur border
+                         flex items-center justify-center transition-all duration-200">
             <ng-icon name="lucideHeart" size="14" />
           </button>
           <button (click)="$event.stopPropagation(); $event.preventDefault(); quickView.emit(product)"
@@ -107,6 +109,7 @@ const PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9I
 export class ProductCardComponent {
   @Input({ required: true }) product!: ProductSummary;
   @Input() badge?: 'OFERTA' | 'NUEVO' | null = null;
+  @Input() inWishlist = false;
 
   readonly placeholder = PLACEHOLDER;
   readonly hover = signal(false);

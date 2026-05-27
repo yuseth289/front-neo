@@ -7,6 +7,10 @@ import { ProductCardComponent } from '../../../shared/components/product-card/pr
 import { ProductService } from '../../../core/catalog/product.service';
 import { CategoryService } from '../../../core/catalog/category.service';
 import { ProductSummary, Category } from '../../../shared/models/catalog.models';
+import { Store } from '@ngrx/store';
+import * as CartActions from '../../../core/cart/store/cart.actions';
+import { selectIsAuthenticated } from '../../../core/auth/store/auth.selectors';
+import { WishlistStateService } from '../../../core/account/wishlist-state.service';
 
 @Component({
   selector: 'app-home',
@@ -61,7 +65,7 @@ import { ProductSummary, Category } from '../../../shared/models/catalog.models'
                   <span class="neo-letter" [style.--d]="(120 + $index * 22) + 'ms'">{{ ch }}</span>
                 }
               </span>
-              <span class="block overflow-hidden">
+              <span class="block overflow-hidden whitespace-nowrap pb-2">
                 @for (ch of split('gamer'); track $index) {
                   <span class="neo-letter text-accent" [style.--d]="(430 + $index * 22) + 'ms'">{{ ch }}</span>
                 }
@@ -182,7 +186,11 @@ import { ProductSummary, Category } from '../../../shared/models/catalog.models'
           <div class="neo-stagger grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             @for (p of products(); track p.id) {
               <div class="neo-reveal">
-                <app-product-card [product]="p" />
+                <app-product-card [product]="p"
+                  [inWishlist]="wishlistState.isInWishlist(p.id)"
+                  (addToCart)="onAddToCart($event)"
+                  (quickView)="onQuickView($event)"
+                  (favorite)="onFavorite($event)" />
               </div>
             }
           </div>
@@ -195,6 +203,9 @@ export class HomeComponent implements OnInit {
   private productService  = inject(ProductService);
   private categoryService = inject(CategoryService);
   private router          = inject(Router);
+  private store           = inject(Store);
+  readonly isAuthenticated = this.store.selectSignal(selectIsAuthenticated);
+  readonly wishlistState   = inject(WishlistStateService);
 
   products         = signal<ProductSummary[]>([]);
   carouselProducts = signal<ProductSummary[]>([]);
@@ -230,5 +241,21 @@ export class HomeComponent implements OnInit {
   search() {
     const q = (this.searchQuery ?? '').trim();
     this.router.navigate(['/catalog'], { queryParams: q ? { q } : {} });
+  }
+
+  onAddToCart(product: ProductSummary): void {
+    this.store.dispatch(CartActions.addItem({ request: { productId: product.id, quantity: 1 } }));
+  }
+
+  onQuickView(product: ProductSummary): void {
+    this.router.navigate(['/product', product.slug]);
+  }
+
+  onFavorite(product: ProductSummary): void {
+    if (!this.isAuthenticated()) {
+      this.router.navigate(['/login']);
+      return;
+    }
+    this.wishlistState.toggle(product.id);
   }
 }
