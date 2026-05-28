@@ -177,14 +177,32 @@ export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
   ngOnDestroy(): void { this.destroy$.next(); this.destroy$.complete(); }
 
   loginWithGoogle(): void {
+    if (typeof google === 'undefined' || !environment.googleClientId) {
+      this.googleError = 'Google Sign-In no disponible. Recarga la página.';
+      return;
+    }
     this.googleLoading = true;
     this.googleError   = '';
-    const btn = this.googleBtnRef?.nativeElement?.querySelector<HTMLElement>('[role="button"]');
-    if (btn) {
-      btn.click();
+
+    const tryClick = () => {
+      const btn = this.googleBtnRef?.nativeElement?.querySelector('[role="button"]') as HTMLElement | null;
+      if (btn) {
+        btn.click();
+      } else {
+        this.googleLoading = false;
+        this.googleError   = 'Google Sign-In no disponible. Recarga la página.';
+      }
+    };
+
+    if (this.googleBtnRef?.nativeElement?.querySelector('[role="button"]')) {
+      tryClick();
     } else {
-      this.googleLoading = false;
-      this.googleError   = 'Google Sign-In no disponible. Recarga la página.';
+      google.accounts.id.initialize({
+        client_id: environment.googleClientId,
+        callback: (res: { credential: string }) => this.handleGoogleCredential(res.credential),
+      });
+      google.accounts.id.renderButton(this.googleBtnRef.nativeElement, { type: 'icon', size: 'medium' });
+      setTimeout(tryClick, 300);
     }
   }
 
