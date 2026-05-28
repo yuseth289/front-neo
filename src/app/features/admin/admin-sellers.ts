@@ -200,7 +200,10 @@ export class AdminSellersComponent implements OnInit {
 
   updateStatus(seller: SellerResponse, status: SellerStatus): void {
     this.processing.set(seller.id);
-    this.adminService.updateSellerStatus(seller.id, status).subscribe({
+    const call$ = status === 'ACTIVE'
+      ? this.adminService.approveSeller(seller.id)
+      : this.adminService.suspendSeller(seller.id);
+    call$.subscribe({
       next:  (res) => { this.sellers.update(list => list.map(s => s.id === seller.id ? res.data : s)); this.processing.set(null); },
       error: () => this.processing.set(null),
     });
