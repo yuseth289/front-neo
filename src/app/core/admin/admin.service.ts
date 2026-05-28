@@ -5,6 +5,7 @@ import { environment } from '../../../environments/environment';
 import { ApiResponse, PageResponse } from '../../shared/models/api.models';
 import { SellerResponse } from '../../shared/models/seller.models';
 import { UserResponse } from '../../shared/models/auth.models';
+import { ConversationResponse } from '../../shared/models/chat.models';
 import { Review, Brand } from '../../shared/models/catalog.models';
 import { Invoice } from '../../shared/models/invoice.models';
 import { SellerStatus, UserStatus } from '../../shared/models/enums';
@@ -65,6 +66,10 @@ export class AdminService {
 
   reactivateUser(id: string): Observable<ApiResponse<UserResponse>> {
     return this.http.patch<ApiResponse<UserResponse>>(`${this.base}/admin/users/${id}/reactivate`, {});
+  }
+
+  startConversationWithUser(id: string, firstMessage: string): Observable<ApiResponse<ConversationResponse>> {
+    return this.http.post<ApiResponse<ConversationResponse>>(`${this.base}/admin/users/${id}/conversations`, { firstMessage });
   }
 
   // ── Reviews ──────────────────────────────────────────────────────────────
