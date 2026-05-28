@@ -10,16 +10,7 @@ import { PaymentService } from '../../core/cart/payment.service';
 import { AddressService } from '../../core/account/address.service';
 import { selectCartItems, selectCartTotal } from '../../core/cart/store/cart.selectors';
 import { AddressResponse } from '../../shared/models/auth.models';
-import { PaymentMethod } from '../../shared/models/enums';
 
-const PAYMENT_OPTIONS: { value: PaymentMethod; label: string; icon: string }[] = [
-  { value: 'MP_CREDIT_CARD',    label: 'Tarjeta crédito', icon: 'lucideCreditCard' },
-  { value: 'MP_DEBIT_CARD',     label: 'Tarjeta débito',  icon: 'lucideCreditCard' },
-  { value: 'MP_PSE',            label: 'PSE',             icon: 'lucideBuilding2'  },
-  { value: 'MP_NEQUI',          label: 'Nequi',           icon: 'lucidePhone'      },
-  { value: 'MP_EFECTY',         label: 'Efecty',          icon: 'lucideBanknote'   },
-  { value: 'MP_ACCOUNT_MONEY',  label: 'Dinero en cuenta', icon: 'lucideWallet'    },
-];
 
 @Component({
   selector: 'app-checkout-page',
@@ -148,39 +139,6 @@ const PAYMENT_OPTIONS: { value: PaymentMethod; label: string; icon: string }[] =
               }
             </div>
 
-            <!-- Método de pago -->
-            <div class="neo-card-premium p-5">
-              <div class="flex items-start gap-3 mb-4">
-                <div class="w-8 h-8 rounded-lg bg-neon-cyan/10 border border-neon-cyan/20 flex items-center justify-center shrink-0">
-                  <ng-icon name="lucideCreditCard" size="15" class="text-neon-cyan" />
-                </div>
-                <div>
-                  <h2 class="text-sm font-semibold text-text-primary">Método de pago</h2>
-                  <p class="text-[12px] text-text-muted mt-0.5">Aceptamos PSE, tarjetas, Nequi y más.</p>
-                </div>
-              </div>
-
-              <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                @for (method of paymentOptions; track method.value) {
-                  <label class="flex items-center gap-2.5 p-3 rounded-[10px] border cursor-pointer
-                                transition-all duration-200 text-sm"
-                    [style.border-color]="form.get('paymentMethod')?.value === method.value
-                      ? 'var(--color-accent)' : 'var(--color-border)'"
-                    [style.background]="form.get('paymentMethod')?.value === method.value
-                      ? 'var(--color-accent-soft)' : 'var(--color-bg-elevated)'"
-                    [style.box-shadow]="form.get('paymentMethod')?.value === method.value
-                      ? '0 0 10px var(--color-accent-glow)' : 'none'"
-                    [style.color]="form.get('paymentMethod')?.value === method.value
-                      ? 'var(--color-text-primary)' : 'var(--color-text-secondary)'">
-                    <input type="radio" formControlName="paymentMethod" [value]="method.value"
-                           class="sr-only" />
-                    <ng-icon [name]="method.icon" size="14" class="shrink-0" />
-                    <span class="leading-tight">{{ method.label }}</span>
-                  </label>
-                }
-              </div>
-            </div>
-
             <!-- Actions -->
             <div class="flex items-center gap-3">
               <button type="button" (click)="submit()"
@@ -286,11 +244,9 @@ export class CheckoutPageComponent implements OnInit {
   currentStep      = signal(1);
 
   readonly steps = ['Carrito', 'Pago', 'Confirmación'];
-  readonly paymentOptions = PAYMENT_OPTIONS;
 
   form = this.fb.nonNullable.group({
-    addressId:     ['', Validators.required],
-    paymentMethod: ['' as PaymentMethod, Validators.required],
+    addressId: ['', Validators.required],
   });
 
   ngOnInit(): void {
@@ -309,10 +265,11 @@ export class CheckoutPageComponent implements OnInit {
     if (this.form.invalid) { this.form.markAllAsTouched(); return; }
     this.submitting.set(true);
     this.error.set(null);
-    const { addressId, paymentMethod } = this.form.getRawValue();
+    const { addressId } = this.form.getRawValue();
 
     // Paso 1: crear el checkout en el backend
-    this.checkoutService.initCheckout({ addressId, paymentMethod }).subscribe({
+    // paymentMethod lo gestiona MercadoPago Checkout Pro en su propia pantalla
+    this.checkoutService.initCheckout({ addressId, paymentMethod: 'MP_CHECKOUT_PRO' }).subscribe({
       next: (checkoutRes) => {
         const checkoutId = checkoutRes.data?.id;
         if (!checkoutId) {

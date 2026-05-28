@@ -292,6 +292,11 @@ export const routes: Routes = [
         data: { title: 'Categorías' },
       },
       {
+        path: 'brands',
+        loadComponent: () => import('./features/admin/admin-brands').then((m) => m.AdminBrandsComponent),
+        data: { title: 'Marcas' },
+      },
+      {
         path: 'analytics',
         loadComponent: () => import('./features/admin/admin-analytics').then((m) => m.AdminAnalyticsComponent),
         data: { title: 'Analytics global' },

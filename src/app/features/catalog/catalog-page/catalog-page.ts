@@ -7,8 +7,9 @@ import { NgIcon } from '@ng-icons/core';
 import { ProductCardComponent } from '../../../shared/components/product-card/product-card';
 import { ProductService } from '../../../core/catalog/product.service';
 import { CategoryService } from '../../../core/catalog/category.service';
+import { BrandService } from '../../../core/catalog/brand.service';
 import { SellerService } from '../../../core/seller/seller.service';
-import { ProductSummary, Category } from '../../../shared/models/catalog.models';
+import { ProductSummary, Category, Brand } from '../../../shared/models/catalog.models';
 import { PublicSellerResponse } from '../../../shared/models/seller.models';
 import { PageResponse } from '../../../shared/models/api.models';
 import { Store } from '@ngrx/store';
@@ -212,14 +213,14 @@ import { WishlistStateService } from '../../../core/account/wishlist-state.servi
               <div class="mb-5">
                 <p class="text-[12px] font-semibold text-text-primary mb-2.5">Marca</p>
                 <div class="flex flex-col gap-1.5">
-                  @for (brand of filterBrands; track brand) {
+                  @for (brand of brands(); track brand.id) {
                     <label class="flex items-center gap-2 text-[13px] text-text-secondary cursor-pointer
                                   hover:text-text-primary transition-colors">
                       <input type="checkbox"
-                             [checked]="selectedBrands.has(brand)"
-                             (change)="toggleBrand(brand)"
+                             [checked]="selectedBrands.has(brand.name)"
+                             (change)="toggleBrand(brand.name)"
                              class="rounded" style="accent-color: var(--color-accent);" />
-                      {{ brand }}
+                      {{ brand.name }}
                     </label>
                   }
                 </div>
@@ -366,6 +367,7 @@ import { WishlistStateService } from '../../../core/account/wishlist-state.servi
 export class CatalogPageComponent implements OnInit, OnDestroy {
   private productService  = inject(ProductService);
   private categoryService = inject(CategoryService);
+  private brandService    = inject(BrandService);
   private sellerService   = inject(SellerService);
   private route  = inject(ActivatedRoute);
   private router = inject(Router);
@@ -379,6 +381,7 @@ export class CatalogPageComponent implements OnInit, OnDestroy {
   products      = signal<ProductSummary[]>([]);
   stores        = signal<PublicSellerResponse[]>([]);
   categories    = signal<Category[]>([]);
+  brands        = signal<Brand[]>([]);
   page          = signal<PageResponse<ProductSummary> | null>(null);
   loading       = signal(true);
   loadingStores = signal(false);
@@ -393,7 +396,6 @@ export class CatalogPageComponent implements OnInit, OnDestroy {
   selectedRatings = new Set<number>();
 
   readonly skeletons = Array(12);
-  readonly filterBrands = ['Razer', 'Logitech G', 'ASUS ROG', 'Sony', 'Samsung'];
 
   activeCategoryName = computed(() => {
     if (!this.activeCategoryId()) return null;
@@ -410,6 +412,11 @@ export class CatalogPageComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.categoryService.getTree().subscribe({
       next: (res) => this.categories.set(res.data),
+      error: () => {},
+    });
+
+    this.brandService.getActive().subscribe({
+      next: (res) => this.brands.set(res.data),
       error: () => {},
     });
 
