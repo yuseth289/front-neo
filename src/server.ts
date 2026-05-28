@@ -10,19 +10,21 @@ import { join } from 'node:path';
 const browserDistFolder = join(import.meta.dirname, '../browser');
 
 const app = express();
-const angularApp = new AngularNodeAppEngine();
 
-/**
- * Example Express Rest API endpoints can be defined here.
- * Uncomment and define endpoints as necessary.
- *
- * Example:
- * ```ts
- * app.get('/api/{*splat}', (req, res) => {
- *   // Handle API request
- * });
- * ```
- */
+// Railway (y cualquier reverse proxy) agrega x-forwarded-for / x-forwarded-host.
+// Sin este flag, Express rechaza esos headers.
+app.set('trust proxy', true);
+
+const angularApp = new AngularNodeAppEngine({
+  // Permite que el engine procese x-forwarded-host y x-forwarded-prefix
+  // desde el reverse proxy de Railway.
+  trustProxyHeaders: true,
+  // Hosts autorizados para SSR. Se lee de la variable de entorno NG_ALLOWED_HOSTS
+  // (valores separados por coma). Si no está definida, se permite cualquier host.
+  allowedHosts: process.env['NG_ALLOWED_HOSTS']
+    ? process.env['NG_ALLOWED_HOSTS'].split(',').map((h) => h.trim())
+    : undefined,
+});
 
 /**
  * Serve static files from /browser
