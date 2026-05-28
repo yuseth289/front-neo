@@ -66,19 +66,19 @@ export class AdminService {
   // ── Categories ───────────────────────────────────────────────────────────
 
   getCategories(): Observable<ApiResponse<AdminCategory[]>> {
-    return this.http.get<ApiResponse<AdminCategory[]>>(`${this.base}/admin/categories`);
+    return this.http.get<ApiResponse<AdminCategory[]>>(`${this.base}/categories`);
   }
 
   createCategory(request: CreateCategoryRequest): Observable<ApiResponse<AdminCategory>> {
-    return this.http.post<ApiResponse<AdminCategory>>(`${this.base}/admin/categories`, request);
+    return this.http.post<ApiResponse<AdminCategory>>(`${this.base}/categories`, request);
   }
 
   updateCategory(id: string, request: Partial<CreateCategoryRequest>): Observable<ApiResponse<AdminCategory>> {
-    return this.http.put<ApiResponse<AdminCategory>>(`${this.base}/admin/categories/${id}`, request);
+    return this.http.put<ApiResponse<AdminCategory>>(`${this.base}/categories/${id}`, request);
   }
 
   deleteCategory(id: string): Observable<ApiResponse<void>> {
-    return this.http.delete<ApiResponse<void>>(`${this.base}/admin/categories/${id}`);
+    return this.http.delete<ApiResponse<void>>(`${this.base}/categories/${id}`);
   }
 
   // ── Brands ───────────────────────────────────────────────────────────────
