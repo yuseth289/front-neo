@@ -105,10 +105,12 @@ import { WishlistStateService } from '../../../core/account/wishlist-state.servi
                 Ver catálogo completo
                 <ng-icon name="lucideArrowRight" size="14" />
               </a>
-              <a routerLink="/register" class="neo-btn-outline !py-3.5 !px-6">
-                <ng-icon name="lucideUserPlus" size="16" />
-                Crear cuenta gratis
-              </a>
+              @if (!isAuthenticated()) {
+                <a routerLink="/register" class="neo-btn-outline !py-3.5 !px-6">
+                  <ng-icon name="lucideUserPlus" size="16" />
+                  Crear cuenta gratis
+                </a>
+              }
             </div>
 
             <div class="neo-reveal flex flex-wrap gap-8 mt-4 text-text-muted text-xs font-mono uppercase tracking-[0.05em]"
