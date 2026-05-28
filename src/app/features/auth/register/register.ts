@@ -274,7 +274,7 @@ export class RegisterComponent implements OnInit, OnDestroy, AfterViewInit {
   loginWithGoogle(): void {
     this.googleLoading = true;
     this.googleError   = '';
-    const btn = this.googleBtnRef?.nativeElement?.querySelector<HTMLElement>('[role="button"]');
+    const btn = this.googleBtnRef?.nativeElement?.querySelector('[role="button"]') as HTMLElement | null;
     if (btn) {
       btn.click();
     } else {
