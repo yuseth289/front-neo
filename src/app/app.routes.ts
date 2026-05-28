@@ -272,6 +272,11 @@ export const routes: Routes = [
         data: { title: 'Panel de administración' },
       },
       {
+        path: 'users',
+        loadComponent: () => import('./features/admin/admin-users').then((m) => m.AdminUsersComponent),
+        data: { title: 'Gestión de usuarios' },
+      },
+      {
         path: 'sellers',
         loadComponent: () => import('./features/admin/admin-sellers').then((m) => m.AdminSellersComponent),
         data: { title: 'Gestión de vendedores' },
