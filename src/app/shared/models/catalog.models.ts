@@ -51,6 +51,14 @@ export interface Category {
   children: Category[];
 }
 
+export interface Brand {
+  id: string;
+  name: string;
+  slug: string;
+  displayOrder: number;
+  active: boolean;
+}
+
 export interface Review {
   id: string;
   productId: string | null;

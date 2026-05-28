@@ -29,6 +29,7 @@ export type ReviewStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
 export type SellerStatus = 'PENDING' | 'ACTIVE' | 'SUSPENDED';
 
 export type PaymentMethod =
+  | 'MP_CHECKOUT_PRO'
   | 'MP_CREDIT_CARD'
   | 'MP_DEBIT_CARD'
   | 'MP_PSE'

@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ApiResponse, PageResponse } from '../../shared/models/api.models';
 import { SellerResponse } from '../../shared/models/seller.models';
-import { Review } from '../../shared/models/catalog.models';
+import { Review, Brand } from '../../shared/models/catalog.models';
 import { Invoice } from '../../shared/models/invoice.models';
 import { SellerStatus } from '../../shared/models/enums';
 
@@ -75,6 +75,28 @@ export class AdminService {
 
   deleteCategory(id: string): Observable<ApiResponse<void>> {
     return this.http.delete<ApiResponse<void>>(`${this.base}/admin/categories/${id}`);
+  }
+
+  // ── Brands ───────────────────────────────────────────────────────────────
+
+  getBrands(): Observable<ApiResponse<Brand[]>> {
+    return this.http.get<ApiResponse<Brand[]>>(`${this.base}/brands/all`);
+  }
+
+  createBrand(request: { name: string; displayOrder: number }): Observable<ApiResponse<Brand>> {
+    return this.http.post<ApiResponse<Brand>>(`${this.base}/brands`, request);
+  }
+
+  updateBrand(id: string, request: { name: string; displayOrder: number }): Observable<ApiResponse<Brand>> {
+    return this.http.put<ApiResponse<Brand>>(`${this.base}/brands/${id}`, request);
+  }
+
+  deleteBrand(id: string): Observable<ApiResponse<void>> {
+    return this.http.delete<ApiResponse<void>>(`${this.base}/brands/${id}`);
+  }
+
+  activateBrand(id: string): Observable<ApiResponse<void>> {
+    return this.http.put<ApiResponse<void>>(`${this.base}/brands/${id}/activate`, {});
   }
 
   // ── Invoices ─────────────────────────────────────────────────────────────
