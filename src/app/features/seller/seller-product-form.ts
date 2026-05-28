@@ -620,9 +620,9 @@ export class SellerProductFormComponent implements OnInit {
 
   form = this.fb.nonNullable.group({
     name:        ['', Validators.required],
-    description: ['', Validators.required],
-    brand:       ['', Validators.required],
-    sku:         ['', Validators.required],
+    description: [''],
+    brand:       [''],
+    sku:         [''],
     categoryId:  ['', Validators.required],
     basePrice:   [0, [Validators.required, Validators.min(1)]],
     ivaPercent:  [19, Validators.required],
@@ -817,7 +817,11 @@ export class SellerProductFormComponent implements OnInit {
   // ── save ──────────────────────────────────────────────────
 
   save(): void {
-    if (this.form.invalid) { this.form.markAllAsTouched(); return; }
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      this.formError.set('Completa los campos obligatorios: nombre, categoría y precio.');
+      return;
+    }
     this.saving.set(true);
     this.formError.set(null);
 
