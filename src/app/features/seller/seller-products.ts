@@ -120,12 +120,17 @@ const STATUS_MAP: Record<ProductStatus, { color: string; bg: string; border: str
                     </span>
                   </div>
 
-                  <!-- Edit action -->
-                  <div class="w-8 flex justify-center">
+                  <!-- Actions -->
+                  <div class="flex items-center gap-1">
                     <a [routerLink]="['/seller/products', p.id]"
                       class="p-1.5 rounded-lg text-text-muted hover:text-text-primary hover:bg-bg-elevated
-                             transition-colors inline-flex" aria-label="Editar">
+                             transition-colors inline-flex" aria-label="Editar producto" title="Editar">
                       <ng-icon name="lucideSettings" size="15" />
+                    </a>
+                    <a [routerLink]="['/seller/products', p.id, 'inventory']"
+                      class="p-1.5 rounded-lg text-text-muted hover:text-accent hover:bg-bg-elevated
+                             transition-colors inline-flex" aria-label="Gestionar stock" title="Stock">
+                      <ng-icon name="lucidePackage" size="15" />
                     </a>
                   </div>
                 </div>
