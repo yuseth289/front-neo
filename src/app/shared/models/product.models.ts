@@ -25,6 +25,7 @@ export interface ProductSummaryResponse {
   basePrice: number;
   finalPrice: number;
   status: ProductStatus;
+  availableStock?: number | null;
   primaryImageUrl?: string;
 }
 
@@ -42,6 +43,7 @@ export interface ProductResponse {
   finalPrice: number;
   condition?: string;
   status: ProductStatus;
+  availableStock?: number | null;
   images: ProductImageResponse[];
   createdAt: string;
 }

@@ -15,7 +15,7 @@ import { filter, firstValueFrom } from 'rxjs';
 import {
   lucideShoppingCart, lucideLogIn, lucideUserPlus, lucideUser, lucideLogOut,
   lucideMapPin, lucideClipboardList, lucideFileText, lucideHeart, lucideStar,
-  lucideLayoutDashboard, lucidePackage, lucideTrendingUp, lucideStore,
+  lucideLayoutDashboard, lucidePackage, lucidePackageX, lucideTrendingUp, lucideStore,
   lucideCreditCard, lucideHouse, lucideUsers, lucideTag, lucideSearch,
   lucideMenu, lucideX, lucideChevronRight, lucideChevronLeft, lucideShield,
   lucideTruck, lucideTriangleAlert, lucideCircleCheck, lucideRefreshCw,
@@ -75,7 +75,7 @@ export const appConfig: ApplicationConfig = {
     provideIcons({
       lucideShoppingCart, lucideLogIn, lucideUserPlus, lucideUser, lucideLogOut,
       lucideMapPin, lucideClipboardList, lucideFileText, lucideHeart, lucideStar,
-      lucideLayoutDashboard, lucidePackage, lucideTrendingUp, lucideStore,
+      lucideLayoutDashboard, lucidePackage, lucidePackageX, lucideTrendingUp, lucideStore,
       lucideCreditCard, lucideHouse, lucideUsers, lucideTag, lucideSearch,
       lucideMenu, lucideX, lucideChevronRight, lucideChevronLeft, lucideShield,
       lucideTruck, lucideTriangleAlert, lucideCircleCheck, lucideRefreshCw,

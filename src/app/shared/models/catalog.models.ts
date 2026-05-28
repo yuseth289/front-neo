@@ -36,6 +36,7 @@ export interface ProductDetail {
   ivaPercent: number;
   finalPrice: number;
   status: ProductStatus;
+  availableStock?: number | null;
   images: ProductImage[];
   createdAt: string;
   updatedAt: string;

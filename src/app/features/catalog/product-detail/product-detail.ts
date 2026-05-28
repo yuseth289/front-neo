@@ -176,10 +176,33 @@ const PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9I
                   </p>
                 }
 
-                <button (click)="addToCart()" [disabled]="isAdding()"
+                <!-- Stock badge -->
+                @if (product()!.availableStock !== null && product()!.availableStock !== undefined) {
+                  @if (product()!.availableStock! <= 0) {
+                    <div class="flex items-center gap-2 rounded-[10px] bg-error/10 border border-error/30 px-3.5 py-2.5">
+                      <ng-icon name="lucidePackageX" size="15" class="text-error" />
+                      <span class="text-sm font-semibold text-error">Agotado</span>
+                    </div>
+                  } @else if (product()!.availableStock! <= 5) {
+                    <div class="flex items-center gap-2 rounded-[10px] bg-warning/10 border border-warning/30 px-3.5 py-2.5">
+                      <ng-icon name="lucidePackage" size="15" class="text-warning" />
+                      <span class="text-sm text-warning">¡Solo quedan <strong>{{ product()!.availableStock }}</strong> unidades!</span>
+                    </div>
+                  } @else {
+                    <div class="flex items-center gap-1.5 text-sm text-success">
+                      <ng-icon name="lucideCircleCheck" size="14" />
+                      <span>{{ product()!.availableStock }} unidades disponibles</span>
+                    </div>
+                  }
+                }
+
+                <button (click)="addToCart()" [disabled]="isAdding() || product()!.availableStock === 0"
                   class="neo-btn-primary w-full justify-center !py-3.5
                          disabled:opacity-60 disabled:cursor-not-allowed">
-                  @if (isAdding()) {
+                  @if (product()!.availableStock === 0) {
+                    <ng-icon name="lucidePackageX" size="18" />
+                    Agotado
+                  } @else if (isAdding()) {
                     <ng-icon name="lucideRefreshCw" size="16" class="neo-spin" />
                     Agregando…
                   } @else {
