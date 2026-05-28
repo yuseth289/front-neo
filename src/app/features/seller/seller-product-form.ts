@@ -868,14 +868,10 @@ export class SellerProductFormComponent implements OnInit {
         const pending = this.pendingImages();
         const initialStock = raw.initialStock ?? 0;
 
-        const afterStock$ = initialStock > 0
-          ? this.productService.adjustStock(id, { quantity: initialStock, notes: 'Stock inicial' })
-          : of(null);
-
-        afterStock$.subscribe({
-          complete: () => {},
-          error: () => {},
-        });
+        if (initialStock > 0) {
+          this.productService.adjustStock(id, { quantity: initialStock, notes: 'Stock inicial' })
+            .subscribe({ error: () => {} });
+        }
 
         if (pending.length === 0) {
           this.saving.set(false);
