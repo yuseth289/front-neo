@@ -1,5 +1,7 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
 import { NgIcon } from '@ng-icons/core';
 import { AdminService } from '../../core/admin/admin.service';
 import { UserResponse } from '../../shared/models/auth.models';
@@ -22,8 +24,58 @@ const ROLE_LABEL: Record<string, string> = {
 @Component({
   selector: 'app-admin-users',
   standalone: true,
-  imports: [CommonModule, NgIcon],
+  imports: [CommonModule, ReactiveFormsModule, NgIcon],
   template: `
+    <!-- Modal compose -->
+    @if (composing()) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div class="neo-card-premium p-6 w-full max-w-[480px]">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h2 class="text-sm font-semibold text-text-primary">
+                Mensaje a {{ selectedUser()!.firstName }} {{ selectedUser()!.lastName }}
+              </h2>
+              <p class="text-[12px] text-text-muted mt-0.5">
+                El usuario lo verá en su bandeja de mensajes
+              </p>
+            </div>
+            <button (click)="composing.set(false)"
+              class="p-1.5 rounded-lg hover:bg-bg-elevated text-text-muted transition-colors">
+              <ng-icon name="lucideX" size="16" />
+            </button>
+          </div>
+          @if (composeError()) {
+            <p class="text-xs text-error mb-3 flex items-center gap-1.5">
+              <ng-icon name="lucideTriangleAlert" size="13" />{{ composeError() }}
+            </p>
+          }
+          <form [formGroup]="composeForm" (ngSubmit)="sendMessage()">
+            <textarea formControlName="message" rows="5"
+              placeholder="Ej: Tu cuenta ha sido suspendida por incumplir las políticas de la plataforma."
+              class="w-full rounded-[10px] bg-bg-elevated border border-border px-3.5 py-2.5 text-sm
+                     text-text-primary placeholder:text-text-muted outline-none focus:border-accent
+                     transition-colors resize-none mb-4">
+            </textarea>
+            <div class="flex gap-3 justify-end">
+              <button type="button" (click)="composing.set(false)"
+                class="neo-btn-outline !py-2 !px-4 !text-[13px]">
+                Cancelar
+              </button>
+              <button type="submit" [disabled]="composeForm.invalid || sending()"
+                class="neo-btn-primary !py-2 !px-4 !text-[13px] disabled:opacity-50">
+                @if (sending()) {
+                  <ng-icon name="lucideRefreshCw" size="13" class="neo-spin" />
+                } @else {
+                  <ng-icon name="lucideSend" size="13" />
+                }
+                Enviar
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    }
+
     <div class="max-w-[1100px]">
 
       <!-- Header -->
@@ -64,6 +116,34 @@ const ROLE_LABEL: Record<string, string> = {
         </div>
 
       } @else {
+
+        <!-- Panel usuario seleccionado -->
+        @if (selectedUser()) {
+          <div class="flex items-center justify-between gap-4 mb-4 px-4 py-3 rounded-[12px]
+                      bg-accent/8 border border-accent/25 neo-reveal">
+            <div class="flex items-center gap-3 min-w-0">
+              <ng-icon name="lucideUser" size="16" class="text-accent shrink-0" />
+              <div class="min-w-0">
+                <p class="text-sm font-semibold text-text-primary truncate">
+                  {{ selectedUser()!.firstName }} {{ selectedUser()!.lastName }}
+                </p>
+                <p class="text-[12px] text-text-muted">Usuario seleccionado</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <button (click)="openCompose()"
+                class="neo-btn-primary !py-2 !px-4 !text-[13px]">
+                <ng-icon name="lucideMessageCircle" size="14" />
+                Iniciar conversación
+              </button>
+              <button (click)="selectedUser.set(null)"
+                class="p-2 rounded-lg text-text-muted hover:text-text-primary hover:bg-bg-elevated transition-colors">
+                <ng-icon name="lucideX" size="14" />
+              </button>
+            </div>
+          </div>
+        }
+
         <div class="neo-card-premium overflow-hidden">
           <div class="overflow-x-auto">
             <table class="w-full text-[13px] border-collapse">
@@ -79,7 +159,10 @@ const ROLE_LABEL: Record<string, string> = {
               </thead>
               <tbody>
                 @for (user of users(); track user.id) {
-                  <tr class="border-t border-border hover:bg-bg-elevated/60 transition-colors">
+                  <tr (click)="selectedUser.set(selectedUser()?.id === user.id ? null : user)"
+                      class="border-t border-border transition-colors cursor-pointer"
+                      [class.bg-accent-soft]="selectedUser()?.id === user.id"
+                      [class.hover:bg-bg-elevated/60]="selectedUser()?.id !== user.id">
                     <td class="px-5 py-3.5">
                       <div class="flex items-center gap-2.5">
                         @if (user.avatarUrl) {
@@ -166,13 +249,47 @@ const ROLE_LABEL: Record<string, string> = {
 })
 export class AdminUsersComponent implements OnInit {
   private adminService = inject(AdminService);
+  private router       = inject(Router);
+  private fb           = inject(FormBuilder);
 
-  users       = signal<UserResponse[]>([]);
-  loading     = signal(true);
-  page        = signal(0);
-  totalPages  = signal(0);
+  users        = signal<UserResponse[]>([]);
+  loading      = signal(true);
+  page         = signal(0);
+  totalPages   = signal(0);
   activeFilter = signal<UserStatus | undefined>(undefined);
-  processing  = signal<string | null>(null);
+  processing   = signal<string | null>(null);
+  selectedUser = signal<UserResponse | null>(null);
+  composing    = signal(false);
+  composeError = signal<string | null>(null);
+  sending      = signal(false);
+
+  composeForm = this.fb.nonNullable.group({
+    message: ['', [Validators.required, Validators.minLength(5)]],
+  });
+
+  openCompose(): void {
+    this.composeError.set(null);
+    this.composeForm.reset();
+    this.composing.set(true);
+  }
+
+  sendMessage(): void {
+    const user = this.selectedUser();
+    if (!user || this.composeForm.invalid) return;
+    this.sending.set(true);
+    this.composeError.set(null);
+    this.adminService.startConversationWithUser(user.id, this.composeForm.getRawValue().message).subscribe({
+      next: (res) => {
+        this.sending.set(false);
+        this.composing.set(false);
+        this.router.navigate(['/admin/messages', res.data.id]);
+      },
+      error: (err) => {
+        this.sending.set(false);
+        this.composeError.set(err.error?.message ?? 'Error al enviar');
+      },
+    });
+  }
 
   readonly filters: { label: string; value: UserStatus | undefined }[] = [
     { label: 'Todos',       value: undefined    },
