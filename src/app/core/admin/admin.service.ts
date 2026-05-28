@@ -4,9 +4,10 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ApiResponse, PageResponse } from '../../shared/models/api.models';
 import { SellerResponse } from '../../shared/models/seller.models';
+import { UserResponse } from '../../shared/models/auth.models';
 import { Review, Brand } from '../../shared/models/catalog.models';
 import { Invoice } from '../../shared/models/invoice.models';
-import { SellerStatus } from '../../shared/models/enums';
+import { SellerStatus, UserStatus } from '../../shared/models/enums';
 
 export interface AdminCategory {
   id: string;
@@ -48,6 +49,22 @@ export class AdminService {
 
   reactivateSeller(id: string): Observable<ApiResponse<SellerResponse>> {
     return this.http.patch<ApiResponse<SellerResponse>>(`${this.base}/admin/sellers/${id}/reactivate`, {});
+  }
+
+  // ── Users ────────────────────────────────────────────────────────────────
+
+  getUsers(page = 0, size = 20, status?: UserStatus): Observable<ApiResponse<PageResponse<UserResponse>>> {
+    let params = new HttpParams().set('page', page).set('size', size);
+    if (status) params = params.set('status', status);
+    return this.http.get<ApiResponse<PageResponse<UserResponse>>>(`${this.base}/admin/users`, { params });
+  }
+
+  suspendUser(id: string): Observable<ApiResponse<UserResponse>> {
+    return this.http.patch<ApiResponse<UserResponse>>(`${this.base}/admin/users/${id}/suspend`, {});
+  }
+
+  reactivateUser(id: string): Observable<ApiResponse<UserResponse>> {
+    return this.http.patch<ApiResponse<UserResponse>>(`${this.base}/admin/users/${id}/reactivate`, {});
   }
 
   // ── Reviews ──────────────────────────────────────────────────────────────

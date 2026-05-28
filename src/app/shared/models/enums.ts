@@ -28,6 +28,8 @@ export type ReviewStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
 
 export type SellerStatus = 'PENDING' | 'ACTIVE' | 'SUSPENDED';
 
+export type UserStatus = 'ACTIVE' | 'INACTIVE' | 'SUSPENDED';
+
 export type PaymentMethod =
   | 'MP_CHECKOUT_PRO'
   | 'MP_CREDIT_CARD'

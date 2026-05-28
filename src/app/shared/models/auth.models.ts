@@ -1,4 +1,4 @@
-import { Role } from './enums';
+import { Role, UserStatus } from './enums';
 
 export interface TokenResponse {
   accessToken: string;
@@ -15,6 +15,8 @@ export interface UserResponse {
   phone: string;
   avatarUrl?: string;
   role: Role;
+  status: UserStatus;
+  emailVerified: boolean;
   createdAt: string;
 }
 
