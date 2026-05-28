@@ -238,6 +238,18 @@ interface GalleryItem {
                   </span>
                 </div>
 
+                <!-- Stock inicial (solo en creación) -->
+                @if (!productId()) {
+                  <div>
+                    <label class="block text-[11px] font-semibold text-text-muted mb-1.5 uppercase tracking-[0.07em]">
+                      Stock inicial <span class="text-text-muted font-normal normal-case">(unidades disponibles)</span>
+                    </label>
+                    <input type="number" formControlName="initialStock" min="0"
+                      class="w-full rounded-[10px] bg-bg-elevated border border-border px-3 py-2.5 text-sm text-text-primary
+                             outline-none focus:border-accent transition-colors" />
+                  </div>
+                }
+
                 <!-- Descripción -->
                 <div>
                   <label class="block text-[11px] font-semibold text-text-muted mb-1.5 uppercase tracking-[0.07em]">
@@ -619,13 +631,14 @@ export class SellerProductFormComponent implements OnInit {
   });
 
   form = this.fb.nonNullable.group({
-    name:        ['', Validators.required],
-    description: [''],
-    brand:       [''],
-    sku:         [''],
-    categoryId:  ['', Validators.required],
-    basePrice:   [0, [Validators.required, Validators.min(1)]],
-    ivaPercent:  [19, Validators.required],
+    name:         ['', Validators.required],
+    description:  [''],
+    brand:        [''],
+    sku:          [''],
+    categoryId:   ['', Validators.required],
+    basePrice:    [0, [Validators.required, Validators.min(1)]],
+    ivaPercent:   [19, Validators.required],
+    initialStock: [0, [Validators.min(0)]],
   });
 
   onApplyContent(event: ApplyDescriptionEvent): void {
@@ -848,11 +861,21 @@ export class SellerProductFormComponent implements OnInit {
       return;
     }
 
-    // Create → upload pending images → navigate to preview
+    // Create → set initial stock → upload pending images → navigate to preview
     this.productService.create(request).subscribe({
       next: (res) => {
         const id = res.data.id;
         const pending = this.pendingImages();
+        const initialStock = raw.initialStock ?? 0;
+
+        const afterStock$ = initialStock > 0
+          ? this.productService.adjustStock(id, { quantity: initialStock, notes: 'Stock inicial' })
+          : of(null);
+
+        afterStock$.subscribe({
+          complete: () => {},
+          error: () => {},
+        });
 
         if (pending.length === 0) {
           this.saving.set(false);
