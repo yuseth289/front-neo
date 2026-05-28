@@ -309,6 +309,17 @@ export const routes: Routes = [
           ),
         data: { title: 'Analytics IA' },
       },
+      {
+        path: 'messages',
+        loadComponent: () => import('./features/chat/chat-shell').then((m) => m.ChatShellComponent),
+        data: { title: 'Mensajes a vendedores' },
+        children: [
+          {
+            path: ':id',
+            loadComponent: () => import('./features/chat/chat-detail').then((m) => m.ChatDetailComponent),
+          },
+        ],
+      },
     ],
   },
 

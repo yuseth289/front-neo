@@ -1,7 +1,10 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
 import { NgIcon } from '@ng-icons/core';
 import { AdminService } from '../../core/admin/admin.service';
+import { ChatService } from '../../core/chat/chat.service';
 import { SellerResponse } from '../../shared/models/seller.models';
 import { SellerStatus } from '../../shared/models/enums';
 
@@ -16,8 +19,47 @@ const STATUS_MAP: Record<SellerStatus, StatusMeta> = {
 @Component({
   selector: 'app-admin-sellers',
   standalone: true,
-  imports: [CommonModule, NgIcon],
+  imports: [CommonModule, ReactiveFormsModule, NgIcon],
   template: `
+    <!-- Modal compose message -->
+    @if (composeSeller()) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div class="neo-card-premium p-6 w-full max-w-[480px]">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h2 class="text-sm font-semibold text-text-primary">Mensaje a {{ composeSeller()!.storeName }}</h2>
+              <p class="text-[12px] text-text-muted mt-0.5">El vendedor lo verá en su bandeja de mensajes</p>
+            </div>
+            <button (click)="composeSeller.set(null)" class="p-1.5 rounded-lg hover:bg-bg-elevated text-text-muted">
+              <ng-icon name="lucideX" size="16" />
+            </button>
+          </div>
+          @if (composeError()) {
+            <p class="text-xs text-error mb-3 flex items-center gap-1.5">
+              <ng-icon name="lucideTriangleAlert" size="13" />{{ composeError() }}
+            </p>
+          }
+          <form [formGroup]="composeForm" (ngSubmit)="sendMessage()">
+            <textarea formControlName="message" rows="5"
+              placeholder="Escribe tu mensaje al vendedor. Puedes indicar productos no permitidos, normas de la plataforma, etc."
+              class="w-full rounded-[10px] bg-bg-elevated border border-border px-3.5 py-2.5 text-sm text-text-primary
+                     placeholder:text-text-muted outline-none focus:border-accent transition-colors resize-none mb-4">
+            </textarea>
+            <div class="flex gap-3 justify-end">
+              <button type="button" (click)="composeSeller.set(null)"
+                class="neo-btn-outline !py-2 !px-4 !text-[13px]">Cancelar</button>
+              <button type="submit" [disabled]="composeForm.invalid || sending()"
+                class="neo-btn-primary !py-2 !px-4 !text-[13px] disabled:opacity-50">
+                @if (sending()) { <ng-icon name="lucideRefreshCw" size="13" class="neo-spin" /> }
+                <ng-icon name="lucideSend" size="13" />
+                Enviar
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    }
+
     <div class="max-w-[1100px]">
 
       <!-- Header -->
@@ -131,6 +173,13 @@ const STATUS_MAP: Record<SellerStatus, StatusMeta> = {
                             Reactivar
                           </button>
                         }
+                        <button (click)="openCompose(seller)"
+                          class="px-2.5 py-1 rounded-[8px] text-[12px] font-medium border border-border
+                                 text-text-secondary hover:border-accent hover:text-accent transition-colors
+                                 flex items-center gap-1">
+                          <ng-icon name="lucideMessageCircle" size="11" />
+                          Mensaje
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -161,6 +210,9 @@ const STATUS_MAP: Record<SellerStatus, StatusMeta> = {
 })
 export class AdminSellersComponent implements OnInit {
   private adminService = inject(AdminService);
+  private chatService  = inject(ChatService);
+  private router       = inject(Router);
+  private fb           = inject(FormBuilder);
 
   sellers      = signal<SellerResponse[]>([]);
   loading      = signal(true);
@@ -168,6 +220,42 @@ export class AdminSellersComponent implements OnInit {
   totalPages   = signal(0);
   activeFilter = signal<SellerStatus | undefined>(undefined);
   processing   = signal<string | null>(null);
+
+  composeSeller = signal<SellerResponse | null>(null);
+  composeError  = signal<string | null>(null);
+  sending       = signal(false);
+
+  composeForm = this.fb.nonNullable.group({
+    message: ['', [Validators.required, Validators.minLength(5)]],
+  });
+
+  openCompose(seller: SellerResponse): void {
+    this.composeSeller.set(seller);
+    this.composeError.set(null);
+    this.composeForm.reset();
+  }
+
+  sendMessage(): void {
+    const seller = this.composeSeller();
+    if (!seller || this.composeForm.invalid) return;
+    this.sending.set(true);
+    this.composeError.set(null);
+
+    this.chatService.startConversation({
+      sellerId: seller.id,
+      firstMessage: this.composeForm.getRawValue().message,
+    }).subscribe({
+      next: (res) => {
+        this.sending.set(false);
+        this.composeSeller.set(null);
+        this.router.navigate(['/admin/messages', res.data.id]);
+      },
+      error: (err) => {
+        this.sending.set(false);
+        this.composeError.set(err.error?.message ?? 'Error al enviar el mensaje');
+      },
+    });
+  }
 
   readonly filters: { label: string; value: SellerStatus | undefined }[] = [
     { label: 'Todos',       value: undefined    },
