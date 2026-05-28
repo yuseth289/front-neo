@@ -36,7 +36,7 @@ export class SellerService {
   }
 
   register(request: RegisterSellerRequest): Observable<ApiResponse<SellerResponse>> {
-    return this.http.post<ApiResponse<SellerResponse>>(`${this.base}/sellers`, request);
+    return this.http.post<ApiResponse<SellerResponse>>(`${this.base}/sellers/register`, request);
   }
 
   getAccounts(): Observable<ApiResponse<PaymentAccountResponse[]>> {
