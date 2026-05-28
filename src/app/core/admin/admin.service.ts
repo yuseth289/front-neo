@@ -46,6 +46,10 @@ export class AdminService {
     return this.http.patch<ApiResponse<SellerResponse>>(`${this.base}/admin/sellers/${id}/suspend`, {});
   }
 
+  reactivateSeller(id: string): Observable<ApiResponse<SellerResponse>> {
+    return this.http.patch<ApiResponse<SellerResponse>>(`${this.base}/admin/sellers/${id}/reactivate`, {});
+  }
+
   // ── Reviews ──────────────────────────────────────────────────────────────
 
   createAdminReview(request: {
