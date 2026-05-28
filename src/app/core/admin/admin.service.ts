@@ -38,8 +38,12 @@ export class AdminService {
     return this.http.get<ApiResponse<PageResponse<SellerResponse>>>(`${this.base}/admin/sellers`, { params });
   }
 
-  updateSellerStatus(id: string, status: SellerStatus): Observable<ApiResponse<SellerResponse>> {
-    return this.http.patch<ApiResponse<SellerResponse>>(`${this.base}/admin/sellers/${id}/status`, { status });
+  approveSeller(id: string): Observable<ApiResponse<SellerResponse>> {
+    return this.http.patch<ApiResponse<SellerResponse>>(`${this.base}/admin/sellers/${id}/approve`, {});
+  }
+
+  suspendSeller(id: string): Observable<ApiResponse<SellerResponse>> {
+    return this.http.patch<ApiResponse<SellerResponse>>(`${this.base}/admin/sellers/${id}/suspend`, {});
   }
 
   // ── Reviews ──────────────────────────────────────────────────────────────
