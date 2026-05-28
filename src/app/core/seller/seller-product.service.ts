@@ -56,12 +56,12 @@ export class SellerProductService {
   }
 
   getInventory(productId: string): Observable<ApiResponse<InventoryResponse>> {
-    return this.http.get<ApiResponse<InventoryResponse>>(`${this.base}/products/${productId}/inventory`);
+    return this.http.get<ApiResponse<InventoryResponse>>(`${this.base}/inventory/${productId}`);
   }
 
   adjustStock(productId: string, request: AdjustStockRequest): Observable<ApiResponse<InventoryResponse>> {
     return this.http.post<ApiResponse<InventoryResponse>>(
-      `${this.base}/products/${productId}/inventory/adjust`,
+      `${this.base}/inventory/${productId}/stock`,
       request,
     );
   }

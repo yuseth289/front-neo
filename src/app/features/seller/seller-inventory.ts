@@ -24,6 +24,10 @@ import { InventoryResponse } from '../../shared/models/product.models';
 
       @if (loading()) {
         <div class="h-32 rounded-xl bg-bg-surface border border-border animate-pulse"></div>
+      } @else if (loadError()) {
+        <div class="flex items-center gap-2 rounded-xl bg-error/10 border border-error/30 px-4 py-3 text-sm text-error">
+          <ng-icon name="lucideTriangleAlert" size="15" />{{ loadError() }}
+        </div>
       } @else if (inventory()) {
         <!-- Stock actual -->
         <div class="bg-bg-surface border border-border rounded-xl p-5 mb-5">
@@ -93,6 +97,7 @@ export class SellerInventoryComponent implements OnInit {
   productId = signal('');
   inventory = signal<InventoryResponse | null>(null);
   loading = signal(true);
+  loadError = signal<string | null>(null);
   adjusting = signal(false);
   adjustSuccess = signal(false);
   adjustError = signal<string | null>(null);
@@ -107,7 +112,10 @@ export class SellerInventoryComponent implements OnInit {
     this.productId.set(id);
     this.productService.getInventory(id).subscribe({
       next: (res) => { this.inventory.set(res.data); this.loading.set(false); },
-      error: () => this.loading.set(false),
+      error: (err) => {
+        this.loading.set(false);
+        this.loadError.set(err.error?.message ?? 'Error al cargar el inventario');
+      },
     });
   }
 
