@@ -1,27 +1,38 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { NgIcon } from '@ng-icons/core';
+import { CopCurrencyPipe } from '../../shared/pipes/cop-currency.pipe';
 import { SellerService } from '../../core/seller/seller.service';
 import { SellerProductService } from '../../core/seller/seller-product.service';
-import { SellerOrderService } from '../../core/seller/seller-order.service';
+import { SellerOrderService, SellerOrderSummary } from '../../core/seller/seller-order.service';
+import { AnalyticsService, SellerDashboard } from '../../core/analytics/analytics.service';
 import { SellerResponse } from '../../shared/models/seller.models';
 
-const STATUS_MAP: Record<string, { color: string; bg: string; border: string; label: string }> = {
-  DELIVERED: { color: 'var(--color-success)',    bg: 'rgba(0,200,150,0.12)', border: 'rgba(0,200,150,0.2)',  label: 'Entregada' },
-  PENDING:   { color: 'var(--color-warning)',    bg: 'rgba(255,140,0,0.12)', border: 'rgba(255,140,0,0.2)',  label: 'Pendiente' },
-  SHIPPED:   { color: 'var(--color-neon-cyan)',  bg: 'rgba(0,212,255,0.12)', border: 'rgba(0,212,255,0.2)',  label: 'Enviada'   },
-  CANCELLED: { color: 'var(--color-error)',      bg: 'rgba(255,0,60,0.12)',  border: 'rgba(255,0,60,0.2)',   label: 'Cancelada' },
-  CONFIRMED: { color: 'var(--color-neon-cyan)',  bg: 'rgba(0,212,255,0.12)', border: 'rgba(0,212,255,0.2)',  label: 'Confirmada'},
+const STATUS_META: Record<string, { icon: string; color: string; label: string }> = {
+  PENDING:   { icon: 'lucideShoppingBag', color: 'var(--color-warning)',   label: 'Nueva orden' },
+  CONFIRMED: { icon: 'lucideCheck',       color: 'var(--color-success)',   label: 'Orden confirmada' },
+  PREPARING: { icon: 'lucidePackage',     color: 'var(--color-neon-cyan)', label: 'En preparación' },
+  SHIPPED:   { icon: 'lucideTruck',       color: 'var(--color-accent)',    label: 'Enviada' },
+  DELIVERED: { icon: 'lucideCheckCheck',  color: 'var(--color-success)',   label: 'Entregada' },
+  CANCELLED: { icon: 'lucideXCircle',     color: 'var(--color-error)',     label: 'Cancelada' },
+};
+
+const STATUS_BADGE: Record<string, { color: string; bg: string; border: string; label: string }> = {
+  DELIVERED: { color: 'var(--color-success)',   bg: 'rgba(0,200,150,0.12)',  border: 'rgba(0,200,150,0.2)',  label: 'Entregada'   },
+  PENDING:   { color: 'var(--color-warning)',   bg: 'rgba(255,140,0,0.12)',  border: 'rgba(255,140,0,0.2)',  label: 'Pendiente'   },
+  SHIPPED:   { color: 'var(--color-neon-cyan)', bg: 'rgba(0,212,255,0.12)', border: 'rgba(0,212,255,0.2)',  label: 'Enviada'     },
+  CANCELLED: { color: 'var(--color-error)',     bg: 'rgba(255,0,60,0.12)',   border: 'rgba(255,0,60,0.2)',   label: 'Cancelada'   },
+  CONFIRMED: { color: 'var(--color-neon-cyan)', bg: 'rgba(0,212,255,0.12)', border: 'rgba(0,212,255,0.2)',  label: 'Confirmada'  },
+  PREPARING: { color: 'var(--color-neon-cyan)', bg: 'rgba(0,212,255,0.12)', border: 'rgba(0,212,255,0.2)',  label: 'Preparando'  },
 };
 
 @Component({
   selector: 'app-seller-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink, NgIcon],
+  imports: [CommonModule, RouterLink, NgIcon, CopCurrencyPipe],
   template: `
     <div class="relative">
-      <!-- Ambient backdrop -->
       <div class="absolute inset-0 pointer-events-none overflow-hidden -z-[1]">
         <div class="neo-grid-bg absolute inset-0 opacity-25"></div>
         <span class="neo-orb red"  style="width:480px;height:480px;top:-15%;right:-8%;opacity:0.12;"></span>
@@ -30,7 +41,7 @@ const STATUS_MAP: Record<string, { color: string; bg: string; border: string; la
 
       <div class="relative max-w-[1100px] mx-auto">
 
-        <!-- Greeting row -->
+        <!-- ── Greeting ──────────────────────────────────────────── -->
         <div class="neo-reveal flex flex-wrap justify-between items-start gap-4 mb-7">
           <div>
             <p class="neo-stat-label">Bienvenido de vuelta</p>
@@ -41,14 +52,12 @@ const STATUS_MAP: Record<string, { color: string; bg: string; border: string; la
               <div class="flex flex-wrap items-center gap-2.5 mt-2 text-[13px] text-text-secondary">
                 @if (seller()!.status === 'ACTIVE') {
                   <span class="inline-flex items-center gap-1.5">
-                    <span class="w-2 h-2 rounded-full bg-success"
-                          style="box-shadow: 0 0 8px var(--color-success);"></span>
+                    <span class="w-2 h-2 rounded-full bg-success" style="box-shadow:0 0 8px var(--color-success);"></span>
                     Tienda activa
                   </span>
                 } @else {
                   <span class="inline-flex items-center gap-1.5">
-                    <span class="w-2 h-2 rounded-full bg-yellow-400"></span>
-                    {{ seller()!.status }}
+                    <span class="w-2 h-2 rounded-full bg-yellow-400"></span>{{ seller()!.status }}
                   </span>
                 }
                 <span class="text-border-strong">·</span>
@@ -59,23 +68,18 @@ const STATUS_MAP: Record<string, { color: string; bg: string; border: string; la
               <div class="h-4 w-40 rounded bg-bg-elevated animate-pulse mt-2"></div>
             }
           </div>
-
           <div class="flex gap-2 shrink-0">
-            <a routerLink="/seller/profile"
-               class="neo-btn-outline !text-[13px] !py-2 !px-3.5">
-              <ng-icon name="lucideExternalLink" size="14" />
-              Ver tienda
+            <a routerLink="/seller/profile" class="neo-btn-outline !text-[13px] !py-2 !px-3.5">
+              <ng-icon name="lucideExternalLink" size="14" /> Ver tienda
             </a>
-            <a routerLink="/seller/products/new"
-               class="neo-btn-primary !text-[13px] !py-2 !px-3.5">
-              <ng-icon name="lucidePlus" size="14" />
-              Crear producto
+            <a routerLink="/seller/products/new" class="neo-btn-primary !text-[13px] !py-2 !px-3.5">
+              <ng-icon name="lucidePlus" size="14" /> Nuevo producto
             </a>
           </div>
         </div>
 
-        <!-- Metric cards -->
-        <div class="neo-stagger grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[18px] mb-6">
+        <!-- ── Metric cards ──────────────────────────────────────── -->
+        <div class="neo-stagger grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[18px] mb-5">
 
           <!-- Ingresos del mes -->
           <div class="neo-card-premium relative overflow-hidden p-5">
@@ -87,57 +91,50 @@ const STATUS_MAP: Record<string, { color: string; bg: string; border: string; la
                 <ng-icon name="lucideBanknote" size="14" />
               </div>
             </div>
-            <p class="font-display text-[30px] font-bold tracking-[-0.01em] text-text-primary">$ —</p>
-            <div class="flex items-center justify-between mt-2.5">
-              <span class="text-xs font-semibold text-success inline-flex items-center gap-1">
-                <ng-icon name="lucideTrendingUp" size="12" /> +12%
-              </span>
-              <svg width="120" height="36" viewBox="0 0 120 36" preserveAspectRatio="none">
-                <defs>
-                  <linearGradient id="sg-red" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stop-color="#FF003C" stop-opacity="0.35"/>
-                    <stop offset="100%" stop-color="#FF003C" stop-opacity="0"/>
-                  </linearGradient>
-                </defs>
-                <path [attr.d]="sparklineArea([8,14,11,16,22,19,24,28,26,32,30,38])" fill="url(#sg-red)"/>
-                <path [attr.d]="sparklineLine([8,14,11,16,22,19,24,28,26,32,30,38])"
-                      fill="none" stroke="#FF003C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </div>
+            @if (loadingAnalytics()) {
+              <div class="h-8 w-32 rounded bg-bg-elevated animate-pulse mb-2.5"></div>
+              <div class="h-3 w-20 rounded bg-bg-elevated animate-pulse"></div>
+            } @else {
+              <p class="font-display text-[28px] font-bold tracking-[-0.01em] text-text-primary leading-none">
+                {{ analytics()?.ingresosEsteMes | copCurrency }}
+              </p>
+              <div class="flex items-center gap-2 mt-2.5">
+                @if (revenuePct() !== null) {
+                  <span class="text-xs font-semibold inline-flex items-center gap-0.5"
+                        [class.text-success]="revenuePct()! >= 0"
+                        [class.text-error]="revenuePct()! < 0">
+                    <ng-icon [name]="revenuePct()! >= 0 ? 'lucideTrendingUp' : 'lucideTrendingDown'" size="12" />
+                    {{ revenuePct()! >= 0 ? '+' : '' }}{{ revenuePct() }}%
+                  </span>
+                  <span class="text-[11px] text-text-muted">vs mes ant.</span>
+                } @else {
+                  <span class="text-[11px] text-text-muted">Sin datos anteriores</span>
+                }
+              </div>
+            }
           </div>
 
-          <!-- Productos activos -->
+          <!-- Mis productos -->
           <div class="neo-card-premium relative overflow-hidden p-5">
             <div class="absolute -top-5 -right-5 w-[100px] h-[100px] rounded-full pointer-events-none"
                  style="background:radial-gradient(circle,#00D4FF,transparent 70%);opacity:.18;filter:blur(28px);"></div>
             <div class="flex items-center justify-between mb-2.5">
-              <p class="neo-stat-label">Productos activos</p>
+              <p class="neo-stat-label">Mis productos</p>
               <div class="w-7 h-7 rounded-lg bg-bg-elevated border border-border flex items-center justify-center"
                    style="color:#00D4FF;">
                 <ng-icon name="lucidePackage" size="14" />
               </div>
             </div>
             @if (loadingProducts()) {
-              <div class="h-8 w-14 rounded bg-bg-elevated animate-pulse"></div>
+              <div class="h-8 w-14 rounded bg-bg-elevated animate-pulse mb-2.5"></div>
+              <div class="h-3 w-20 rounded bg-bg-elevated animate-pulse"></div>
             } @else {
               <p class="font-display text-[30px] font-bold tracking-[-0.01em] text-text-primary">{{ totalProducts() }}</p>
+              <a routerLink="/seller/products"
+                 class="text-[11px] text-text-muted hover:text-accent transition-colors mt-2 inline-flex items-center gap-1">
+                Ver inventario <ng-icon name="lucideArrowRight" size="10" />
+              </a>
             }
-            <div class="flex items-center justify-between mt-2.5">
-              <span class="text-xs font-semibold text-success inline-flex items-center gap-1">
-                <ng-icon name="lucideTrendingUp" size="12" /> +4%
-              </span>
-              <svg width="120" height="36" viewBox="0 0 120 36" preserveAspectRatio="none">
-                <defs>
-                  <linearGradient id="sg-cyan" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stop-color="#00D4FF" stop-opacity="0.35"/>
-                    <stop offset="100%" stop-color="#00D4FF" stop-opacity="0"/>
-                  </linearGradient>
-                </defs>
-                <path [attr.d]="sparklineArea([110,112,115,116,118,120,122,121,124,125,126,128])" fill="url(#sg-cyan)"/>
-                <path [attr.d]="sparklineLine([110,112,115,116,118,120,122,121,124,125,126,128])"
-                      fill="none" stroke="#00D4FF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </div>
           </div>
 
           <!-- Órdenes pendientes -->
@@ -151,27 +148,19 @@ const STATUS_MAP: Record<string, { color: string; bg: string; border: string; la
                 <ng-icon name="lucideClipboardList" size="14" />
               </div>
             </div>
-            @if (loadingOrders()) {
-              <div class="h-8 w-10 rounded bg-bg-elevated animate-pulse"></div>
+            @if (loadingAnalytics()) {
+              <div class="h-8 w-10 rounded bg-bg-elevated animate-pulse mb-2.5"></div>
+              <div class="h-3 w-20 rounded bg-bg-elevated animate-pulse"></div>
             } @else {
-              <p class="font-display text-[30px] font-bold tracking-[-0.01em] text-text-primary">{{ pendingOrders() }}</p>
+              <p class="font-display text-[30px] font-bold tracking-[-0.01em] text-text-primary">
+                {{ analytics()?.ordenesPendientes ?? 0 }}
+              </p>
+              <div class="flex items-center gap-2 mt-2.5">
+                <span class="text-[11px] text-text-muted">
+                  {{ (analytics()?.ordenesEnPreparacion ?? 0) }} en preparación
+                </span>
+              </div>
             }
-            <div class="flex items-center justify-between mt-2.5">
-              <span class="text-xs font-semibold text-error inline-flex items-center gap-1">
-                <ng-icon name="lucideTrendingDown" size="12" /> -3%
-              </span>
-              <svg width="120" height="36" viewBox="0 0 120 36" preserveAspectRatio="none">
-                <defs>
-                  <linearGradient id="sg-orange" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stop-color="#FF8C00" stop-opacity="0.35"/>
-                    <stop offset="100%" stop-color="#FF8C00" stop-opacity="0"/>
-                  </linearGradient>
-                </defs>
-                <path [attr.d]="sparklineArea([12,10,11,9,8,10,9,8,7,8,7,7])" fill="url(#sg-orange)"/>
-                <path [attr.d]="sparklineLine([12,10,11,9,8,10,9,8,7,8,7,7])"
-                      fill="none" stroke="#FF8C00" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </div>
           </div>
 
           <!-- Calificación -->
@@ -185,27 +174,49 @@ const STATUS_MAP: Record<string, { color: string; bg: string; border: string; la
                 <ng-icon name="lucideStar" size="14" />
               </div>
             </div>
-            <p class="font-display text-[30px] font-bold tracking-[-0.01em] text-text-primary">—</p>
-            <div class="flex items-center justify-between mt-2.5">
-              <span class="text-xs font-semibold text-success inline-flex items-center gap-1">
-                <ng-icon name="lucideTrendingUp" size="12" /> +1%
-              </span>
-              <svg width="120" height="36" viewBox="0 0 120 36" preserveAspectRatio="none">
-                <defs>
-                  <linearGradient id="sg-gold" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stop-color="#D4A017" stop-opacity="0.35"/>
-                    <stop offset="100%" stop-color="#D4A017" stop-opacity="0"/>
-                  </linearGradient>
-                </defs>
-                <path [attr.d]="sparklineArea([45,46,46,47,47,47,48,48,47,48,48,48])" fill="url(#sg-gold)"/>
-                <path [attr.d]="sparklineLine([45,46,46,47,47,47,48,48,47,48,48,48])"
-                      fill="none" stroke="#D4A017" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </div>
+            @if (loadingAnalytics()) {
+              <div class="h-8 w-14 rounded bg-bg-elevated animate-pulse mb-2.5"></div>
+              <div class="h-3 w-20 rounded bg-bg-elevated animate-pulse"></div>
+            } @else if (analytics()?.totalResenas) {
+              <div class="flex items-baseline gap-1.5">
+                <p class="font-display text-[30px] font-bold tracking-[-0.01em]" style="color:#D4A017;">
+                  {{ analytics()!.promedioCalificacion | number:'1.1-1' }}
+                </p>
+                <span class="text-sm text-text-muted">/ 5</span>
+              </div>
+              <p class="text-[11px] text-text-muted mt-2">
+                {{ analytics()!.totalResenas }} reseña{{ analytics()!.totalResenas !== 1 ? 's' : '' }}
+              </p>
+            } @else {
+              <p class="font-display text-[28px] font-bold text-text-muted">—</p>
+              <p class="text-[11px] text-text-muted mt-2">Sin reseñas aún</p>
+            }
           </div>
         </div>
 
-        <!-- Orders + Activity grid -->
+        <!-- ── Totales históricos ─────────────────────────────────── -->
+        @if (!loadingAnalytics() && analytics()) {
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5 neo-reveal">
+            <div class="rounded-[12px] bg-bg-surface border border-border px-4 py-3 flex flex-col gap-0.5">
+              <p class="text-[10px] font-mono uppercase tracking-wider text-text-muted">Ingresos totales</p>
+              <p class="text-[15px] font-bold text-text-primary tabular-nums">{{ analytics()!.ingresosTotales | copCurrency }}</p>
+            </div>
+            <div class="rounded-[12px] bg-bg-surface border border-border px-4 py-3 flex flex-col gap-0.5">
+              <p class="text-[10px] font-mono uppercase tracking-wider text-text-muted">Órdenes totales</p>
+              <p class="text-[15px] font-bold text-text-primary tabular-nums">{{ analytics()!.ordenesTotales }}</p>
+            </div>
+            <div class="rounded-[12px] bg-bg-surface border border-border px-4 py-3 flex flex-col gap-0.5">
+              <p class="text-[10px] font-mono uppercase tracking-wider text-text-muted">Unidades este mes</p>
+              <p class="text-[15px] font-bold text-text-primary tabular-nums">{{ analytics()!.unidadesVendidasEsteMes }}</p>
+            </div>
+            <div class="rounded-[12px] bg-bg-surface border border-border px-4 py-3 flex flex-col gap-0.5">
+              <p class="text-[10px] font-mono uppercase tracking-wider text-text-muted">Enviadas activas</p>
+              <p class="text-[15px] font-bold text-text-primary tabular-nums">{{ analytics()!.ordenesEnviadas }}</p>
+            </div>
+          </div>
+        }
+
+        <!-- ── Orders + Activity ─────────────────────────────────── -->
         <div class="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-[18px]">
 
           <!-- Orders table -->
@@ -217,7 +228,6 @@ const STATUS_MAP: Record<string, { color: string; bg: string; border: string; la
                 Ver todas <ng-icon name="lucideArrowRight" size="12" />
               </a>
             </div>
-
             @if (loadingOrders()) {
               <div class="p-4 space-y-2">
                 @for (_ of [1,2,3,4,5]; track $index) {
@@ -234,29 +244,28 @@ const STATUS_MAP: Record<string, { color: string; bg: string; border: string; la
                 <table class="w-full text-[13px] border-collapse">
                   <thead>
                     <tr class="bg-bg-elevated">
-                      @for (h of ['Orden','Cliente','Fecha','Total','Estado']; track h) {
+                      @for (h of ['Cliente','Fecha','Total','Estado']; track h) {
                         <th class="text-left px-5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.06em]
-                                   text-text-muted font-mono whitespace-nowrap">{{ h }}</th>
+                                   text-text-muted font-mono whitespace-nowrap last:text-right">{{ h }}</th>
                       }
                     </tr>
                   </thead>
                   <tbody>
                     @for (order of recentOrders(); track order.id) {
                       <tr class="border-t border-border transition-colors hover:bg-bg-elevated/60">
-                        <td class="px-5 py-3 font-mono text-xs text-text-primary whitespace-nowrap">{{ order.id }}</td>
-                        <td class="px-5 py-3 text-text-secondary whitespace-nowrap">{{ order.buyerName }}</td>
-                        <td class="px-5 py-3 text-text-muted whitespace-nowrap">
+                        <td class="px-5 py-3 text-text-primary font-medium whitespace-nowrap">{{ order.buyerName }}</td>
+                        <td class="px-5 py-3 text-text-muted whitespace-nowrap text-[12px]">
                           {{ order.createdAt | date:'d MMM yyyy':'':'es' }}
                         </td>
-                        <td class="px-5 py-3 font-semibold text-text-primary whitespace-nowrap">
-                          {{ order.subtotal | currency:'COP':'symbol-narrow':'1.0-0':'es' }}
+                        <td class="px-5 py-3 font-semibold text-text-primary whitespace-nowrap tabular-nums">
+                          {{ order.subtotal | copCurrency }}
                         </td>
-                        <td class="px-5 py-3">
+                        <td class="px-5 py-3 text-right">
                           <span class="text-[11px] font-semibold px-[10px] py-[3px] rounded-full border whitespace-nowrap"
-                            [style.color]="orderStatusColor(order.status)"
-                            [style.background]="orderStatusBg(order.status)"
-                            [style.border-color]="orderStatusBorder(order.status)">
-                            {{ orderStatusLabel(order.status) }}
+                            [style.color]="badge(order.status).color"
+                            [style.background]="badge(order.status).bg"
+                            [style.border-color]="badge(order.status).border">
+                            {{ badge(order.status).label }}
                           </span>
                         </td>
                       </tr>
@@ -267,24 +276,43 @@ const STATUS_MAP: Record<string, { color: string; bg: string; border: string; la
             }
           </div>
 
-          <!-- Activity feed -->
+          <!-- Actividad reciente (desde órdenes reales) -->
           <div class="neo-card-premium p-5 neo-reveal">
-            <p class="text-sm font-semibold text-text-primary mb-3.5">Actividad</p>
-            <div class="flex flex-col gap-3.5">
-              @for (act of activity; track $index) {
-                <div class="flex gap-2.5 items-start">
-                  <div class="w-7 h-7 shrink-0 rounded-lg bg-bg-elevated border border-border
-                              flex items-center justify-center"
-                       [style.color]="act.color">
-                    <ng-icon [name]="act.icon" size="13" />
+            <p class="text-sm font-semibold text-text-primary mb-3.5">Actividad reciente</p>
+            @if (loadingOrders()) {
+              <div class="flex flex-col gap-3">
+                @for (_ of [1,2,3,4]; track $index) {
+                  <div class="flex gap-2.5 items-center">
+                    <div class="w-7 h-7 rounded-lg bg-bg-elevated animate-pulse shrink-0"></div>
+                    <div class="flex-1 flex flex-col gap-1">
+                      <div class="h-3 rounded bg-bg-elevated animate-pulse w-3/4"></div>
+                      <div class="h-2.5 rounded bg-bg-elevated animate-pulse w-1/3"></div>
+                    </div>
                   </div>
-                  <div class="min-w-0">
-                    <p class="text-[13px] text-text-primary leading-snug">{{ act.label }}</p>
-                    <p class="text-[11px] text-text-muted mt-0.5 font-mono">{{ act.time }}</p>
+                }
+              </div>
+            } @else if (activityItems().length === 0) {
+              <div class="flex flex-col items-center gap-2 py-8 text-center">
+                <ng-icon name="lucideActivity" size="24" class="text-text-muted" />
+                <p class="text-[12px] text-text-muted">Sin actividad reciente</p>
+              </div>
+            } @else {
+              <div class="flex flex-col gap-3.5">
+                @for (act of activityItems(); track $index) {
+                  <div class="flex gap-2.5 items-start">
+                    <div class="w-7 h-7 shrink-0 rounded-lg bg-bg-elevated border border-border
+                                flex items-center justify-center"
+                         [style.color]="act.color">
+                      <ng-icon [name]="act.icon" size="13" />
+                    </div>
+                    <div class="min-w-0">
+                      <p class="text-[13px] text-text-primary leading-snug">{{ act.label }}</p>
+                      <p class="text-[11px] text-text-muted mt-0.5 font-mono">{{ act.time }}</p>
+                    </div>
                   </div>
-                </div>
-              }
-            </div>
+                }
+              </div>
+            }
           </div>
 
         </div>
@@ -293,63 +321,67 @@ const STATUS_MAP: Record<string, { color: string; bg: string; border: string; la
   `,
 })
 export class SellerDashboardComponent implements OnInit {
-  private sellerService  = inject(SellerService);
-  private productService = inject(SellerProductService);
-  private orderService   = inject(SellerOrderService);
+  private sellerService   = inject(SellerService);
+  private productService  = inject(SellerProductService);
+  private orderService    = inject(SellerOrderService);
+  private analyticsService = inject(AnalyticsService);
 
-  seller         = signal<SellerResponse | null>(null);
-  totalProducts  = signal(0);
+  seller          = signal<SellerResponse | null>(null);
+  totalProducts   = signal(0);
   loadingProducts = signal(true);
-  pendingOrders  = signal(0);
-  recentOrders   = signal<any[]>([]);
-  loadingOrders  = signal(true);
+  recentOrders    = signal<SellerOrderSummary[]>([]);
+  loadingOrders   = signal(true);
+  analytics       = signal<SellerDashboard | null>(null);
+  loadingAnalytics = signal(true);
 
-  readonly activity = [
-    { icon: 'lucideCheck',         color: 'var(--color-success)',   label: 'ORD marcada como entregada',          time: 'hace 14 min' },
-    { icon: 'lucidePackage',       color: 'var(--color-neon-cyan)', label: 'Inventario actualizado en tu tienda', time: 'hace 1 h'    },
-    { icon: 'lucideStar',          color: '#D4A017',                label: 'Nueva reseña 5★ en tu tienda',        time: 'hace 3 h'    },
-    { icon: 'lucideTriangleAlert', color: 'var(--color-warning)',   label: 'Stock bajo: revisar inventario',      time: 'hace 5 h'    },
-    { icon: 'lucideUserPlus',      color: 'var(--color-accent)',    label: 'Nuevos seguidores en tu tienda',      time: 'hace 8 h'    },
-  ];
+  revenuePct = computed(() => {
+    const d = this.analytics();
+    if (!d || d.ingresosMesAnterior === 0) return null;
+    return Math.round(((d.ingresosEsteMes - d.ingresosMesAnterior) / d.ingresosMesAnterior) * 100);
+  });
 
-  orderStatusColor(s: string):  string { return (STATUS_MAP[s] ?? STATUS_MAP['PENDING']).color;  }
-  orderStatusBg(s: string):     string { return (STATUS_MAP[s] ?? STATUS_MAP['PENDING']).bg;     }
-  orderStatusBorder(s: string): string { return (STATUS_MAP[s] ?? STATUS_MAP['PENDING']).border; }
-  orderStatusLabel(s: string):  string { return (STATUS_MAP[s] ?? STATUS_MAP['PENDING']).label;  }
+  activityItems = computed(() =>
+    this.recentOrders().slice(0, 8).map(o => {
+      const meta = STATUS_META[o.status] ?? STATUS_META['PENDING'];
+      return {
+        icon:  meta.icon,
+        color: meta.color,
+        label: `${meta.label} — ${o.buyerName}`,
+        time:  this.timeAgo(o.createdAt),
+      };
+    })
+  );
 
-  sparklineLine(points: number[], w = 120, h = 36): string {
-    const max = Math.max(...points), min = Math.min(...points);
-    const range = max - min || 1;
-    const stepX = w / (points.length - 1);
-    return points.map((p, i) =>
-      `${i === 0 ? 'M' : 'L'}${(i * stepX).toFixed(1)},${(h - ((p - min) / range) * (h - 4) - 2).toFixed(1)}`
-    ).join(' ');
-  }
-
-  sparklineArea(points: number[], w = 120, h = 36): string {
-    const line = this.sparklineLine(points, w, h);
-    return `${line} L${w},${h} L0,${h} Z`;
-  }
+  badge(s: string) { return STATUS_BADGE[s] ?? STATUS_BADGE['PENDING']; }
 
   ngOnInit(): void {
-    this.sellerService.getMe().subscribe({
-      next: (res) => this.seller.set(res.data),
-    });
+    this.sellerService.getMe().subscribe({ next: res => this.seller.set(res.data) });
 
     this.productService.getMyProducts(0, 1).subscribe({
-      next: (res) => { this.totalProducts.set(res.data.totalElements); this.loadingProducts.set(false); },
-      error: () => this.loadingProducts.set(false),
+      next:  res => { this.totalProducts.set(res.data.totalElements); this.loadingProducts.set(false); },
+      error: ()  => this.loadingProducts.set(false),
     });
 
-    this.orderService.getMyOrders(0, 5).subscribe({
-      next: (res) => {
-        this.recentOrders.set(res.data.content);
-        this.pendingOrders.set(
-          res.data.content.filter((o: any) => o.status === 'PENDING' || o.status === 'CONFIRMED').length
-        );
-        this.loadingOrders.set(false);
-      },
-      error: () => this.loadingOrders.set(false),
+    this.orderService.getMyOrders(0, 8).subscribe({
+      next:  res => { this.recentOrders.set(res.data.content); this.loadingOrders.set(false); },
+      error: ()  => this.loadingOrders.set(false),
     });
+
+    this.analyticsService.getSellerAnalytics().subscribe({
+      next:  res => { this.analytics.set(res.data); this.loadingAnalytics.set(false); },
+      error: ()  => this.loadingAnalytics.set(false),
+    });
+  }
+
+  private timeAgo(dateStr: string): string {
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1)   return 'ahora';
+    if (mins < 60)  return `hace ${mins} min`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs  < 24)  return `hace ${hrs}h`;
+    const days = Math.floor(hrs / 24);
+    if (days < 7)   return `hace ${days}d`;
+    return new Date(dateStr).toLocaleDateString('es', { day: 'numeric', month: 'short' });
   }
 }
