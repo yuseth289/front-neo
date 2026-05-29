@@ -228,10 +228,29 @@ import { WishlistStateService } from '../../../core/account/wishlist-state.servi
                   }
                 </div>
 
-                <!-- Valores actuales -->
-                <div class="flex items-center justify-between mb-3 font-mono tabular-nums text-[12px] text-text-secondary">
-                  <span>{{ fmtPrice(sliderMin) }}</span>
-                  <span>{{ fmtPrice(sliderMax) }}</span>
+                <!-- Inputs min / max -->
+                <div class="flex items-center gap-2 mb-3">
+                  <div class="flex-1 relative">
+                    <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-[11px] text-text-muted pointer-events-none">$</span>
+                    <input type="number" placeholder="Mín"
+                           [value]="sliderMin || null"
+                           (change)="onInputMin($event)"
+                           min="0"
+                           class="w-full h-[30px] pl-5 pr-2 rounded-lg bg-bg-elevated border border-border
+                                  text-[12px] text-text-primary outline-none focus:border-accent transition-colors
+                                  placeholder:text-text-muted [appearance:textfield]" />
+                  </div>
+                  <span class="text-text-muted text-[11px] shrink-0">—</span>
+                  <div class="flex-1 relative">
+                    <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-[11px] text-text-muted pointer-events-none">$</span>
+                    <input type="number" placeholder="Máx"
+                           [value]="sliderMax < PRICE_MAX ? sliderMax : null"
+                           (change)="onInputMax($event)"
+                           min="0"
+                           class="w-full h-[30px] pl-5 pr-2 rounded-lg bg-bg-elevated border border-border
+                                  text-[12px] text-text-primary outline-none focus:border-accent transition-colors
+                                  placeholder:text-text-muted [appearance:textfield]" />
+                  </div>
                 </div>
 
                 <!-- Dual range slider -->
@@ -255,12 +274,6 @@ import { WishlistStateService } from '../../../core/account/wishlist-state.servi
                          [value]="sliderMax"
                          [style.z-index]="maxZIndex()"
                          (input)="onSliderMax($event)" />
-                </div>
-
-                <!-- Límites del rango -->
-                <div class="flex items-center justify-between mt-2 text-[10px] text-text-muted font-mono">
-                  <span>{{ fmtPrice(PRICE_MIN) }}</span>
-                  <span>{{ fmtPrice(PRICE_MAX) }}</span>
                 </div>
               </div>
 
@@ -474,6 +487,22 @@ export class CatalogPageComponent implements OnInit, OnDestroy {
     const val = +(e.target as HTMLInputElement).value;
     this.sliderMax = Math.max(val, this.sliderMin + this.PRICE_STEP);
     this.priceMax  = this.sliderMax < this.PRICE_MAX ? String(this.sliderMax) : '';
+    this.onPriceFilter();
+  }
+
+  onInputMin(e: Event): void {
+    const val = +(e.target as HTMLInputElement).value;
+    if (!val || val < this.PRICE_MIN) { this.sliderMin = this.PRICE_MIN; }
+    else { this.sliderMin = Math.min(val, this.sliderMax - this.PRICE_STEP); }
+    this.priceMin = this.sliderMin > 0 ? String(this.sliderMin) : '';
+    this.onPriceFilter();
+  }
+
+  onInputMax(e: Event): void {
+    const val = +(e.target as HTMLInputElement).value;
+    if (!val || val >= this.PRICE_MAX) { this.sliderMax = this.PRICE_MAX; }
+    else { this.sliderMax = Math.max(val, this.sliderMin + this.PRICE_STEP); }
+    this.priceMax = this.sliderMax < this.PRICE_MAX ? String(this.sliderMax) : '';
     this.onPriceFilter();
   }
 
