@@ -23,8 +23,9 @@ export class SellerProductService {
   private http = inject(HttpClient);
   private base = environment.apiUrl;
 
-  getMyProducts(page = 0, size = 20): Observable<ApiResponse<PageResponse<ProductSummaryResponse>>> {
-    const params = new HttpParams().set('page', page).set('size', size);
+  getMyProducts(page = 0, size = 20, q?: string): Observable<ApiResponse<PageResponse<ProductSummaryResponse>>> {
+    let params = new HttpParams().set('page', page).set('size', size);
+    if (q?.trim()) params = params.set('q', q.trim());
     return this.http.get<ApiResponse<PageResponse<ProductSummaryResponse>>>(
       `${this.base}/products/me`,
       { params },

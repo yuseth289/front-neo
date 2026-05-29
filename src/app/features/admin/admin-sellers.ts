@@ -1,6 +1,6 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, Validators, FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { NgIcon } from '@ng-icons/core';
 import { AdminService } from '../../core/admin/admin.service';
@@ -19,7 +19,7 @@ const STATUS_MAP: Record<SellerStatus, StatusMeta> = {
 @Component({
   selector: 'app-admin-sellers',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, NgIcon],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, NgIcon],
   template: `
     <!-- Modal compose -->
     @if (composing()) {
@@ -79,6 +79,23 @@ const STATUS_MAP: Record<SellerStatus, StatusMeta> = {
         <h1 class="font-display text-[26px] font-bold tracking-[-0.02em] text-text-primary mt-0.5">
           Vendedores
         </h1>
+      </div>
+
+      <!-- Search bar -->
+      <div class="relative mb-4">
+        <ng-icon name="lucideSearch" size="14"
+          class="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" />
+        <input [(ngModel)]="searchQ" (ngModelChange)="onSearch($event)"
+          placeholder="Buscar tienda por nombre…"
+          class="w-full h-[38px] pl-9 pr-3 rounded-[10px] bg-bg-elevated border border-border
+                 text-[13px] text-text-primary placeholder:text-text-muted outline-none
+                 focus:border-accent/50 transition-colors" />
+        @if (searchQ) {
+          <button (click)="clearSearch()"
+            class="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary transition-colors">
+            <ng-icon name="lucideX" size="13" />
+          </button>
+        }
       </div>
 
       <!-- Filter tabs -->
@@ -313,6 +330,20 @@ export class AdminSellersComponent implements OnInit {
 
   statusMeta(s: SellerStatus): StatusMeta { return STATUS_MAP[s] ?? STATUS_MAP.PENDING; }
 
+  searchQ = '';
+  private searchTimer: ReturnType<typeof setTimeout> | null = null;
+
+  onSearch(q: string): void {
+    if (this.searchTimer) clearTimeout(this.searchTimer);
+    this.searchTimer = setTimeout(() => { this.page.set(0); this.load(); }, 300);
+  }
+
+  clearSearch(): void {
+    this.searchQ = '';
+    this.page.set(0);
+    this.load();
+  }
+
   ngOnInit(): void { this.load(); }
 
   setFilter(value: SellerStatus | undefined): void {
@@ -323,7 +354,7 @@ export class AdminSellersComponent implements OnInit {
 
   private load(): void {
     this.loading.set(true);
-    this.adminService.getSellers(this.page(), 20, this.activeFilter()).subscribe({
+    this.adminService.getSellers(this.page(), 20, this.activeFilter(), this.searchQ || undefined).subscribe({
       next: (res) => {
         this.sellers.set(res.data.content);
         this.totalPages.set(res.data.totalPages);
