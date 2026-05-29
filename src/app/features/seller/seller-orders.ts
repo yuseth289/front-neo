@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NgIcon } from '@ng-icons/core';
@@ -57,6 +57,23 @@ const NEXT_LABEL: Partial<Record<OrderGroupStatus, string>> = {
           }
         </div>
 
+        <!-- Search bar -->
+        <div class="relative mb-5">
+          <ng-icon name="lucideSearch" size="14"
+            class="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" />
+          <input [(ngModel)]="searchQ"
+            placeholder="Buscar por comprador…"
+            class="w-full h-[38px] pl-9 pr-3 rounded-[10px] bg-bg-elevated border border-border
+                   text-[13px] text-text-primary placeholder:text-text-muted outline-none
+                   focus:border-accent/50 transition-colors" />
+          @if (searchQ) {
+            <button (click)="searchQ = ''"
+              class="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary transition-colors">
+              <ng-icon name="lucideX" size="13" />
+            </button>
+          }
+        </div>
+
         <!-- Loading -->
         @if (loading()) {
           <div class="flex flex-col gap-3">
@@ -66,7 +83,7 @@ const NEXT_LABEL: Partial<Record<OrderGroupStatus, string>> = {
           </div>
 
         <!-- Empty -->
-        } @else if (orders().length === 0) {
+        } @else if (filteredOrders().length === 0) {
           <div class="neo-card-premium p-16 flex flex-col items-center gap-4 text-center neo-reveal">
             <div class="relative">
               <div class="absolute inset-0 rounded-2xl pointer-events-none"
@@ -84,7 +101,7 @@ const NEXT_LABEL: Partial<Record<OrderGroupStatus, string>> = {
         <!-- Orders list -->
         } @else {
           <div class="neo-stagger flex flex-col gap-3">
-            @for (order of orders(); track order.id) {
+            @for (order of filteredOrders(); track order.id) {
               <div class="neo-card-premium overflow-hidden">
                 <!-- Card header -->
                 <div class="relative px-5 py-4 flex items-start justify-between gap-3 flex-wrap overflow-hidden cursor-pointer
@@ -262,6 +279,13 @@ export class SellerOrdersComponent implements OnInit {
   page         = signal(0);
   totalPages   = signal(0);
   advancing    = signal<string | null>(null);
+  searchQ      = '';
+
+  filteredOrders = computed(() => {
+    const q = this.searchQ.toLowerCase().trim();
+    if (!q) return this.orders();
+    return this.orders().filter(o => o.buyerName.toLowerCase().includes(q));
+  });
   trackingInput       = signal<string | null>(null);
   trackingNumberValue = '';
   expandedId   = signal<string | null>(null);

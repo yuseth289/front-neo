@@ -34,9 +34,10 @@ export class AdminService {
 
   // ── Sellers ──────────────────────────────────────────────────────────────
 
-  getSellers(page = 0, size = 20, status?: SellerStatus): Observable<ApiResponse<PageResponse<SellerResponse>>> {
+  getSellers(page = 0, size = 20, status?: SellerStatus, q?: string): Observable<ApiResponse<PageResponse<SellerResponse>>> {
     let params = new HttpParams().set('page', page).set('size', size);
     if (status) params = params.set('status', status);
+    if (q?.trim()) params = params.set('q', q.trim());
     return this.http.get<ApiResponse<PageResponse<SellerResponse>>>(`${this.base}/admin/sellers`, { params });
   }
 
@@ -54,9 +55,10 @@ export class AdminService {
 
   // ── Users ────────────────────────────────────────────────────────────────
 
-  getUsers(page = 0, size = 20, status?: UserStatus): Observable<ApiResponse<PageResponse<UserResponse>>> {
+  getUsers(page = 0, size = 20, status?: UserStatus, q?: string): Observable<ApiResponse<PageResponse<UserResponse>>> {
     let params = new HttpParams().set('page', page).set('size', size);
     if (status) params = params.set('status', status);
+    if (q?.trim()) params = params.set('q', q.trim());
     return this.http.get<ApiResponse<PageResponse<UserResponse>>>(`${this.base}/admin/users`, { params });
   }
 

@@ -1,6 +1,7 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { NgIcon } from '@ng-icons/core';
 import { CopCurrencyPipe } from '../../shared/pipes/cop-currency.pipe';
 import { SellerProductService } from '../../core/seller/seller-product.service';
@@ -17,7 +18,7 @@ const STATUS_MAP: Record<ProductStatus, { color: string; bg: string; border: str
 @Component({
   selector: 'app-seller-products',
   standalone: true,
-  imports: [CommonModule, RouterLink, NgIcon, CopCurrencyPipe],
+  imports: [CommonModule, RouterLink, FormsModule, NgIcon, CopCurrencyPipe],
   template: `
 
     <!-- ── Modal confirmar eliminación ───────────────────────── -->
@@ -71,6 +72,23 @@ const STATUS_MAP: Record<ProductStatus, { color: string; bg: string; border: str
           <a routerLink="/seller/products/new" class="neo-btn-primary !text-[13px] !py-2 !px-4">
             <ng-icon name="lucidePlus" size="14" /> Nuevo producto
           </a>
+        </div>
+
+        <!-- Search bar -->
+        <div class="relative mb-5">
+          <ng-icon name="lucideSearch" size="14"
+            class="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" />
+          <input [(ngModel)]="searchQ" (ngModelChange)="onSearch($event)"
+            placeholder="Buscar producto por nombre…"
+            class="w-full h-[38px] pl-9 pr-3 rounded-[10px] bg-bg-elevated border border-border
+                   text-[13px] text-text-primary placeholder:text-text-muted outline-none
+                   focus:border-accent/50 transition-colors" />
+          @if (searchQ) {
+            <button (click)="clearSearch()"
+              class="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary transition-colors">
+              <ng-icon name="lucideX" size="13" />
+            </button>
+          }
         </div>
 
         <!-- Loading skeletons -->
@@ -324,6 +342,20 @@ export class SellerProductsComponent implements OnInit {
     });
   }
 
+  searchQ = '';
+  private searchTimer: ReturnType<typeof setTimeout> | null = null;
+
+  onSearch(q: string): void {
+    if (this.searchTimer) clearTimeout(this.searchTimer);
+    this.searchTimer = setTimeout(() => { this.page.set(0); this.load(); }, 300);
+  }
+
+  clearSearch(): void {
+    this.searchQ = '';
+    this.page.set(0);
+    this.load();
+  }
+
   ngOnInit(): void {
     this.load();
     document.addEventListener('click', this.closeMenu);
@@ -341,7 +373,7 @@ export class SellerProductsComponent implements OnInit {
 
   private load(): void {
     this.loading.set(true);
-    this.productService.getMyProducts(this.page(), 20).subscribe({
+    this.productService.getMyProducts(this.page(), 20, this.searchQ || undefined).subscribe({
       next: (res) => {
         this.products.set(res.data.content);
         this.totalPages.set(res.data.totalPages);
