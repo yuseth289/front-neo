@@ -230,8 +230,8 @@ interface GalleryItem {
                   <div class="absolute inset-0 pointer-events-none"
                     style="background:radial-gradient(ellipse at 0% 50%,rgba(0,212,255,0.12),transparent 60%);"></div>
                   <div class="relative">
-                    <p class="text-[10px] font-semibold uppercase tracking-[0.08em] text-text-muted font-mono">Vista catálogo</p>
-                    <p class="text-[11px] text-text-muted mt-0.5">IVA incluido en precio final</p>
+                    <p class="text-[10px] font-semibold uppercase tracking-[0.08em] text-text-muted font-mono">Precio final al cliente</p>
+                    <p class="text-[11px] text-text-muted mt-0.5">Base × (1 + IVA%) — lo que paga el comprador</p>
                   </div>
                   <span class="relative font-display text-[24px] font-bold text-neon-cyan">
                     @if (previewPrice() > 0) { {{ previewPrice() | copCurrency }} } @else { — }
