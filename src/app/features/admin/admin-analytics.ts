@@ -1,8 +1,16 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NgIcon } from '@ng-icons/core';
 import { CopCurrencyPipe } from '../../shared/pipes/cop-currency.pipe';
 import { AnalyticsService, AdminDashboard } from '../../core/analytics/analytics.service';
+
+interface StatusItem {
+  icon: string;
+  color: string;
+  label: string;
+  value: string | number;
+  link?: string;
+}
 
 @Component({
   selector: 'app-admin-analytics',
@@ -10,7 +18,6 @@ import { AnalyticsService, AdminDashboard } from '../../core/analytics/analytics
   imports: [CommonModule, NgIcon, CopCurrencyPipe],
   template: `
     <div class="relative">
-      <!-- Ambient backdrop -->
       <div class="absolute inset-0 pointer-events-none overflow-hidden -z-[1]">
         <div class="neo-grid-bg absolute inset-0 opacity-25"></div>
         <span class="neo-orb red"  style="width:500px;height:500px;top:-15%;right:-8%;opacity:0.12;"></span>
@@ -27,7 +34,7 @@ import { AnalyticsService, AdminDashboard } from '../../core/analytics/analytics
           </h1>
         </div>
 
-        <!-- ── Loading ────────────────────────────────────────────── -->
+        <!-- Loading -->
         @if (loading()) {
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[18px] mb-6">
             @for (_ of [1,2,3,4]; track $index) {
@@ -39,7 +46,7 @@ import { AnalyticsService, AdminDashboard } from '../../core/analytics/analytics
             <div class="h-80 rounded-2xl bg-bg-surface border border-border animate-pulse"></div>
           </div>
 
-        <!-- ── Error ──────────────────────────────────────────────── -->
+        <!-- Error -->
         } @else if (error()) {
           <div class="neo-card-premium p-14 flex flex-col items-center gap-4 text-center">
             <div class="w-14 h-14 rounded-2xl bg-bg-elevated border border-border flex items-center justify-center">
@@ -51,13 +58,13 @@ import { AnalyticsService, AdminDashboard } from '../../core/analytics/analytics
             </div>
           </div>
 
-        <!-- ── Data ───────────────────────────────────────────────── -->
+        <!-- Data -->
         } @else if (data()) {
 
           <!-- ── Metric cards ──────────────────────────────────────── -->
-          <div class="neo-stagger grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[18px] mb-6">
+          <div class="neo-stagger grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[18px] mb-5">
 
-            <!-- Ingresos este mes -->
+            <!-- Ingresos del mes -->
             <div class="neo-card-premium relative overflow-hidden p-5">
               <div class="absolute -top-5 -right-5 w-[100px] h-[100px] rounded-full pointer-events-none"
                    style="background:radial-gradient(circle,#FF003C,transparent 70%);opacity:.18;filter:blur(28px);"></div>
@@ -70,21 +77,10 @@ import { AnalyticsService, AdminDashboard } from '../../core/analytics/analytics
               <p class="font-display text-[22px] font-bold tracking-[-0.01em] text-text-primary leading-none">
                 {{ data()!.ingresosEsteMes | copCurrency }}
               </p>
-              <div class="flex items-center justify-between mt-2.5">
-                <span class="text-xs font-semibold text-success inline-flex items-center gap-1">
-                  <ng-icon name="lucideTrendingUp" size="12" /> +18%
-                </span>
-                <svg width="100" height="32" viewBox="0 0 100 32" preserveAspectRatio="none">
-                  <defs>
-                    <linearGradient id="sg-aa-red" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stop-color="#FF003C" stop-opacity="0.35"/>
-                      <stop offset="100%" stop-color="#FF003C" stop-opacity="0"/>
-                    </linearGradient>
-                  </defs>
-                  <path [attr.d]="sparklineArea(revenuePoints, 100, 32)" fill="url(#sg-aa-red)"/>
-                  <path [attr.d]="sparklineLine(revenuePoints, 100, 32)"
-                        fill="none" stroke="#FF003C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
+              <div class="mt-2.5">
+                <p class="text-[11px] text-text-muted">
+                  Total histórico: {{ data()!.ingresosTotales | copCurrency }}
+                </p>
               </div>
             </div>
 
@@ -102,25 +98,16 @@ import { AnalyticsService, AdminDashboard } from '../../core/analytics/analytics
               <p class="font-display text-[30px] font-bold tracking-[-0.01em] text-text-primary">
                 {{ data()!.totalUsuarios }}
               </p>
-              <div class="flex items-center justify-between mt-2.5">
-                <span class="text-xs font-semibold inline-flex items-center gap-1" style="color:#00D4FF;">
-                  <ng-icon name="lucideTrendingUp" size="12" /> +{{ data()!.usuariosNuevosEsteMes }} este mes
+              <div class="flex items-center gap-1.5 mt-2.5">
+                <span class="text-xs font-semibold inline-flex items-center gap-0.5" style="color:#00D4FF;">
+                  <ng-icon name="lucideTrendingUp" size="12" />
+                  +{{ data()!.usuariosNuevosEsteMes }}
                 </span>
-                <svg width="100" height="32" viewBox="0 0 100 32" preserveAspectRatio="none">
-                  <defs>
-                    <linearGradient id="sg-aa-cyan" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stop-color="#00D4FF" stop-opacity="0.35"/>
-                      <stop offset="100%" stop-color="#00D4FF" stop-opacity="0"/>
-                    </linearGradient>
-                  </defs>
-                  <path [attr.d]="sparklineArea(usersPoints, 100, 32)" fill="url(#sg-aa-cyan)"/>
-                  <path [attr.d]="sparklineLine(usersPoints, 100, 32)"
-                        fill="none" stroke="#00D4FF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
+                <span class="text-[11px] text-text-muted">nuevos este mes</span>
               </div>
             </div>
 
-            <!-- Órdenes este mes -->
+            <!-- Órdenes del mes -->
             <div class="neo-card-premium relative overflow-hidden p-5">
               <div class="absolute -top-5 -right-5 w-[100px] h-[100px] rounded-full pointer-events-none"
                    style="background:radial-gradient(circle,#FF8C00,transparent 70%);opacity:.18;filter:blur(28px);"></div>
@@ -134,21 +121,10 @@ import { AnalyticsService, AdminDashboard } from '../../core/analytics/analytics
               <p class="font-display text-[30px] font-bold tracking-[-0.01em] text-text-primary">
                 {{ data()!.ordenesEsteMes }}
               </p>
-              <div class="flex items-center justify-between mt-2.5">
-                <span class="text-xs font-semibold text-success inline-flex items-center gap-1">
-                  <ng-icon name="lucideTrendingUp" size="12" /> +9%
-                </span>
-                <svg width="100" height="32" viewBox="0 0 100 32" preserveAspectRatio="none">
-                  <defs>
-                    <linearGradient id="sg-aa-orange" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stop-color="#FF8C00" stop-opacity="0.35"/>
-                      <stop offset="100%" stop-color="#FF8C00" stop-opacity="0"/>
-                    </linearGradient>
-                  </defs>
-                  <path [attr.d]="sparklineArea(ordersPoints, 100, 32)" fill="url(#sg-aa-orange)"/>
-                  <path [attr.d]="sparklineLine(ordersPoints, 100, 32)"
-                        fill="none" stroke="#FF8C00" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
+              <div class="mt-2.5">
+                <p class="text-[11px] text-text-muted">
+                  {{ data()!.ordenesPendientes }} pendientes · {{ data()!.ordenesTotales }} totales
+                </p>
               </div>
             </div>
 
@@ -166,31 +142,19 @@ import { AnalyticsService, AdminDashboard } from '../../core/analytics/analytics
               <p class="font-display text-[22px] font-bold tracking-[-0.01em] text-text-primary leading-none">
                 {{ data()!.comisionesEsteMes | copCurrency }}
               </p>
-              <div class="flex items-center justify-between mt-2.5">
-                <span class="text-xs font-semibold text-success inline-flex items-center gap-1">
-                  <ng-icon name="lucideTrendingUp" size="12" /> +6%
-                </span>
-                <svg width="100" height="32" viewBox="0 0 100 32" preserveAspectRatio="none">
-                  <defs>
-                    <linearGradient id="sg-aa-gold" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stop-color="#D4A017" stop-opacity="0.35"/>
-                      <stop offset="100%" stop-color="#D4A017" stop-opacity="0"/>
-                    </linearGradient>
-                  </defs>
-                  <path [attr.d]="sparklineArea(commissionPoints, 100, 32)" fill="url(#sg-aa-gold)"/>
-                  <path [attr.d]="sparklineLine(commissionPoints, 100, 32)"
-                        fill="none" stroke="#D4A017" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
+              <div class="mt-2.5">
+                <p class="text-[11px] text-text-muted">
+                  Monto aprobado: {{ data()!.montoAprobadoEsteMes | copCurrency }}
+                </p>
               </div>
             </div>
           </div>
 
-          <!-- ── Secondary stats row ───────────────────────────────── -->
-          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-[14px] mb-6 neo-reveal">
-
-            <div class="neo-card-premium p-4 col-span-1">
+          <!-- ── Resumen plataforma ─────────────────────────────────── -->
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-[14px] mb-5 neo-reveal">
+            <div class="neo-card-premium p-4">
               <p class="neo-stat-label mb-1.5">Ingresos totales</p>
-              <p class="font-display text-[16px] font-bold text-text-primary leading-snug">
+              <p class="font-display text-[15px] font-bold text-text-primary leading-snug">
                 {{ data()!.ingresosTotales | copCurrency }}
               </p>
             </div>
@@ -210,24 +174,23 @@ import { AnalyticsService, AdminDashboard } from '../../core/analytics/analytics
             </div>
             <div class="neo-card-premium p-4">
               <p class="neo-stat-label mb-1.5">En revisión</p>
-              <p class="font-display text-[22px] font-bold" style="color:var(--color-warning);">
+              <p class="font-display text-[22px] font-bold"
+                 [style.color]="data()!.vendedoresPendientesAprobacion > 0 ? 'var(--color-warning)' : 'var(--color-text-primary)'">
                 {{ data()!.vendedoresPendientesAprobacion }}
               </p>
             </div>
             <div class="neo-card-premium p-4">
               <p class="neo-stat-label mb-1.5">Catálogo activo</p>
-              <p class="font-display text-[22px] font-bold text-text-primary">
-                {{ data()!.totalProductosActivos }}
-              </p>
+              <p class="font-display text-[22px] font-bold text-text-primary">{{ data()!.totalProductosActivos }}</p>
               @if (data()!.productosPendientesRevision > 0) {
-                <p class="text-[11px] font-mono mt-0.5" style="color:var(--color-warning);">
+                <p class="text-[10px] font-mono mt-0.5" style="color:var(--color-warning);">
                   {{ data()!.productosPendientesRevision }} en revisión
                 </p>
               }
             </div>
           </div>
 
-          <!-- ── Lower grid ──────────────────────────────────────── -->
+          <!-- ── Lower grid ──────────────────────────────────────────── -->
           <div class="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-[18px]">
 
             <!-- Top productos -->
@@ -253,7 +216,7 @@ import { AnalyticsService, AdminDashboard } from '../../core/analytics/analytics
                       <tbody>
                         @for (p of data()!.topProductos; track p.productId; let i = $index) {
                           <tr class="border-t border-border transition-colors hover:bg-bg-elevated/60">
-                            <td class="px-5 py-3">
+                            <td class="px-5 py-3 w-8">
                               <span class="w-5 h-5 rounded-full bg-bg-elevated border border-border text-[11px]
                                            font-mono font-bold text-text-muted flex items-center justify-center">
                                 {{ i + 1 }}
@@ -271,17 +234,21 @@ import { AnalyticsService, AdminDashboard } from '../../core/analytics/analytics
                     </table>
                   </div>
                 </div>
+              } @else {
+                <div class="neo-card-premium p-10 flex flex-col items-center gap-3 text-center neo-reveal">
+                  <ng-icon name="lucidePackage" size="28" class="text-text-muted" />
+                  <p class="text-sm text-text-muted">Sin datos de productos vendidos aún</p>
+                </div>
               }
             </div>
 
-            <!-- Pagos + activity -->
+            <!-- Pagos + estado plataforma -->
             <div class="flex flex-col gap-[18px]">
 
               <!-- Pagos del mes -->
               <div class="neo-card-premium p-5 neo-reveal">
                 <p class="text-sm font-semibold text-text-primary mb-4">Pagos este mes</p>
                 <div class="flex flex-col gap-3">
-
                   <div class="flex items-center justify-between p-3 rounded-[10px] bg-success/8 border border-success/20">
                     <div>
                       <p class="text-[12px] font-semibold text-success">Aprobados</p>
@@ -293,7 +260,6 @@ import { AnalyticsService, AdminDashboard } from '../../core/analytics/analytics
                       {{ data()!.pagosAprobadosEsteMes }}
                     </p>
                   </div>
-
                   <div class="flex items-center justify-between p-3 rounded-[10px] bg-error/8 border border-error/20">
                     <div>
                       <p class="text-[12px] font-semibold text-error">Rechazados</p>
@@ -303,24 +269,40 @@ import { AnalyticsService, AdminDashboard } from '../../core/analytics/analytics
                       {{ data()!.pagosRechazadosEsteMes }}
                     </p>
                   </div>
-
+                  <!-- Tasa de éxito -->
+                  @if (paymentTotal() > 0) {
+                    <div class="pt-1">
+                      <div class="flex items-center justify-between text-[12px] mb-1.5">
+                        <span class="text-text-muted">Tasa de aprobación</span>
+                        <span class="font-semibold text-success">{{ approvalRate() }}%</span>
+                      </div>
+                      <div class="h-1.5 rounded-full bg-bg-elevated overflow-hidden">
+                        <div class="h-full rounded-full bg-success transition-all duration-700"
+                             [style.width]="approvalRate() + '%'"></div>
+                      </div>
+                    </div>
+                  }
                 </div>
               </div>
 
-              <!-- Activity feed -->
+              <!-- Estado de la plataforma (datos reales) -->
               <div class="neo-card-premium p-5 neo-reveal flex-1">
-                <p class="text-sm font-semibold text-text-primary mb-3.5">Actividad reciente</p>
-                <div class="flex flex-col gap-3.5">
-                  @for (act of activity; track $index) {
-                    <div class="flex gap-2.5 items-start">
+                <p class="text-sm font-semibold text-text-primary mb-3.5">Estado de la plataforma</p>
+                <div class="flex flex-col gap-3">
+                  @for (item of statusItems(); track item.label) {
+                    <div class="flex items-start gap-2.5">
                       <div class="w-7 h-7 shrink-0 rounded-lg bg-bg-elevated border border-border
                                   flex items-center justify-center"
-                           [style.color]="act.color">
-                        <ng-icon [name]="act.icon" size="13" />
+                           [style.color]="item.color">
+                        <ng-icon [name]="item.icon" size="13" />
                       </div>
-                      <div class="min-w-0">
-                        <p class="text-[13px] text-text-primary leading-snug">{{ act.label }}</p>
-                        <p class="text-[11px] text-text-muted mt-0.5 font-mono">{{ act.time }}</p>
+                      <div class="min-w-0 flex-1">
+                        <div class="flex items-center justify-between gap-2">
+                          <p class="text-[13px] text-text-primary leading-snug">{{ item.label }}</p>
+                          <p class="text-[13px] font-bold tabular-nums shrink-0" [style.color]="item.color">
+                            {{ item.value }}
+                          </p>
+                        </div>
                       </div>
                     </div>
                   }
@@ -342,36 +324,52 @@ export class AdminAnalyticsComponent implements OnInit {
   loading = signal(true);
   error   = signal(false);
 
-  readonly revenuePoints    = [10, 18, 14, 22, 28, 24, 32, 36, 30, 40, 38, 46];
-  readonly usersPoints      = [800,820,840,865,880,900,920,915,940,960,975,990];
-  readonly ordersPoints     = [22, 28, 24, 32, 38, 35, 42, 46, 40, 50, 48, 55];
-  readonly commissionPoints = [6, 10, 8, 12, 15, 13, 17, 19, 16, 21, 20, 24];
+  paymentTotal  = computed(() => (this.data()?.pagosAprobadosEsteMes ?? 0) + (this.data()?.pagosRechazadosEsteMes ?? 0));
+  approvalRate  = computed(() => {
+    const total = this.paymentTotal();
+    if (total === 0) return 0;
+    return Math.round(((this.data()!.pagosAprobadosEsteMes) / total) * 100);
+  });
 
-  readonly activity = [
-    { icon: 'lucideUserCheck',     color: 'var(--color-success)',   label: 'Nuevo vendedor aprobado',              time: 'hace 22 min' },
-    { icon: 'lucideShieldCheck',   color: 'var(--color-neon-cyan)', label: 'Producto aprobado en catálogo',        time: 'hace 45 min' },
-    { icon: 'lucideTriangleAlert', color: 'var(--color-warning)',   label: '3 vendedores pendientes de revisión',  time: 'hace 2 h'    },
-    { icon: 'lucideBanknote',      color: '#D4A017',                label: 'Pago de comisiones procesado',         time: 'hace 4 h'    },
-    { icon: 'lucideUsers',         color: 'var(--color-accent)',    label: '+38 nuevos usuarios registrados',      time: 'hace 6 h'    },
-  ];
-
-  sparklineLine(points: number[], w = 100, h = 32): string {
-    const max = Math.max(...points), min = Math.min(...points);
-    const range = max - min || 1;
-    const stepX = w / (points.length - 1);
-    return points.map((p, i) =>
-      `${i === 0 ? 'M' : 'L'}${(i * stepX).toFixed(1)},${(h - ((p - min) / range) * (h - 4) - 2).toFixed(1)}`
-    ).join(' ');
-  }
-
-  sparklineArea(points: number[], w = 100, h = 32): string {
-    return `${this.sparklineLine(points, w, h)} L${w},${h} L0,${h} Z`;
-  }
+  statusItems = computed((): StatusItem[] => {
+    const d = this.data();
+    if (!d) return [];
+    return [
+      {
+        icon:  'lucideUsers',
+        color: 'var(--color-neon-cyan)',
+        label: 'Usuarios registrados',
+        value: d.totalUsuarios,
+      },
+      {
+        icon:  'lucideStore',
+        color: d.vendedoresPendientesAprobacion > 0 ? 'var(--color-warning)' : 'var(--color-success)',
+        label: d.vendedoresPendientesAprobacion > 0
+          ? `${d.vendedoresPendientesAprobacion} vendedor(es) en revisión`
+          : 'Vendedores sin pendientes',
+        value: d.totalVendedores,
+      },
+      {
+        icon:  'lucidePackage',
+        color: d.productosPendientesRevision > 0 ? 'var(--color-warning)' : 'var(--color-success)',
+        label: d.productosPendientesRevision > 0
+          ? `${d.productosPendientesRevision} producto(s) en revisión`
+          : 'Catálogo sin revisiones',
+        value: d.totalProductosActivos,
+      },
+      {
+        icon:  'lucideClipboardList',
+        color: d.ordenesPendientes > 0 ? 'var(--color-warning)' : 'var(--color-success)',
+        label: d.ordenesPendientes > 0 ? 'Órdenes pendientes' : 'Sin órdenes pendientes',
+        value: d.ordenesPendientes,
+      },
+    ];
+  });
 
   ngOnInit(): void {
     this.analyticsService.getAdminAnalytics().subscribe({
-      next:  (res) => { this.data.set(res.data); this.loading.set(false); },
-      error: () => { this.error.set(true); this.loading.set(false); },
+      next:  res => { this.data.set(res.data); this.loading.set(false); },
+      error: ()  => { this.error.set(true); this.loading.set(false); },
     });
   }
 }
