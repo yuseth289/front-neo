@@ -69,7 +69,8 @@ const STATUS_BADGE: Record<string, { color: string; bg: string; border: string; 
             }
           </div>
           <div class="flex gap-2 shrink-0">
-            <a routerLink="/seller/profile" class="neo-btn-outline !text-[13px] !py-2 !px-3.5">
+            <a [routerLink]="['/store', seller()!.storeSlug]" target="_blank"
+               class="neo-btn-outline !text-[13px] !py-2 !px-3.5">
               <ng-icon name="lucideExternalLink" size="14" /> Ver tienda
             </a>
             <a routerLink="/seller/products/new" class="neo-btn-primary !text-[13px] !py-2 !px-3.5">
