@@ -59,7 +59,7 @@ import { WishlistStateService } from '../../../core/account/wishlist-state.servi
 
             <!-- Animated H1 -->
             <h1 class="font-display font-bold leading-[0.92] tracking-[-0.025em] text-text-primary"
-                style="font-size: clamp(48px, 7.2vw, 104px);">
+                style="font-size: clamp(16px, 7.5vw, 104px);">
               <span class="block overflow-hidden">
                 @for (ch of split('El marketplace'); track $index) {
                   <span class="neo-letter" [style.--d]="(120 + $index * 22) + 'ms'">{{ ch }}</span>
