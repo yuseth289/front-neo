@@ -7,7 +7,8 @@ import { from, of, switchMap, concatMap, catchError } from 'rxjs';
 import { CopCurrencyPipe } from '../../shared/pipes/cop-currency.pipe';
 import { SellerProductService } from '../../core/seller/seller-product.service';
 import { CategoryService } from '../../core/catalog/category.service';
-import { Category } from '../../shared/models/catalog.models';
+import { BrandService } from '../../core/catalog/brand.service';
+import { Category, Brand } from '../../shared/models/catalog.models';
 import { ProductImageResponse } from '../../shared/models/product.models';
 import { AiProductChatComponent, AiProductChatInput, ApplyDescriptionEvent } from './product-assistant/ai-product-chat.component';
 
@@ -177,12 +178,20 @@ interface GalleryItem {
                 <div class="grid grid-cols-2 gap-3">
                   <div>
                     <label class="block text-[11px] font-semibold text-text-muted mb-1.5 uppercase tracking-[0.07em]">Marca</label>
-                    <input type="text" formControlName="brand"
-                      placeholder="Ej: Corsair, Razer, NVIDIA"
-                      class="w-full rounded-[10px] bg-bg-elevated border border-border px-3.5 py-2.5 text-[14px]
-                             text-text-primary placeholder:text-text-muted outline-none
-                             focus:border-accent/60 focus:ring-[3px] focus:ring-accent/8 transition-all"
-                      [class.!border-error]="isInvalid('brand')" />
+                    <div class="relative">
+                      <select formControlName="brand"
+                        class="w-full rounded-[10px] bg-bg-elevated border border-border px-3.5 py-2.5 text-[14px]
+                               text-text-primary outline-none appearance-none pr-8
+                               focus:border-accent/60 focus:ring-[3px] focus:ring-accent/8 transition-all"
+                        [class.!border-error]="isInvalid('brand')">
+                        <option value="">Seleccionar marca…</option>
+                        @for (b of availableBrands(); track b.id) {
+                          <option [value]="b.name">{{ b.name }}</option>
+                        }
+                      </select>
+                      <ng-icon name="lucideChevronDown" size="13"
+                        class="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" />
+                    </div>
                   </div>
                   <div>
                     <label class="block text-[11px] font-semibold text-text-muted mb-1.5 uppercase tracking-[0.07em]">SKU</label>
@@ -595,10 +604,12 @@ export class SellerProductFormComponent implements OnInit {
   private router          = inject(Router);
   private productService  = inject(SellerProductService);
   private categoryService = inject(CategoryService);
+  private brandService    = inject(BrandService);
   private fb              = inject(FormBuilder);
 
-  productId   = signal<string | null>(null);
-  categories  = signal<Category[]>([]);
+  productId       = signal<string | null>(null);
+  categories      = signal<Category[]>([]);
+  availableBrands = signal<Brand[]>([]);
   saving      = signal(false);
   formError   = signal<string | null>(null);
   formSuccess = signal(false);
@@ -750,6 +761,10 @@ export class SellerProductFormComponent implements OnInit {
   ngOnInit(): void {
     this.categoryService.getTree().subscribe({
       next: (res) => this.categories.set(res.data),
+    });
+
+    this.brandService.getActive().subscribe({
+      next: (res) => this.availableBrands.set(res.data),
     });
 
     const id = this.route.snapshot.paramMap.get('id');

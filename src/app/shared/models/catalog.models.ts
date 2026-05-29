@@ -96,4 +96,5 @@ export interface ProductFilters {
   page?: number;
   size?: number;
   sort?: string;
+  brands?: string[];
 }

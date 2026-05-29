@@ -10,11 +10,17 @@ export class ProductService {
   private http = inject(HttpClient);
   private base = environment.apiUrl;
 
+  private appendBrands(params: HttpParams, brands?: string[]): HttpParams {
+    (brands ?? []).forEach(b => { params = params.append('brand', b); });
+    return params;
+  }
+
   getCatalog(filters: ProductFilters = {}): Observable<ApiResponse<PageResponse<ProductSummary>>> {
     let params = new HttpParams()
       .set('page', filters.page ?? 0)
       .set('size', filters.size ?? 20);
     if (filters.sort) params = params.set('sort', filters.sort);
+    params = this.appendBrands(params, filters.brands);
 
     return this.http.get<ApiResponse<PageResponse<ProductSummary>>>(
       `${this.base}/products`,
@@ -28,6 +34,7 @@ export class ProductService {
       .set('page', filters.page ?? 0)
       .set('size', filters.size ?? 20);
     if (filters.sort) params = params.set('sort', filters.sort);
+    params = this.appendBrands(params, filters.brands);
 
     return this.http.get<ApiResponse<PageResponse<ProductSummary>>>(
       `${this.base}/products/search`,
@@ -40,6 +47,7 @@ export class ProductService {
       .set('page', filters.page ?? 0)
       .set('size', filters.size ?? 20);
     if (filters.sort) params = params.set('sort', filters.sort);
+    params = this.appendBrands(params, filters.brands);
 
     return this.http.get<ApiResponse<PageResponse<ProductSummary>>>(
       `${this.base}/products/category/${categoryId}`,
