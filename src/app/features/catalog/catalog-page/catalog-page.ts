@@ -50,6 +50,36 @@ import { WishlistStateService } from '../../../core/account/wishlist-state.servi
     }
   `],
   template: `
+
+    <!-- Modal alerta de inicio de sesión -->
+    @if (loginAlert()) {
+      <div class="fixed inset-0 z-[90] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+           (click)="loginAlert.set(false)">
+        <div class="neo-card-premium p-6 w-full max-w-[360px] text-center" (click)="$event.stopPropagation()">
+          <div class="w-12 h-12 rounded-full bg-accent/10 border border-accent/30
+                      flex items-center justify-center mx-auto mb-4">
+            <ng-icon name="lucideLock" size="20" class="text-accent" />
+          </div>
+          <p class="text-[15px] font-semibold text-text-primary">Inicia sesión para continuar</p>
+          <p class="text-[13px] text-text-muted mt-1.5 mb-5">
+            Necesitas una cuenta para agregar productos al carrito.
+          </p>
+          <div class="flex gap-2">
+            <a routerLink="/register" (click)="loginAlert.set(false)"
+               class="flex-1 py-2.5 rounded-[10px] border border-border text-[13px]
+                      text-text-secondary hover:bg-bg-elevated transition-colors text-center">
+              Registrarse
+            </a>
+            <a routerLink="/login" (click)="loginAlert.set(false)"
+               class="flex-1 py-2.5 rounded-[10px] bg-accent text-white text-[13px] font-medium
+                      hover:bg-accent/90 transition-colors text-center">
+              Ingresar
+            </a>
+          </div>
+        </div>
+      </div>
+    }
+
     <div style="position:relative;padding-top:32px;padding-bottom:64px;">
 
       <!-- Ambient backdrop -->
@@ -424,6 +454,8 @@ export class CatalogPageComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   private search$ = new Subject<string>();
 
+  loginAlert = signal(false);
+
   products      = signal<ProductSummary[]>([]);
   stores        = signal<PublicSellerResponse[]>([]);
   categories    = signal<Category[]>([]);
@@ -640,6 +672,7 @@ export class CatalogPageComponent implements OnInit, OnDestroy {
   }
 
   onAddToCart(product: ProductSummary): void {
+    if (!this.isAuthenticated()) { this.loginAlert.set(true); return; }
     this.store.dispatch(CartActions.addItem({ request: { productId: product.id, quantity: 1 } }));
   }
 
@@ -648,10 +681,7 @@ export class CatalogPageComponent implements OnInit, OnDestroy {
   }
 
   onFavorite(product: ProductSummary): void {
-    if (!this.isAuthenticated()) {
-      this.router.navigate(['/login']);
-      return;
-    }
+    if (!this.isAuthenticated()) { this.loginAlert.set(true); return; }
     this.wishlistState.toggle(product.id);
   }
 }
