@@ -34,10 +34,11 @@ import {
   lucideLightbulb, lucidePencil, lucideImageUp, lucideListChecks,
   lucideSun, lucideMoon,
   lucideHeartOff, lucideBadgePercent,
-  lucidePaperclip, lucideSmile, lucideMoreHorizontal,
+  lucidePaperclip, lucideSmile, lucideMoreHorizontal, lucideMoreVertical,
   lucideMessageCircle, lucideSend,
   lucideBarChart2, lucideTrophy,
   lucideShoppingBag,
+  lucidePlay, lucidePause,
 } from '@ng-icons/lucide';
 import { routes } from './app.routes';
 import { environment } from '../environments/environment';
@@ -98,6 +99,7 @@ export const appConfig: ApplicationConfig = {
       lucideMessageCircle, lucideSend,
       lucideBarChart2, lucideTrophy,
       lucideShoppingBag,
+      lucideMoreVertical, lucidePlay, lucidePause,
     }),
   ],
 };
