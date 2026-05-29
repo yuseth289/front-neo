@@ -305,19 +305,6 @@ import { ProductResponse, InventoryResponse } from '../../shared/models/product.
                 </div>
               </div>
 
-              <!-- Tip card -->
-              <div class="rounded-[12px] border border-dashed border-neon-cyan/20 bg-neon-cyan/[0.03] p-4 relative overflow-hidden">
-                <div class="absolute inset-0 pointer-events-none"
-                  style="background:radial-gradient(ellipse at 0% 100%,rgba(0,212,255,0.08),transparent 60%);"></div>
-                <div class="relative flex gap-2.5">
-                  <ng-icon name="lucideLightbulb" size="14" class="text-neon-cyan shrink-0 mt-0.5" />
-                  <p class="text-[11px] text-text-muted leading-relaxed">
-                    Completa los productos con más imágenes y etiquetas relevantes para tener hasta un
-                    <span class="text-neon-cyan font-semibold">40% más</span> de probabilidad de venta.
-                  </p>
-                </div>
-              </div>
-
             </div><!-- /right -->
 
           </div>
