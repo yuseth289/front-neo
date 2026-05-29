@@ -8,10 +8,10 @@ import { ProductSummaryResponse } from '../../shared/models/product.models';
 import { ProductStatus } from '../../shared/models/enums';
 
 const STATUS_MAP: Record<ProductStatus, { color: string; bg: string; border: string; label: string }> = {
-  DRAFT:   { color: 'var(--color-text-muted)',  bg: 'var(--color-bg-elevated)', border: 'var(--color-border)',         label: 'Borrador'  },
-  ACTIVE:  { color: 'var(--color-success)',      bg: 'rgba(0,200,150,0.12)',     border: 'rgba(0,200,150,0.25)',        label: 'Activo'    },
-  PAUSED:  { color: '#FF8C00',                  bg: 'rgba(255,140,0,0.12)',     border: 'rgba(255,140,0,0.25)',        label: 'Pausado'   },
-  DELETED: { color: 'var(--color-error)',        bg: 'rgba(255,0,60,0.12)',      border: 'rgba(255,0,60,0.25)',         label: 'Eliminado' },
+  DRAFT:   { color: 'var(--color-text-muted)',  bg: 'var(--color-bg-elevated)', border: 'var(--color-border)',  label: 'Borrador' },
+  ACTIVE:  { color: 'var(--color-success)',      bg: 'rgba(0,200,150,0.12)',     border: 'rgba(0,200,150,0.25)', label: 'Activo'   },
+  PAUSED:  { color: '#FF8C00',                  bg: 'rgba(255,140,0,0.12)',     border: 'rgba(255,140,0,0.25)', label: 'Pausado'  },
+  DELETED: { color: 'var(--color-error)',        bg: 'rgba(255,0,60,0.12)',      border: 'rgba(255,0,60,0.25)',  label: 'Eliminado'},
 };
 
 @Component({
@@ -19,8 +19,41 @@ const STATUS_MAP: Record<ProductStatus, { color: string; bg: string; border: str
   standalone: true,
   imports: [CommonModule, RouterLink, NgIcon, CopCurrencyPipe],
   template: `
+
+    <!-- ── Modal confirmar eliminación ───────────────────────── -->
+    @if (confirmDelete()) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div class="neo-card-premium p-6 w-full max-w-[400px]">
+          <div class="w-10 h-10 rounded-full bg-error/10 border border-error/30
+                      flex items-center justify-center mb-4">
+            <ng-icon name="lucideTrash2" size="18" class="text-error" />
+          </div>
+          <p class="text-[15px] font-semibold text-text-primary">¿Eliminar este producto?</p>
+          <p class="text-[13px] text-text-muted mt-1 mb-5">
+            "<span class="text-text-secondary">{{ confirmDelete()!.name }}</span>" dejará de estar disponible.
+            Esta acción no se puede deshacer.
+          </p>
+          <div class="flex gap-2">
+            <button (click)="confirmDelete.set(null)"
+              class="flex-1 py-2.5 rounded-[10px] border border-border text-[13px]
+                     text-text-secondary hover:bg-bg-elevated transition-colors">
+              Cancelar
+            </button>
+            <button (click)="doDelete()"
+              [disabled]="processing() === confirmDelete()!.id"
+              class="flex-1 py-2.5 rounded-[10px] bg-error text-white text-[13px] font-medium
+                     hover:bg-error/90 disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
+              @if (processing() === confirmDelete()!.id) {
+                <ng-icon name="lucideRefreshCw" size="13" class="animate-spin" />
+              }
+              Eliminar
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
     <div class="relative">
-      <!-- Ambient backdrop -->
       <div class="absolute inset-0 pointer-events-none overflow-hidden -z-[1]">
         <div class="neo-grid-bg absolute inset-0 opacity-20"></div>
       </div>
@@ -35,10 +68,8 @@ const STATUS_MAP: Record<ProductStatus, { color: string; bg: string; border: str
               Mis productos
             </h1>
           </div>
-          <a routerLink="/seller/products/new"
-             class="neo-btn-primary !text-[13px] !py-2 !px-4">
-            <ng-icon name="lucidePlus" size="14" />
-            Nuevo producto
+          <a routerLink="/seller/products/new" class="neo-btn-primary !text-[13px] !py-2 !px-4">
+            <ng-icon name="lucidePlus" size="14" /> Nuevo producto
           </a>
         </div>
 
@@ -63,14 +94,14 @@ const STATUS_MAP: Record<ProductStatus, { color: string; bg: string; border: str
               <p class="text-sm text-text-muted mt-1">Crea tu primer producto para empezar a vender.</p>
             </div>
             <a routerLink="/seller/products/new" class="neo-btn-primary !text-[13px] !py-2 !px-4 mt-1">
-              <ng-icon name="lucidePlus" size="14" />
-              Crear primer producto
+              <ng-icon name="lucidePlus" size="14" /> Crear primer producto
             </a>
           </div>
 
         <!-- Products table -->
         } @else {
           <div class="neo-card-premium overflow-hidden neo-reveal">
+
             <!-- Table header -->
             <div class="bg-bg-elevated border-b border-border">
               <div class="grid grid-cols-[1fr_auto_auto_auto] items-center px-5 py-2.5 gap-4">
@@ -120,19 +151,91 @@ const STATUS_MAP: Record<ProductStatus, { color: string; bg: string; border: str
                     </span>
                   </div>
 
-                  <!-- Actions -->
-                  <div class="flex items-center gap-1">
-                    <a [routerLink]="['/seller/products', p.id]"
-                      class="p-1.5 rounded-lg text-text-muted hover:text-text-primary hover:bg-bg-elevated
-                             transition-colors inline-flex" aria-label="Editar producto" title="Editar">
-                      <ng-icon name="lucideSettings" size="15" />
-                    </a>
-                    <a [routerLink]="['/seller/products', p.id, 'inventory']"
-                      class="p-1.5 rounded-lg text-text-muted hover:text-accent hover:bg-bg-elevated
-                             transition-colors inline-flex" aria-label="Gestionar stock" title="Stock">
-                      <ng-icon name="lucidePackage" size="15" />
-                    </a>
+                  <!-- Actions dropdown -->
+                  <div class="relative" data-menu>
+                    <button (click)="toggleMenu(p.id)"
+                      [disabled]="processing() === p.id"
+                      class="w-8 h-8 flex items-center justify-center rounded-lg text-text-muted
+                             hover:text-text-primary hover:bg-bg-elevated transition-colors
+                             disabled:opacity-40 disabled:cursor-not-allowed"
+                      [ngClass]="openMenu() === p.id ? 'bg-bg-elevated text-text-primary' : ''">
+                      @if (processing() === p.id) {
+                        <ng-icon name="lucideRefreshCw" size="15" class="animate-spin" />
+                      } @else {
+                        <ng-icon name="lucideMoreVertical" size="15" />
+                      }
+                    </button>
+
+                    @if (openMenu() === p.id) {
+                      <div class="absolute right-0 top-full mt-1 w-44 z-20
+                                  bg-bg-surface border border-border rounded-[12px]
+                                  shadow-[var(--shadow-card-lift)] overflow-hidden py-1">
+
+                        <!-- Editar -->
+                        <a [routerLink]="['/seller/products', p.id]"
+                           (click)="openMenu.set(null)"
+                           class="flex items-center gap-2.5 px-4 py-2.5 text-[13px]
+                                  text-text-primary hover:bg-bg-elevated transition-colors">
+                          <ng-icon name="lucidePencil" size="14" class="text-text-muted shrink-0" />
+                          Editar
+                        </a>
+
+                        <!-- Stock -->
+                        <a [routerLink]="['/seller/products', p.id, 'inventory']"
+                           (click)="openMenu.set(null)"
+                           class="flex items-center gap-2.5 px-4 py-2.5 text-[13px]
+                                  text-text-primary hover:bg-bg-elevated transition-colors">
+                          <ng-icon name="lucidePackage" size="14" class="text-text-muted shrink-0" />
+                          Gestionar stock
+                        </a>
+
+                        <!-- Preview -->
+                        <a [routerLink]="['/seller/products', p.id, 'preview']"
+                           (click)="openMenu.set(null)"
+                           class="flex items-center gap-2.5 px-4 py-2.5 text-[13px]
+                                  text-text-primary hover:bg-bg-elevated transition-colors">
+                          <ng-icon name="lucideEye" size="14" class="text-text-muted shrink-0" />
+                          Vista previa
+                        </a>
+
+                        @if (p.status !== 'DELETED') {
+                          <div class="my-1 border-t border-border mx-2"></div>
+
+                          <!-- Publicar (DRAFT o PAUSED) -->
+                          @if (p.status === 'DRAFT' || p.status === 'PAUSED') {
+                            <button (click)="publish(p)"
+                              class="w-full flex items-center gap-2.5 px-4 py-2.5 text-[13px]
+                                     text-success hover:bg-success/8 transition-colors text-left">
+                              <ng-icon name="lucidePlay" size="14" class="shrink-0" />
+                              Publicar
+                            </button>
+                          }
+
+                          <!-- Pausar (solo ACTIVE) -->
+                          @if (p.status === 'ACTIVE') {
+                            <button (click)="pause(p)"
+                              class="w-full flex items-center gap-2.5 px-4 py-2.5 text-[13px]
+                                     hover:bg-bg-elevated transition-colors text-left"
+                              style="color:#FF8C00">
+                              <ng-icon name="lucidePause" size="14" class="shrink-0" />
+                              Pausar publicación
+                            </button>
+                          }
+
+                          <div class="my-1 border-t border-border mx-2"></div>
+
+                          <!-- Eliminar -->
+                          <button (click)="askDelete(p)"
+                            class="w-full flex items-center gap-2.5 px-4 py-2.5 text-[13px]
+                                   text-error hover:bg-error/8 transition-colors text-left">
+                            <ng-icon name="lucideTrash2" size="14" class="shrink-0" />
+                            Eliminar
+                          </button>
+                        }
+                      </div>
+                    }
                   </div>
+
                 </div>
               }
             </div>
@@ -143,14 +246,12 @@ const STATUS_MAP: Record<ProductStatus, { color: string; bg: string; border: str
             <div class="flex items-center justify-center gap-3 mt-5">
               <button (click)="prevPage()" [disabled]="page() === 0"
                 class="neo-btn-outline !text-[13px] !py-1.5 !px-3 disabled:opacity-40 disabled:cursor-not-allowed">
-                <ng-icon name="lucideChevronLeft" size="14" />
-                Anterior
+                <ng-icon name="lucideChevronLeft" size="14" /> Anterior
               </button>
               <span class="text-sm text-text-muted font-mono">{{ page() + 1 }} / {{ totalPages() }}</span>
               <button (click)="nextPage()" [disabled]="page() + 1 >= totalPages()"
                 class="neo-btn-outline !text-[13px] !py-1.5 !px-3 disabled:opacity-40 disabled:cursor-not-allowed">
-                Siguiente
-                <ng-icon name="lucideChevronRight" size="14" />
+                Siguiente <ng-icon name="lucideChevronRight" size="14" />
               </button>
             </div>
           }
@@ -163,17 +264,80 @@ const STATUS_MAP: Record<ProductStatus, { color: string; bg: string; border: str
 export class SellerProductsComponent implements OnInit {
   private productService = inject(SellerProductService);
 
-  products   = signal<ProductSummaryResponse[]>([]);
-  loading    = signal(true);
-  page       = signal(0);
-  totalPages = signal(0);
+  products      = signal<ProductSummaryResponse[]>([]);
+  loading       = signal(true);
+  page          = signal(0);
+  totalPages    = signal(0);
+  processing    = signal<string | null>(null);
+  openMenu      = signal<string | null>(null);
+  confirmDelete = signal<ProductSummaryResponse | null>(null);
 
   statusColor(s: ProductStatus):  string { return (STATUS_MAP[s] ?? STATUS_MAP.DRAFT).color;  }
   statusBg(s: ProductStatus):     string { return (STATUS_MAP[s] ?? STATUS_MAP.DRAFT).bg;     }
   statusBorder(s: ProductStatus): string { return (STATUS_MAP[s] ?? STATUS_MAP.DRAFT).border; }
   statusLabel(s: ProductStatus):  string { return (STATUS_MAP[s] ?? STATUS_MAP.DRAFT).label;  }
 
-  ngOnInit(): void { this.load(); }
+  toggleMenu(id: string): void {
+    this.openMenu.set(this.openMenu() === id ? null : id);
+  }
+
+  publish(p: ProductSummaryResponse): void {
+    this.openMenu.set(null);
+    this.processing.set(p.id);
+    this.productService.publish(p.id).subscribe({
+      next: res => {
+        this.products.update(list => list.map(x => x.id === p.id ? { ...x, status: res.data.status } : x));
+        this.processing.set(null);
+      },
+      error: () => this.processing.set(null),
+    });
+  }
+
+  pause(p: ProductSummaryResponse): void {
+    this.openMenu.set(null);
+    this.processing.set(p.id);
+    this.productService.pause(p.id).subscribe({
+      next: res => {
+        this.products.update(list => list.map(x => x.id === p.id ? { ...x, status: res.data.status } : x));
+        this.processing.set(null);
+      },
+      error: () => this.processing.set(null),
+    });
+  }
+
+  askDelete(p: ProductSummaryResponse): void {
+    this.openMenu.set(null);
+    this.confirmDelete.set(p);
+  }
+
+  doDelete(): void {
+    const p = this.confirmDelete();
+    if (!p) return;
+    this.processing.set(p.id);
+    this.productService.delete(p.id).subscribe({
+      next: () => {
+        this.products.update(list => list.filter(x => x.id !== p.id));
+        this.confirmDelete.set(null);
+        this.processing.set(null);
+      },
+      error: () => { this.confirmDelete.set(null); this.processing.set(null); },
+    });
+  }
+
+  ngOnInit(): void {
+    this.load();
+    document.addEventListener('click', this.closeMenu);
+  }
+
+  ngOnDestroy(): void {
+    document.removeEventListener('click', this.closeMenu);
+  }
+
+  private closeMenu = (e: MouseEvent) => {
+    if (!(e.target as HTMLElement).closest('[data-menu]')) {
+      this.openMenu.set(null);
+    }
+  };
 
   private load(): void {
     this.loading.set(true);
