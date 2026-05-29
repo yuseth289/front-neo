@@ -651,11 +651,13 @@ export class CatalogPageComponent implements OnInit, OnDestroy {
       this.stores.set([]);
     }
 
+    const brands = this.selectedBrands.size > 0 ? [...this.selectedBrands] : undefined;
+
     const request$ = q
-      ? this.productService.search(q, { page, sort })
+      ? this.productService.search(q, { page, sort, brands })
       : categoryId
-        ? this.productService.getByCategory(categoryId, { page, sort })
-        : this.productService.getCatalog({ page, sort });
+        ? this.productService.getByCategory(categoryId, { page, sort, brands })
+        : this.productService.getCatalog({ page, sort, brands });
 
     request$.subscribe({
       next: (res) => {
