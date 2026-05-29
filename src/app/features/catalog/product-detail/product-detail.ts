@@ -21,6 +21,36 @@ const PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9I
   standalone: true,
   imports: [CommonModule, RouterLink, FormsModule, NgIcon, CopCurrencyPipe],
   template: `
+
+    <!-- ── Modal alerta de inicio de sesión ───────────────────── -->
+    @if (loginAlert()) {
+      <div class="fixed inset-0 z-[90] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+           (click)="loginAlert.set(false)">
+        <div class="neo-card-premium p-6 w-full max-w-[360px] text-center" (click)="$event.stopPropagation()">
+          <div class="w-12 h-12 rounded-full bg-accent/10 border border-accent/30
+                      flex items-center justify-center mx-auto mb-4">
+            <ng-icon name="lucideLock" size="20" class="text-accent" />
+          </div>
+          <p class="text-[15px] font-semibold text-text-primary">Inicia sesión para continuar</p>
+          <p class="text-[13px] text-text-muted mt-1.5 mb-5">
+            {{ loginAlertMsg() }}
+          </p>
+          <div class="flex gap-2">
+            <a routerLink="/register" (click)="loginAlert.set(false)"
+               class="flex-1 py-2.5 rounded-[10px] border border-border text-[13px]
+                      text-text-secondary hover:bg-bg-elevated transition-colors text-center">
+              Registrarse
+            </a>
+            <a routerLink="/login" (click)="loginAlert.set(false)"
+               class="flex-1 py-2.5 rounded-[10px] bg-accent text-white text-[13px] font-medium
+                      hover:bg-accent/90 transition-colors text-center">
+              Ingresar
+            </a>
+          </div>
+        </div>
+      </div>
+    }
+
     <div class="relative">
       <!-- Ambient backdrop -->
       <div class="absolute inset-0 pointer-events-none overflow-hidden -z-[1]">
@@ -237,12 +267,7 @@ const PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9I
                   @if (chatOpen()) {
                     <div class="absolute top-full left-0 right-0 mt-1.5 z-20 neo-card-premium
                                 p-3 shadow-[var(--shadow-card-lift)]">
-                      @if (!isAuthenticated()) {
-                        <p class="text-[13px] text-text-muted text-center py-2">
-                          <a routerLink="/login" class="text-accent hover:underline">Inicia sesión</a>
-                          para contactar al vendedor
-                        </p>
-                      } @else {
+                      @if (isAuthenticated()) {
                         <p class="text-[12px] text-text-muted mb-2">¿En qué puedes ayudarte?</p>
                         <textarea
                           [(ngModel)]="chatMessage"
@@ -449,6 +474,16 @@ export class ProductDetailComponent implements OnInit {
   isAuthenticated  = this.store.selectSignal(selectIsAuthenticated);
   isBuyer          = computed(() => this.store.selectSignal(selectRole)() !== 'SELLER');
 
+  loginAlert    = signal(false);
+  loginAlertMsg = signal('');
+
+  private requireAuth(msg: string): boolean {
+    if (this.isAuthenticated()) return true;
+    this.loginAlertMsg.set(msg);
+    this.loginAlert.set(true);
+    return false;
+  }
+
   activeImage = computed(() => {
     const p = this.product();
     if (!p || p.images.length === 0) return PLACEHOLDER;
@@ -484,6 +519,7 @@ export class ProductDetailComponent implements OnInit {
   addToCart(): void {
     const p = this.product();
     if (!p) return;
+    if (!this.requireAuth('Necesitas una cuenta para agregar productos al carrito.')) return;
     this.store.dispatch(CartActions.addItem({ request: { productId: p.id, quantity: this.qty() } }));
     this.addedFeedback.set(true);
     setTimeout(() => this.addedFeedback.set(false), 2500);
@@ -492,13 +528,14 @@ export class ProductDetailComponent implements OnInit {
   toggleWishlist(): void {
     const p = this.product();
     if (!p) return;
-    if (!this.isAuthenticated()) { this.router.navigate(['/login']); return; }
+    if (!this.requireAuth('Inicia sesión para guardar productos en tu lista de deseos.')) return;
     this.wishlistState.toggle(p.id);
     this.wishlistAdded.set(!this.wishlistState.isInWishlist(p.id) ? false : true);
     setTimeout(() => this.wishlistAdded.set(false), 2000);
   }
 
   toggleChatPanel(): void {
+    if (!this.requireAuth('Inicia sesión para poder contactar al vendedor.')) return;
     this.chatOpen.update(v => !v);
   }
 
