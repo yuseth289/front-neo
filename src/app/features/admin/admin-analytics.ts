@@ -183,8 +183,8 @@ interface StatusItem {
               <p class="neo-stat-label mb-1.5">Catálogo activo</p>
               <p class="font-display text-[22px] font-bold text-text-primary">{{ data()!.totalProductosActivos }}</p>
               @if (data()!.productosPendientesRevision > 0) {
-                <p class="text-[10px] font-mono mt-0.5" style="color:var(--color-warning);">
-                  {{ data()!.productosPendientesRevision }} en revisión
+                <p class="text-[10px] font-mono mt-0.5" style="color:var(--color-text-muted);">
+                  {{ data()!.productosPendientesRevision }} en borrador
                 </p>
               }
             </div>
@@ -351,10 +351,10 @@ export class AdminAnalyticsComponent implements OnInit {
       },
       {
         icon:  'lucidePackage',
-        color: d.productosPendientesRevision > 0 ? 'var(--color-warning)' : 'var(--color-success)',
+        color: 'var(--color-success)',
         label: d.productosPendientesRevision > 0
-          ? `${d.productosPendientesRevision} producto(s) en revisión`
-          : 'Catálogo sin revisiones',
+          ? `${d.productosPendientesRevision} producto(s) en borrador`
+          : 'Catálogo sin borradores',
         value: d.totalProductosActivos,
       },
       {
