@@ -159,14 +159,37 @@ const STATUS_MAP: Record<ProductStatus, { color: string; bg: string; border: str
                     {{ p.finalPrice | copCurrency }}
                   </span>
 
-                  <!-- Status pill -->
-                  <div class="w-24 flex justify-center">
-                    <span class="text-[11px] font-semibold px-[10px] py-[3px] rounded-full border whitespace-nowrap"
-                      [style.color]="statusColor(p.status)"
-                      [style.background]="statusBg(p.status)"
-                      [style.border-color]="statusBorder(p.status)">
-                      {{ statusLabel(p.status) }}
-                    </span>
+                  <!-- Toggle activar / pausar -->
+                  <div class="w-24 flex flex-col items-center gap-1">
+                    @if (p.status !== 'DELETED') {
+                      <button
+                        (click)="toggleStatus(p); $event.stopPropagation()"
+                        [disabled]="processing() === p.id"
+                        class="relative inline-flex h-[22px] w-10 shrink-0 rounded-full border-2 border-transparent
+                               transition-colors duration-200 focus:outline-none disabled:opacity-40 disabled:cursor-not-allowed"
+                        [class.bg-success]="p.status === 'ACTIVE'"
+                        [class.bg-bg-elevated]="p.status !== 'ACTIVE'"
+                        [style.box-shadow]="p.status === 'ACTIVE' ? '0 0 10px rgba(0,200,120,0.4)' : ''"
+                        [attr.aria-checked]="p.status === 'ACTIVE'"
+                        role="switch">
+                        <span class="pointer-events-none inline-block h-[14px] w-[14px] rounded-full
+                                     bg-white shadow-sm transform transition-transform duration-200 mt-[1px]"
+                              [class.translate-x-[20px]]="p.status === 'ACTIVE'"
+                              [class.translate-x-[1px]]="p.status !== 'ACTIVE'">
+                        </span>
+                      </button>
+                      <span class="text-[10px] font-medium whitespace-nowrap"
+                            [style.color]="statusColor(p.status)">
+                        {{ statusLabel(p.status) }}
+                      </span>
+                    } @else {
+                      <span class="text-[11px] font-semibold px-[10px] py-[3px] rounded-full border whitespace-nowrap"
+                        [style.color]="statusColor(p.status)"
+                        [style.background]="statusBg(p.status)"
+                        [style.border-color]="statusBorder(p.status)">
+                        {{ statusLabel(p.status) }}
+                      </span>
+                    }
                   </div>
 
                   <!-- Actions dropdown -->
@@ -321,6 +344,14 @@ export class SellerProductsComponent implements OnInit {
       },
       error: () => this.processing.set(null),
     });
+  }
+
+  toggleStatus(p: ProductSummaryResponse): void {
+    if (p.status === 'ACTIVE') {
+      this.pause(p);
+    } else if (p.status === 'PAUSED' || p.status === 'DRAFT') {
+      this.publish(p);
+    }
   }
 
   askDelete(p: ProductSummaryResponse): void {
