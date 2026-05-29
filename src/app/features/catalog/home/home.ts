@@ -32,9 +32,9 @@ import { WishlistStateService } from '../../../core/account/wishlist-state.servi
           <span class="neo-glow-orbit" style="top:50%;left:50%;transform:translate(-50%,-50%);"></span>
         </div>
 
-        <!-- Hero carousel marquee (oculto en móvil para no tapar el texto) -->
+        <!-- Hero carousel marquee -->
         <div aria-hidden="true"
-             class="hidden sm:block absolute left-0 right-0 top-1/2 -translate-y-1/2 pointer-events-none opacity-55">
+             class="absolute left-0 right-0 top-1/2 -translate-y-1/2 pointer-events-none opacity-20 sm:opacity-55">
           <div class="neo-marquee">
             @for (p of carouselProducts(); track p.id; let i = $index) {
               <div class="shrink-0 w-[280px] h-[280px] rounded-3xl overflow-hidden border border-white/[0.06]
