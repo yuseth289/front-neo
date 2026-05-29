@@ -300,6 +300,31 @@ const PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9I
             </div><!-- /info -->
           </div>
 
+          <!-- ── CARACTERÍSTICAS ──────────────────────────────────────── -->
+          @if (specEntries().length > 0) {
+            <div class="mt-10 pt-8 border-t border-border">
+              <h2 class="font-display text-[20px] font-bold text-text-primary mb-5">
+                Características del producto
+              </h2>
+              <div class="neo-card-premium overflow-hidden">
+                <table class="w-full text-[13px] border-collapse">
+                  <tbody>
+                    @for (entry of specEntries(); track entry.key; let odd = $odd) {
+                      <tr [class.bg-bg-elevated]="odd">
+                        <td class="px-5 py-3 w-[40%] max-w-[200px] font-medium text-text-secondary border-b border-border align-top">
+                          {{ entry.key }}
+                        </td>
+                        <td class="px-5 py-3 text-text-primary border-b border-border align-top">
+                          {{ entry.value }}
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          }
+
           <!-- ── REVIEWS ───────────────────────────────────────────────── -->
           <div class="mt-14 pt-10 border-t border-border">
 
@@ -431,6 +456,12 @@ export class ProductDetailComponent implements OnInit {
   });
 
   roundedRating = computed(() => Math.round(this.ratingSummary()?.averageRating ?? 0));
+
+  specEntries = computed(() => {
+    const specs = this.product()?.specifications;
+    if (!specs) return [];
+    return Object.entries(specs).filter(([, v]) => v?.trim()).map(([key, value]) => ({ key, value }));
+  });
 
   incQty(): void { this.qty.update(q => Math.min(q + 1, 99)); }
   decQty(): void { this.qty.update(q => Math.max(q - 1, 1)); }

@@ -45,6 +45,7 @@ export interface ProductResponse {
   status: ProductStatus;
   availableStock?: number | null;
   images: ProductImageResponse[];
+  specifications?: Record<string, string>;
   createdAt: string;
 }
 
@@ -57,6 +58,7 @@ export interface CreateProductRequest {
   basePrice: number;
   ivaPercent: number;
   condition?: string;
+  specifications?: Record<string, string>;
 }
 
 export interface OfferResponse {

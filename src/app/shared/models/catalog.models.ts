@@ -38,6 +38,7 @@ export interface ProductDetail {
   status: ProductStatus;
   availableStock?: number | null;
   images: ProductImage[];
+  specifications?: Record<string, string>;
   createdAt: string;
   updatedAt: string;
 }
