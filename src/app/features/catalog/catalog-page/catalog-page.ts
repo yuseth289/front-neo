@@ -21,6 +21,34 @@ import { WishlistStateService } from '../../../core/account/wishlist-state.servi
   selector: 'app-catalog-page',
   standalone: true,
   imports: [CommonModule, RouterLink, FormsModule, NgIcon, ProductCardComponent],
+  styles: [`
+    .price-thumb {
+      -webkit-appearance: none; appearance: none;
+      position: absolute; width: 100%; height: 0;
+      background: transparent; pointer-events: none; outline: none;
+    }
+    .price-thumb::-webkit-slider-thumb {
+      -webkit-appearance: none; appearance: none;
+      width: 18px; height: 18px; border-radius: 50%; cursor: pointer;
+      pointer-events: all; position: relative; z-index: 1;
+      background: var(--color-accent);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 25%, transparent),
+                  0 0 12px var(--color-accent-glow);
+      border: 2px solid var(--color-bg-surface);
+      transition: box-shadow 0.15s;
+    }
+    .price-thumb::-moz-range-thumb {
+      width: 18px; height: 18px; border-radius: 50%; cursor: pointer;
+      pointer-events: all;
+      background: var(--color-accent);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 25%, transparent);
+      border: 2px solid var(--color-bg-surface);
+    }
+    .price-thumb::-webkit-slider-thumb:hover {
+      box-shadow: 0 0 0 5px color-mix(in srgb, var(--color-accent) 20%, transparent),
+                  0 0 18px var(--color-accent-glow);
+    }
+  `],
   template: `
     <div style="position:relative;padding-top:32px;padding-bottom:64px;">
 
@@ -188,24 +216,49 @@ import { WishlistStateService } from '../../../core/account/wishlist-state.servi
                 </button>
               </div>
 
-              <!-- Price range -->
+              <!-- Price range slider -->
               <div class="mb-5">
-                <p class="text-[12px] font-semibold text-text-primary mb-2.5">Precio (COP)</p>
-                <div class="flex gap-2">
-                  <input [(ngModel)]="priceMin" (ngModelChange)="onPriceFilter()"
-                         placeholder="Mín" type="number"
-                         class="h-[34px] w-full rounded-lg bg-bg-elevated border border-border text-[13px]
-                                text-text-primary px-3 outline-none focus:border-accent transition-colors
-                                placeholder:text-text-muted" />
-                  <input [(ngModel)]="priceMax" (ngModelChange)="onPriceFilter()"
-                         placeholder="Máx" type="number"
-                         class="h-[34px] w-full rounded-lg bg-bg-elevated border border-border text-[13px]
-                                text-text-primary px-3 outline-none focus:border-accent transition-colors
-                                placeholder:text-text-muted" />
+                <div class="flex items-center justify-between mb-2">
+                  <p class="text-[12px] font-semibold text-text-primary">Precio (COP)</p>
+                  @if (sliderMin > PRICE_MIN || sliderMax < PRICE_MAX) {
+                    <button (click)="resetPrice()"
+                      class="text-[11px] text-accent hover:opacity-70 transition-opacity">
+                      Limpiar
+                    </button>
+                  }
                 </div>
-                <div class="relative h-1 bg-bg-elevated rounded-full mt-3.5">
-                  <div class="absolute left-[20%] right-[30%] top-0 bottom-0 bg-accent rounded-full"
-                       style="box-shadow: 0 0 12px var(--color-accent-glow)"></div>
+
+                <!-- Valores actuales -->
+                <div class="flex items-center justify-between mb-3 font-mono tabular-nums text-[12px] text-text-secondary">
+                  <span>{{ fmtPrice(sliderMin) }}</span>
+                  <span>{{ fmtPrice(sliderMax) }}</span>
+                </div>
+
+                <!-- Dual range slider -->
+                <div class="relative h-5 flex items-center">
+                  <!-- Track base -->
+                  <div class="absolute left-0 right-0 h-1 rounded-full bg-bg-elevated"></div>
+                  <!-- Track fill -->
+                  <div class="absolute h-1 rounded-full pointer-events-none"
+                       [style.left]="leftPct() + '%'"
+                       [style.right]="(100 - rightPct()) + '%'"
+                       style="background:var(--color-accent);box-shadow:0 0 10px var(--color-accent-glow)"></div>
+                  <!-- Min thumb -->
+                  <input type="range" class="price-thumb"
+                         [min]="PRICE_MIN" [max]="PRICE_MAX" [step]="PRICE_STEP"
+                         [value]="sliderMin"
+                         (input)="onSliderMin($event)" />
+                  <!-- Max thumb -->
+                  <input type="range" class="price-thumb"
+                         [min]="PRICE_MIN" [max]="PRICE_MAX" [step]="PRICE_STEP"
+                         [value]="sliderMax"
+                         (input)="onSliderMax($event)" />
+                </div>
+
+                <!-- Límites del rango -->
+                <div class="flex items-center justify-between mt-2 text-[10px] text-text-muted font-mono">
+                  <span>{{ fmtPrice(PRICE_MIN) }}</span>
+                  <span>{{ fmtPrice(PRICE_MAX) }}</span>
                 </div>
               </div>
 
@@ -392,6 +445,42 @@ export class CatalogPageComponent implements OnInit, OnDestroy {
   sortValue = '';
   priceMin = '';
   priceMax = '';
+
+  readonly PRICE_MIN  = 0;
+  readonly PRICE_MAX  = 5_000_000;
+  readonly PRICE_STEP = 50_000;
+  sliderMin = 0;
+  sliderMax = 5_000_000;
+
+  leftPct():  number { return (this.sliderMin / this.PRICE_MAX) * 100; }
+  rightPct(): number { return (this.sliderMax / this.PRICE_MAX) * 100; }
+
+  fmtPrice(v: number): string {
+    return '$ ' + v.toLocaleString('es-CO');
+  }
+
+  onSliderMin(e: Event): void {
+    const val = +(e.target as HTMLInputElement).value;
+    this.sliderMin = Math.min(val, this.sliderMax - this.PRICE_STEP);
+    this.priceMin  = this.sliderMin > 0 ? String(this.sliderMin) : '';
+    this.onPriceFilter();
+  }
+
+  onSliderMax(e: Event): void {
+    const val = +(e.target as HTMLInputElement).value;
+    this.sliderMax = Math.max(val, this.sliderMin + this.PRICE_STEP);
+    this.priceMax  = this.sliderMax < this.PRICE_MAX ? String(this.sliderMax) : '';
+    this.onPriceFilter();
+  }
+
+  resetPrice(): void {
+    this.sliderMin = this.PRICE_MIN;
+    this.sliderMax = this.PRICE_MAX;
+    this.priceMin  = '';
+    this.priceMax  = '';
+    this.onPriceFilter();
+  }
+
   selectedBrands = new Set<string>();
   selectedRatings = new Set<number>();
 
@@ -487,8 +576,10 @@ export class CatalogPageComponent implements OnInit, OnDestroy {
   clearFilters(): void {
     this.searchQuery = '';
     this.sortValue = '';
-    this.priceMin = '';
-    this.priceMax = '';
+    this.priceMin  = '';
+    this.priceMax  = '';
+    this.sliderMin = this.PRICE_MIN;
+    this.sliderMax = this.PRICE_MAX;
     this.selectedBrands = new Set();
     this.selectedRatings = new Set();
     this.currentPage.set(0);
