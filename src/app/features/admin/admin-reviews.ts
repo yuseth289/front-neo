@@ -1,9 +1,11 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
+import { Subject, debounceTime, distinctUntilChanged, switchMap, of } from 'rxjs';
 import { NgIcon } from '@ng-icons/core';
 import { AdminService } from '../../core/admin/admin.service';
-import { Review } from '../../shared/models/catalog.models';
+import { ProductService } from '../../core/catalog/product.service';
+import { Review, ProductSummary } from '../../shared/models/catalog.models';
 
 @Component({
   selector: 'app-admin-reviews',
@@ -112,19 +114,79 @@ import { Review } from '../../shared/models/catalog.models';
               <form [formGroup]="createForm" (ngSubmit)="submitCreate()" novalidate class="flex flex-col gap-4">
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
+                  <div class="relative">
                     <label class="block text-[11px] font-mono uppercase tracking-wider mb-1.5"
-                           style="color: var(--color-accent)">ID del producto *</label>
-                    <input type="text" formControlName="productId"
-                      placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-                      class="w-full rounded-[10px] border px-3.5 py-2.5 text-[12px] font-mono text-text-primary
-                             placeholder:text-text-muted outline-none transition-all
-                             focus:ring-2 focus:ring-accent/20 focus:border-accent/50"
-                      style="background: var(--color-bg-elevated); border-color: var(--color-border)"
-                      [style.border-color]="createForm.get('productId')?.invalid && createForm.get('productId')?.touched
-                        ? 'rgba(239,68,68,0.55)' : ''" />
-                    @if (createForm.get('productId')?.invalid && createForm.get('productId')?.touched) {
-                      <p class="text-[11px] mt-1" style="color: var(--color-error)">UUID inválido o vacío</p>
+                           style="color: var(--color-accent)">Producto *</label>
+
+                    @if (selectedProduct()) {
+                      <!-- Chip producto seleccionado -->
+                      <div class="flex items-center gap-2 px-3 py-2.5 rounded-[10px] border"
+                           style="background:var(--color-bg-elevated);border-color:var(--color-accent)/40">
+                        @if (selectedProduct()!.primaryImageUrl) {
+                          <img [src]="selectedProduct()!.primaryImageUrl!" alt=""
+                               class="w-7 h-7 rounded-md object-cover shrink-0" />
+                        }
+                        <div class="min-w-0 flex-1">
+                          <p class="text-[12px] font-medium text-text-primary truncate">{{ selectedProduct()!.name }}</p>
+                          <p class="text-[10px] font-mono text-text-muted truncate">{{ selectedProduct()!.id }}</p>
+                        </div>
+                        <button type="button" (click)="clearProduct()"
+                          class="p-0.5 text-text-muted hover:text-text-primary transition-colors shrink-0">
+                          <ng-icon name="lucideX" size="13" />
+                        </button>
+                      </div>
+                    } @else {
+                      <!-- Input búsqueda -->
+                      <div class="relative">
+                        <ng-icon name="lucideSearch" size="13"
+                          class="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" />
+                        <input type="text"
+                          [value]="productQuery()"
+                          (input)="onProductSearch($event)"
+                          (blur)="hideDropdownDelayed()"
+                          (focus)="productQuery().length >= 2 && showProductDropdown.set(true)"
+                          placeholder="Buscar producto por nombre..."
+                          class="w-full rounded-[10px] border pl-8 pr-3 py-2.5 text-[13px] text-text-primary
+                                 placeholder:text-text-muted outline-none transition-all
+                                 focus:ring-2 focus:ring-accent/20 focus:border-accent/50"
+                          style="background:var(--color-bg-elevated);border-color:var(--color-border)"
+                          [style.border-color]="createForm.get('productId')?.invalid && createForm.get('productId')?.touched
+                            ? 'rgba(239,68,68,0.55)' : ''" />
+                        @if (productSearching()) {
+                          <ng-icon name="lucideRefreshCw" size="13"
+                            class="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted neo-spin" />
+                        }
+                      </div>
+
+                      <!-- Dropdown resultados -->
+                      @if (showProductDropdown() && productResults().length > 0) {
+                        <div class="absolute z-30 left-0 right-0 mt-1 rounded-[10px] border border-border
+                                    bg-bg-surface shadow-xl overflow-hidden max-h-52 overflow-y-auto">
+                          @for (p of productResults(); track p.id) {
+                            <button type="button" (mousedown)="selectProduct(p)"
+                              class="w-full flex items-center gap-2.5 px-3 py-2.5 text-left
+                                     hover:bg-bg-elevated transition-colors">
+                              @if (p.primaryImageUrl) {
+                                <img [src]="p.primaryImageUrl" alt=""
+                                     class="w-8 h-8 rounded-md object-cover shrink-0 border border-border" />
+                              } @else {
+                                <div class="w-8 h-8 rounded-md bg-bg-elevated border border-border
+                                            flex items-center justify-center shrink-0">
+                                  <ng-icon name="lucidePackage" size="13" class="text-text-muted" />
+                                </div>
+                              }
+                              <div class="min-w-0 flex-1">
+                                <p class="text-[12px] font-medium text-text-primary truncate">{{ p.name }}</p>
+                                <p class="text-[10px] font-mono text-text-muted truncate">{{ p.id }}</p>
+                              </div>
+                            </button>
+                          }
+                        </div>
+                      }
+
+                      @if (createForm.get('productId')?.invalid && createForm.get('productId')?.touched) {
+                        <p class="text-[11px] mt-1" style="color: var(--color-error)">Selecciona un producto</p>
+                      }
                     }
                   </div>
                   <div>
@@ -361,8 +423,9 @@ import { Review } from '../../shared/models/catalog.models';
   `,
 })
 export class AdminReviewsComponent implements OnInit {
-  private adminService = inject(AdminService);
-  private fb = inject(FormBuilder);
+  private adminService   = inject(AdminService);
+  private productService = inject(ProductService);
+  private fb             = inject(FormBuilder);
 
   reviews    = signal<Review[]>([]);
   loading    = signal(true);
@@ -373,6 +436,59 @@ export class AdminReviewsComponent implements OnInit {
   creating          = signal(false);
   createError       = signal<string | null>(null);
   createHoverRating = signal(0);
+
+  // ── product search ────────────────────────────────────────────────────────
+  productQuery       = signal('');
+  productResults     = signal<ProductSummary[]>([]);
+  productSearching   = signal(false);
+  showProductDropdown = signal(false);
+  selectedProduct    = signal<ProductSummary | null>(null);
+
+  private productSearch$ = new Subject<string>();
+
+  ngOnInit(): void {
+    this.load();
+    this.productSearch$.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      switchMap(q => {
+        if (q.length < 2) { this.productResults.set([]); return of(null); }
+        this.productSearching.set(true);
+        return this.productService.search(q, { size: 8 });
+      }),
+    ).subscribe(res => {
+      this.productSearching.set(false);
+      if (res) {
+        this.productResults.set(res.data.content);
+        this.showProductDropdown.set(res.data.content.length > 0);
+      }
+    });
+  }
+
+  onProductSearch(event: Event): void {
+    const q = (event.target as HTMLInputElement).value;
+    this.productQuery.set(q);
+    this.productSearch$.next(q);
+  }
+
+  selectProduct(p: ProductSummary): void {
+    this.selectedProduct.set(p);
+    this.createForm.patchValue({ productId: p.id });
+    this.showProductDropdown.set(false);
+    this.productQuery.set('');
+    this.productResults.set([]);
+  }
+
+  clearProduct(): void {
+    this.selectedProduct.set(null);
+    this.createForm.patchValue({ productId: '' });
+    this.productQuery.set('');
+    this.productResults.set([]);
+  }
+
+  hideDropdownDelayed(): void {
+    setTimeout(() => this.showProductDropdown.set(false), 150);
+  }
 
   createForm = this.fb.nonNullable.group({
     productId: ['', [Validators.required,
@@ -413,6 +529,7 @@ export class AdminReviewsComponent implements OnInit {
       this.createForm.reset({ rating: 5, productId: '', buyerName: '', title: '', body: '' });
       this.createError.set(null);
       this.createHoverRating.set(0);
+      this.clearProduct();
     }
   }
 
@@ -436,6 +553,7 @@ export class AdminReviewsComponent implements OnInit {
         this.showCreateForm.set(false);
         this.createForm.reset({ rating: 5, productId: '', buyerName: '', title: '', body: '' });
         this.createHoverRating.set(0);
+        this.clearProduct();
         this.load();
       },
       error: (err) => {
@@ -445,7 +563,6 @@ export class AdminReviewsComponent implements OnInit {
     });
   }
 
-  ngOnInit(): void { this.load(); }
 
   private load(): void {
     this.loading.set(true);
