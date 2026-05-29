@@ -247,11 +247,13 @@ import { WishlistStateService } from '../../../core/account/wishlist-state.servi
                   <input type="range" class="price-thumb"
                          [min]="PRICE_MIN" [max]="PRICE_MAX" [step]="PRICE_STEP"
                          [value]="sliderMin"
+                         [style.z-index]="minZIndex()"
                          (input)="onSliderMin($event)" />
                   <!-- Max thumb -->
                   <input type="range" class="price-thumb"
                          [min]="PRICE_MIN" [max]="PRICE_MAX" [step]="PRICE_STEP"
                          [value]="sliderMax"
+                         [style.z-index]="maxZIndex()"
                          (input)="onSliderMax($event)" />
                 </div>
 
@@ -454,6 +456,8 @@ export class CatalogPageComponent implements OnInit, OnDestroy {
 
   leftPct():  number { return (this.sliderMin / this.PRICE_MAX) * 100; }
   rightPct(): number { return (this.sliderMax / this.PRICE_MAX) * 100; }
+  minZIndex(): number { return this.sliderMin >= this.PRICE_MAX - this.PRICE_STEP ? 5 : 3; }
+  maxZIndex(): number { return this.sliderMin >= this.PRICE_MAX - this.PRICE_STEP ? 3 : 5; }
 
   fmtPrice(v: number): string {
     return '$ ' + v.toLocaleString('es-CO');
