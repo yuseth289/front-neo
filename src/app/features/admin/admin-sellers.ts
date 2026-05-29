@@ -127,9 +127,9 @@ const STATUS_MAP: Record<SellerStatus, StatusMeta> = {
             </div>
             <div class="flex items-center gap-2 shrink-0">
               <button (click)="openCompose()"
-                class="neo-btn-primary !py-2 !px-4 !text-[13px]">
+                class="neo-btn-primary !py-2 !px-3 sm:!px-4 !text-[13px]">
                 <ng-icon name="lucideMessageCircle" size="14" />
-                Iniciar conversación
+                <span class="hidden sm:inline">Iniciar conversación</span>
               </button>
               <button (click)="selectedSeller.set(null)"
                 class="p-2 rounded-lg text-text-muted hover:text-text-primary hover:bg-bg-elevated transition-colors">
