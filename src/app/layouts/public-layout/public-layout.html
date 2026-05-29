@@ -203,6 +203,12 @@
                   hover:bg-bg-elevated hover:text-text-primary border-l-2 border-transparent transition-colors">
           <ng-icon name="lucideLayoutGrid" size="18" /> Catálogo
         </a>
+        <a routerLink="/stores" routerLinkActive="bg-bg-elevated text-text-primary border-l-2 border-accent"
+           (click)="mobileOpen.set(false)"
+           class="flex items-center gap-3 px-3.5 py-3 rounded-lg text-sm font-medium text-text-secondary
+                  hover:bg-bg-elevated hover:text-text-primary border-l-2 border-transparent transition-colors">
+          <ng-icon name="lucideStore" size="18" /> Tiendas
+        </a>
         <a routerLink="/cart" routerLinkActive="bg-bg-elevated text-text-primary border-l-2 border-accent"
            (click)="mobileOpen.set(false)"
            class="flex items-center gap-3 px-3.5 py-3 rounded-lg text-sm font-medium text-text-secondary

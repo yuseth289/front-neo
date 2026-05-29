@@ -1,5 +1,5 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, NgClass } from '@angular/common';
 import { Router, RouterOutlet, ActivatedRoute, NavigationEnd } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { NgIcon } from '@ng-icons/core';
@@ -13,12 +13,14 @@ import { selectRole } from '../../core/auth/store/auth.selectors';
 @Component({
   selector: 'app-chat-shell',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, FormsModule, NgIcon],
+  imports: [CommonModule, NgClass, RouterOutlet, FormsModule, NgIcon],
   template: `
     <div class="flex h-[calc(100vh-72px)] min-h-0 -mx-4 -my-8 overflow-hidden rounded-xl border border-border">
 
       <!-- ── LEFT: Conversation list ─────────────────────────────── -->
-      <div class="w-[280px] shrink-0 flex flex-col bg-bg-surface border-r border-border">
+      <!-- En móvil se oculta cuando hay una conversación activa -->
+      <div class="shrink-0 flex flex-col bg-bg-surface border-r border-border w-full md:w-[280px]"
+           [ngClass]="activeId() ? 'hidden md:flex' : 'flex'">
 
         <!-- Header -->
         <div class="px-4 pt-5 pb-3 shrink-0">
@@ -104,7 +106,9 @@ import { selectRole } from '../../core/auth/store/auth.selectors';
       </div>
 
       <!-- ── RIGHT: Chat detail ───────────────────────────────────── -->
-      <div class="flex-1 min-w-0 flex flex-col bg-bg-base">
+      <!-- En móvil se oculta cuando no hay conversación activa -->
+      <div class="flex-1 min-w-0 flex flex-col bg-bg-base"
+           [ngClass]="!activeId() ? 'hidden md:flex' : 'flex'">
         @if (activeId()) {
           <router-outlet />
         } @else {

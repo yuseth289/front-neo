@@ -28,6 +28,13 @@ const EMOJIS = [
     <!-- ── HEADER ─────────────────────────────────────────────── -->
     <div class="px-4 py-3 flex items-center gap-3 shrink-0 border-b border-border bg-bg-surface">
 
+      <!-- Botón atrás solo en móvil -->
+      <button class="md:hidden p-1.5 -ml-1 rounded-lg text-text-muted hover:text-text-primary
+                     hover:bg-bg-elevated transition-colors shrink-0"
+              (click)="goBack()" aria-label="Volver">
+        <ng-icon name="lucideArrowLeft" size="18" />
+      </button>
+
       @if (conversation()) {
         <div class="w-9 h-9 rounded-full overflow-hidden border border-border bg-bg-elevated
                     flex items-center justify-center font-bold text-accent text-sm shrink-0">
@@ -195,7 +202,7 @@ const EMOJIS = [
       }
 
       @for (msg of filteredMessages(); track msg.id) {
-        <div class="flex gap-2 max-w-[78%]"
+        <div class="flex gap-2 max-w-[88%] sm:max-w-[78%]"
              [class.ml-auto]="isOwn(msg)"
              [class.flex-row-reverse]="isOwn(msg)">
 
@@ -260,7 +267,7 @@ const EMOJIS = [
     <!-- ── EMOJI PICKER ──────────────────────────────────────── -->
     @if (emojiOpen()) {
       <div class="border-t border-border bg-bg-elevated px-3 py-2.5 shrink-0">
-        <div class="grid grid-cols-10 gap-0.5">
+        <div class="grid grid-cols-8 sm:grid-cols-10 gap-0.5">
           @for (e of emojis; track e) {
             <button (click)="insertEmoji(e)"
               class="h-8 w-full flex items-center justify-center text-[18px] rounded-lg
@@ -401,6 +408,11 @@ export class ChatDetailComponent implements OnInit, OnDestroy, AfterViewChecked 
   }
 
   ngOnDestroy(): void { this.destroy$.next(); this.destroy$.complete(); }
+
+  goBack(): void {
+    const base = this.isSeller() ? '/seller/messages' : '/messages';
+    this.router.navigate([base]);
+  }
 
   openInfo(): void {
     this.menuOpen.set(false);
