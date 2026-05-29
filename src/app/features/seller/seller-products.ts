@@ -150,7 +150,15 @@ const STATUS_MAP: Record<ProductStatus, { color: string; bg: string; border: str
                     </div>
                     <div class="min-w-0">
                       <p class="text-sm font-medium text-text-primary truncate">{{ p.name }}</p>
-                      <p class="text-xs text-text-muted font-mono">{{ p.brand }}</p>
+                      @if (p.status === 'DRAFT') {
+                        <a [routerLink]="['/seller/products', p.id]"
+                          class="text-[11px] font-medium text-accent hover:underline inline-flex items-center gap-0.5 mt-0.5">
+                          <ng-icon name="lucidePencil" size="10" />
+                          Continuar editando
+                        </a>
+                      } @else {
+                        <p class="text-xs text-text-muted font-mono">{{ p.brand }}</p>
+                      }
                     </div>
                   </div>
 
