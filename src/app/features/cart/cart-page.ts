@@ -105,6 +105,13 @@ import {
                       }
                     </div>
 
+                    <!-- Subtotal móvil (solo en xs) -->
+                    @if (item.quantity > 1) {
+                      <p class="text-xs text-text-muted mt-1 sm:hidden tabular-nums">
+                        Total: <span class="font-semibold text-text-primary">{{ item.subtotal | copCurrency }}</span>
+                      </p>
+                    }
+
                     <!-- Qty controls -->
                     <div class="flex items-center gap-2 mt-2.5">
                       <div class="flex items-center rounded-[10px] border border-border overflow-hidden">
@@ -133,8 +140,8 @@ import {
                     </div>
                   </div>
 
-                  <!-- Subtotal -->
-                  <div class="shrink-0 text-right self-center">
+                  <!-- Subtotal (solo visible en sm+) -->
+                  <div class="hidden sm:block shrink-0 text-right self-center">
                     <p class="text-sm font-bold text-text-primary tabular-nums">
                       {{ item.subtotal | copCurrency }}
                     </p>
