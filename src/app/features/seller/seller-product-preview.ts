@@ -424,11 +424,9 @@ export class SellerProductPreviewComponent implements OnInit {
     this.actioning.set(true);
     this.actionError.set(null);
     this.productService.publish(id).subscribe({
-      next: (res) => {
-        this.product.set(res.data);
+      next: () => {
         this.actioning.set(false);
-        this.actionSuccess.set(true);
-        setTimeout(() => this.actionSuccess.set(false), 4000);
+        this.router.navigate(['/seller/products']);
       },
       error: (err) => {
         this.actionError.set(err.error?.message ?? 'Error al publicar');
