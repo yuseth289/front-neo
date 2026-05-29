@@ -281,8 +281,19 @@ const PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9I
                 <div class="pt-5 border-t border-border">
                   <p class="neo-stat-label mb-2.5">Descripción</p>
                   <p class="text-sm text-text-secondary leading-relaxed whitespace-pre-line">
-                    {{ product()!.description }}
+                    {{ descText() }}
                   </p>
+                  @if (descNeedsToggle()) {
+                    <button (click)="descExpanded.update(v => !v)"
+                      class="mt-2 inline-flex items-center gap-1 text-xs font-medium text-accent
+                             hover:underline transition-colors">
+                      @if (descExpanded()) {
+                        <ng-icon name="lucideChevronUp" size="12" />Ver menos
+                      } @else {
+                        <ng-icon name="lucideChevronDown" size="12" />Ver más
+                      }
+                    </button>
+                  }
                 </div>
               }
 
@@ -392,7 +403,14 @@ export class ProductDetailComponent implements OnInit {
   addedFeedback    = signal(false);
   qty              = signal(1);
 
-  wishlistAdded = signal(false);
+  wishlistAdded  = signal(false);
+  descExpanded   = signal(false);
+  descNeedsToggle = computed(() => (this.product()?.description?.length ?? 0) > 120);
+  descText = computed(() => {
+    const desc = this.product()?.description ?? '';
+    if (!this.descNeedsToggle() || this.descExpanded()) return desc;
+    return desc.slice(0, 120) + '…';
+  });
 
   chatOpen    = signal(false);
   chatMessage = '';
