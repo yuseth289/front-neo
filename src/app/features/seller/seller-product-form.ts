@@ -278,6 +278,49 @@ interface GalleryItem {
                     <p class="text-[11px] text-text-muted">Sugerencias de título y descripción generadas por IA</p>
                   </div>
                 </div>
+
+                <!-- Características -->
+                <div>
+                  <div class="flex items-center justify-between mb-2">
+                    <label class="text-[11px] font-semibold text-text-muted uppercase tracking-[0.07em]">
+                      Características del producto
+                    </label>
+                    <button type="button" (click)="addSpec()"
+                      class="flex items-center gap-1 text-[11px] font-medium text-accent hover:opacity-80 transition-opacity">
+                      <ng-icon name="lucidePlus" size="12" />
+                      Añadir
+                    </button>
+                  </div>
+
+                  @if (specs().length === 0) {
+                    <p class="text-[12px] text-text-muted py-2">
+                      Sin características. Añade atributos como Marca, Color, Conectividad, etc.
+                    </p>
+                  } @else {
+                    <div class="flex flex-col gap-2">
+                      @for (spec of specs(); track $index; let i = $index) {
+                        <div class="flex items-center gap-2">
+                          <input type="text" [value]="spec.key"
+                            (input)="updateSpec(i, 'key', $any($event.target).value)"
+                            placeholder="Ej: Color"
+                            class="w-[38%] rounded-[8px] bg-bg-elevated border border-border px-3 py-2 text-[13px]
+                                   text-text-primary placeholder:text-text-muted outline-none
+                                   focus:border-accent/60 transition-all" />
+                          <input type="text" [value]="spec.value"
+                            (input)="updateSpec(i, 'value', $any($event.target).value)"
+                            placeholder="Ej: Negro"
+                            class="flex-1 rounded-[8px] bg-bg-elevated border border-border px-3 py-2 text-[13px]
+                                   text-text-primary placeholder:text-text-muted outline-none
+                                   focus:border-accent/60 transition-all" />
+                          <button type="button" (click)="removeSpec(i)"
+                            class="p-1.5 text-text-muted hover:text-error transition-colors shrink-0">
+                            <ng-icon name="lucideTrash2" size="13" />
+                          </button>
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
               </div>
 
               <!-- Action bar -->
@@ -641,6 +684,22 @@ export class SellerProductFormComponent implements OnInit {
     initialStock: [0, [Validators.min(0)]],
   });
 
+  specs = signal<{ key: string; value: string }[]>([]);
+
+  addSpec(): void { this.specs.update(s => [...s, { key: '', value: '' }]); }
+
+  removeSpec(i: number): void { this.specs.update(s => s.filter((_, idx) => idx !== i)); }
+
+  updateSpec(i: number, field: 'key' | 'value', val: string): void {
+    this.specs.update(s => s.map((item, idx) => idx === i ? { ...item, [field]: val } : item));
+  }
+
+  private specsToRecord(): Record<string, string> {
+    return Object.fromEntries(
+      this.specs().filter(s => s.key.trim()).map(s => [s.key.trim(), s.value.trim()])
+    );
+  }
+
   onApplyContent(event: ApplyDescriptionEvent): void {
     if (event.seoTitle) this.form.patchValue({ name: event.seoTitle });
     if (event.description) this.form.patchValue({ description: event.description });
@@ -705,6 +764,9 @@ export class SellerProductFormComponent implements OnInit {
             basePrice: p.basePrice, ivaPercent: p.ivaPercent,
           });
           if (p.condition) this.condition.set(p.condition as Condition);
+          if (p.specifications) {
+            this.specs.set(Object.entries(p.specifications).map(([key, value]) => ({ key, value })));
+          }
           this.images.set(p.images ?? []);
         },
       });
@@ -844,6 +906,7 @@ export class SellerProductFormComponent implements OnInit {
       sku: raw.sku, categoryId: raw.categoryId,
       basePrice: raw.basePrice, ivaPercent: raw.ivaPercent,
       condition: this.condition(),
+      specifications: this.specsToRecord(),
     };
 
     if (this.productId()) {
