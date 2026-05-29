@@ -27,6 +27,7 @@ export class ProductService {
       .set('q', q)
       .set('page', filters.page ?? 0)
       .set('size', filters.size ?? 20);
+    if (filters.sort) params = params.set('sort', filters.sort);
 
     return this.http.get<ApiResponse<PageResponse<ProductSummary>>>(
       `${this.base}/products/search`,
@@ -35,9 +36,10 @@ export class ProductService {
   }
 
   getByCategory(categoryId: string, filters: ProductFilters = {}): Observable<ApiResponse<PageResponse<ProductSummary>>> {
-    const params = new HttpParams()
+    let params = new HttpParams()
       .set('page', filters.page ?? 0)
       .set('size', filters.size ?? 20);
+    if (filters.sort) params = params.set('sort', filters.sort);
 
     return this.http.get<ApiResponse<PageResponse<ProductSummary>>>(
       `${this.base}/products/category/${categoryId}`,

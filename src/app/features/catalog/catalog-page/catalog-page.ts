@@ -90,27 +90,10 @@ import { WishlistStateService } from '../../../core/account/wishlist-state.servi
                              text-[13px] text-text-secondary outline-none cursor-pointer appearance-none
                              focus:border-accent transition-colors">
                 <option value="">Más relevantes</option>
-                <option value="finalPrice,asc">Precio: menor a mayor</option>
-                <option value="finalPrice,desc">Precio: mayor a menor</option>
+                <option value="basePrice,asc">Precio: menor a mayor</option>
+                <option value="basePrice,desc">Precio: mayor a menor</option>
                 <option value="name,asc">Nombre A-Z</option>
               </select>
-            </div>
-
-            <div class="flex border border-border rounded-[10px] p-[3px] bg-bg-surface">
-              <button (click)="viewMode.set('grid')" aria-label="Vista cuadrícula"
-                      class="w-8 h-8 rounded-[7px] flex items-center justify-center transition-colors"
-                      [class.bg-bg-elevated]="viewMode() === 'grid'"
-                      [class.text-text-primary]="viewMode() === 'grid'"
-                      [class.text-text-muted]="viewMode() !== 'grid'">
-                <ng-icon name="lucideLayoutGrid" size="14" />
-              </button>
-              <button (click)="viewMode.set('list')" aria-label="Vista lista"
-                      class="w-8 h-8 rounded-[7px] flex items-center justify-center transition-colors"
-                      [class.bg-bg-elevated]="viewMode() === 'list'"
-                      [class.text-text-primary]="viewMode() === 'list'"
-                      [class.text-text-muted]="viewMode() !== 'list'">
-                <ng-icon name="lucideList" size="14" />
-              </button>
             </div>
           </div>
         </div>
@@ -362,9 +345,7 @@ import { WishlistStateService } from '../../../core/account/wishlist-state.servi
           <div class="flex-1 min-w-0">
 
             @if (loading()) {
-              <div [class]="viewMode() === 'grid'
-                ? 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-[18px]'
-                : 'flex flex-col gap-4'">
+              <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-[18px]">
                 @for (_ of skeletons; track $index) {
                   <div class="aspect-square neo-skeleton"></div>
                 }
@@ -387,10 +368,7 @@ import { WishlistStateService } from '../../../core/account/wishlist-state.servi
               </div>
 
             } @else {
-              <div class="neo-stagger"
-                   [class]="viewMode() === 'grid'
-                     ? 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-[18px]'
-                     : 'flex flex-col gap-4'">
+              <div class="neo-stagger grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-[18px]">
                 @for (p of products(); track p.id) {
                   <div class="neo-reveal">
                     <app-product-card [product]="p"
@@ -455,7 +433,7 @@ export class CatalogPageComponent implements OnInit, OnDestroy {
   loadingStores = signal(false);
   currentPage   = signal(0);
   activeCategoryId = signal<string | null>(null);
-  viewMode = signal<'grid' | 'list'>('grid');
+
   searchQuery = '';
   sortValue = '';
   priceMin = '';
