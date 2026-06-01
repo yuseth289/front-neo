@@ -141,32 +141,25 @@ import { Brand } from '../../shared/models/catalog.models';
                     </td>
                     <td class="px-5 py-3.5 text-[12px] text-text-muted font-mono">{{ brand.displayOrder }}</td>
                     <td class="px-5 py-3.5">
-                      @if (brand.active) {
-                        <span class="text-[11px] font-medium px-2 py-0.5 rounded-full"
-                              style="background:rgba(34,197,94,0.1);color:var(--color-success);">Activa</span>
-                      } @else {
-                        <span class="text-[11px] font-medium px-2 py-0.5 rounded-full"
-                              style="background:rgba(107,114,128,0.1);color:var(--color-text-muted);">Inactiva</span>
-                      }
+                      <button
+                        (click)="brand.active ? deactivate(brand.id) : activate(brand.id)"
+                        class="relative inline-flex h-[22px] w-10 shrink-0 rounded-full border-2 border-transparent
+                               transition-colors duration-200 focus:outline-none"
+                        [style.background]="brand.active ? 'var(--color-success)' : 'var(--color-border)'"
+                        [style.box-shadow]="brand.active ? '0 0 10px rgba(0,200,120,0.4)' : 'none'"
+                        [attr.title]="brand.active ? 'Desactivar marca' : 'Activar marca'"
+                        role="switch" [attr.aria-checked]="brand.active">
+                        <span class="pointer-events-none inline-block h-[14px] w-[14px] rounded-full
+                                     bg-white shadow-sm transform transition-transform duration-200 mt-[1px]"
+                              [style.transform]="brand.active ? 'translateX(20px)' : 'translateX(1px)'">
+                        </span>
+                      </button>
                     </td>
-                    <td class="px-5 py-3.5">
-                      <div class="flex gap-1 justify-end">
-                        <button (click)="openEdit(brand)" title="Editar"
-                          class="p-1.5 rounded-[8px] text-text-muted hover:text-accent hover:bg-accent/10 transition-colors">
-                          <ng-icon name="lucideSettings" size="13" />
-                        </button>
-                        @if (brand.active) {
-                          <button (click)="deactivate(brand.id)" title="Desactivar"
-                            class="p-1.5 rounded-[8px] text-text-muted hover:text-error hover:bg-error/10 transition-colors">
-                            <ng-icon name="lucideTrash2" size="13" />
-                          </button>
-                        } @else {
-                          <button (click)="activate(brand.id)" title="Reactivar"
-                            class="p-1.5 rounded-[8px] text-text-muted hover:text-success hover:bg-success/10 transition-colors">
-                            <ng-icon name="lucideRefreshCw" size="13" />
-                          </button>
-                        }
-                      </div>
+                    <td class="px-3 py-3.5 text-right">
+                      <button (click)="openEdit(brand)" title="Editar"
+                        class="p-1.5 rounded-[8px] text-text-muted hover:text-accent hover:bg-accent/10 transition-colors">
+                        <ng-icon name="lucidePencil" size="13" />
+                      </button>
                     </td>
                   </tr>
                 }
