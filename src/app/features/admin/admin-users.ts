@@ -209,32 +209,41 @@ const ROLE_LABEL: Record<string, string> = {
                       </span>
                     </td>
                     <td class="px-5 py-3.5">
-                      <div class="flex gap-1.5 justify-end">
-                        @if (user.status !== 'SUSPENDED') {
-                          <button (click)="suspend(user)"
+                      <div class="flex flex-col items-end gap-0.5">
+                        @if (user.status === 'INACTIVE') {
+                          <button disabled
+                            class="relative inline-flex h-[22px] w-10 shrink-0 rounded-full border-2 border-transparent
+                                   opacity-35 cursor-not-allowed"
+                            style="background: var(--color-border)">
+                            <span class="pointer-events-none inline-block h-[14px] w-[14px] rounded-full
+                                         bg-white shadow-sm mt-[1px]" style="transform:translateX(1px)"></span>
+                          </button>
+                          <span class="text-[10px] font-medium" style="color:var(--color-warning)">Inactivo</span>
+                        } @else {
+                          <button
+                            (click)="toggleUser(user); $event.stopPropagation()"
                             [disabled]="processing() === user.id"
-                            class="px-2.5 py-1 rounded-[8px] text-[12px] font-medium border border-border
-                                   text-text-secondary hover:border-error hover:text-error disabled:opacity-50 transition-colors">
+                            class="relative inline-flex h-[22px] w-10 shrink-0 rounded-full border-2 border-transparent
+                                   transition-colors duration-200 focus:outline-none disabled:opacity-60"
+                            [style.background]="user.status === 'ACTIVE' ? 'var(--color-success)' : 'var(--color-border)'"
+                            [style.box-shadow]="user.status === 'ACTIVE' ? '0 0 10px rgba(0,200,120,0.4)' : 'none'"
+                            [attr.title]="user.status === 'ACTIVE' ? 'Suspender usuario' : 'Reactivar usuario'"
+                            role="switch" [attr.aria-checked]="user.status === 'ACTIVE'">
                             @if (processing() === user.id) {
-                              <ng-icon name="lucideRefreshCw" size="11" class="neo-spin" />
+                              <span class="absolute inset-0 flex items-center justify-center">
+                                <ng-icon name="lucideRefreshCw" size="10" class="neo-spin text-white" />
+                              </span>
                             } @else {
-                              Suspender
+                              <span class="pointer-events-none inline-block h-[14px] w-[14px] rounded-full
+                                           bg-white shadow-sm transform transition-transform duration-200 mt-[1px]"
+                                    [style.transform]="user.status === 'ACTIVE' ? 'translateX(20px)' : 'translateX(1px)'">
+                              </span>
                             }
                           </button>
-                        }
-                        @if (user.status === 'SUSPENDED') {
-                          <button (click)="reactivate(user)"
-                            [disabled]="processing() === user.id"
-                            class="px-2.5 py-1 rounded-[8px] text-[12px] font-semibold border transition-colors
-                                   disabled:opacity-50 flex items-center gap-1"
-                            style="color:var(--color-success);background:rgba(0,200,120,0.1);border-color:rgba(0,200,120,0.3);">
-                            @if (processing() === user.id) {
-                              <ng-icon name="lucideRefreshCw" size="11" class="neo-spin" />
-                            } @else {
-                              <ng-icon name="lucideCheck" size="11" />
-                            }
-                            Reactivar
-                          </button>
+                          <span class="text-[10px] font-medium"
+                                [style.color]="user.status === 'ACTIVE' ? 'var(--color-success)' : 'var(--color-error)'">
+                            {{ user.status === 'ACTIVE' ? 'Activo' : 'Suspendido' }}
+                          </span>
                         }
                       </div>
                     </td>
@@ -353,6 +362,10 @@ export class AdminUsersComponent implements OnInit {
       },
       error: () => this.loading.set(false),
     });
+  }
+
+  toggleUser(user: UserResponse): void {
+    user.status === 'ACTIVE' ? this.suspend(user) : this.reactivate(user);
   }
 
   suspend(user: UserResponse): void {
