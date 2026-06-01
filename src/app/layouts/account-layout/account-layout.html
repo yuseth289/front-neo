@@ -69,19 +69,21 @@
           }
         </button>
 
-        <a routerLink="/cart" aria-label="Carrito"
-           class="relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-text-secondary
-                  hover:text-text-primary hover:bg-bg-subtle transition-colors">
-          <ng-icon name="lucideShoppingCart" size="18" />
-          <span class="hidden sm:inline">Carrito</span>
-          @if ((cartCount$ | async) ?? 0 > 0) {
-            <span class="absolute top-0.5 left-[22px] min-w-[16px] h-4 px-1 rounded-full
-                         bg-accent text-white text-[10px] font-bold leading-none
-                         flex items-center justify-center shadow-[0_0_8px_var(--color-accent-glow)]">
-              {{ cartCount$ | async }}
-            </span>
-          }
-        </a>
+        @if ((role$ | async) !== 'ADMIN') {
+          <a routerLink="/cart" aria-label="Carrito"
+             class="relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-text-secondary
+                    hover:text-text-primary hover:bg-bg-subtle transition-colors">
+            <ng-icon name="lucideShoppingCart" size="18" />
+            <span class="hidden sm:inline">Carrito</span>
+            @if ((cartCount$ | async) ?? 0 > 0) {
+              <span class="absolute top-0.5 left-[22px] min-w-[16px] h-4 px-1 rounded-full
+                           bg-accent text-white text-[10px] font-bold leading-none
+                           flex items-center justify-center shadow-[0_0_8px_var(--color-accent-glow)]">
+                {{ cartCount$ | async }}
+              </span>
+            }
+          </a>
+        }
 
         <div class="flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm text-text-secondary">
           <div class="w-7 h-7 rounded-full bg-accent/20 border border-accent/30 overflow-hidden shrink-0
@@ -161,14 +163,16 @@
             Mis órdenes
           </a>
 
-          <a routerLink="/wishlists"
-             routerLinkActive="!bg-bg-subtle !text-text-primary !border-l-accent"
-             class="flex items-center gap-2.5 px-3 py-2.5 rounded-[10px] text-[13px] font-medium
-                    text-text-secondary hover:bg-bg-elevated hover:text-text-primary
-                    border-l-2 border-transparent transition-all duration-200">
-            <ng-icon name="lucideHeart" size="15" />
-            Lista de deseos
-          </a>
+          @if ((role$ | async) !== 'ADMIN') {
+            <a routerLink="/wishlists"
+               routerLinkActive="!bg-bg-subtle !text-text-primary !border-l-accent"
+               class="flex items-center gap-2.5 px-3 py-2.5 rounded-[10px] text-[13px] font-medium
+                      text-text-secondary hover:bg-bg-elevated hover:text-text-primary
+                      border-l-2 border-transparent transition-all duration-200">
+              <ng-icon name="lucideHeart" size="15" />
+              Lista de deseos
+            </a>
+          }
 
           <a routerLink="/followed-stores"
              routerLinkActive="!bg-bg-subtle !text-text-primary !border-l-accent"
@@ -213,7 +217,7 @@
               <ng-icon name="lucideLayoutDashboard" size="15" />
               Panel Seller
             </a>
-          } @else {
+          } @else if ((role$ | async) !== 'ADMIN') {
             <div class="px-1 pt-2 mt-1 border-t border-border">
               <a routerLink="/become-seller"
                  routerLinkActive="!bg-accent/15 !text-accent !border-l-accent"
