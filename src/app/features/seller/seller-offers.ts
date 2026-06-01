@@ -122,28 +122,18 @@ import { OfferResponse } from '../../shared/models/product.models';
               </div>
 
               <!-- Borrar -->
-              @if (confirmDeleteId() === offer.id) {
-                <div class="flex items-center gap-2 shrink-0">
-                  <span class="text-[12px] text-text-muted">¿Eliminar?</span>
-                  <button (click)="confirmDelete(offer.id)"
-                    class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[12px] font-semibold transition-colors"
-                    style="background:rgba(239,68,68,0.12);color:var(--color-error);border:1px solid rgba(239,68,68,0.3)">
-                    <ng-icon name="lucideCheck" size="12" /> Sí
-                  </button>
-                  <button (click)="confirmDeleteId.set(null)"
-                    class="p-1.5 rounded-lg text-text-muted hover:text-text-primary transition-colors border border-border">
-                    <ng-icon name="lucideX" size="12" />
-                  </button>
-                </div>
-              } @else {
-                <button (click)="confirmDeleteId.set(offer.id)"
-                  class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium
-                         transition-colors shrink-0"
-                  style="background:rgba(239,68,68,0.08);color:var(--color-error);border:1px solid rgba(239,68,68,0.2)">
-                  <ng-icon name="lucideTrash2" size="13" />
-                  Eliminar
-                </button>
-              }
+              <button (click)="deleteOffer(offer.id)"
+                [disabled]="deleting() === offer.id"
+                class="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[13px] font-semibold
+                       transition-colors shrink-0 disabled:opacity-50"
+                style="background:#EF4444;color:#fff;border:none">
+                @if (deleting() === offer.id) {
+                  <ng-icon name="lucideRefreshCw" size="14" class="animate-spin" />
+                } @else {
+                  <ng-icon name="lucideTrash2" size="14" />
+                }
+                Eliminar
+              </button>
             </div>
           }
         </div>
@@ -159,10 +149,10 @@ export class SellerOffersComponent implements OnInit {
   productId = signal('');
   offers = signal<OfferResponse[]>([]);
   loading = signal(true);
-  showForm        = signal(false);
-  creating        = signal(false);
-  formError       = signal<string | null>(null);
-  confirmDeleteId = signal<string | null>(null);
+  showForm  = signal(false);
+  creating  = signal(false);
+  formError = signal<string | null>(null);
+  deleting  = signal<string | null>(null);
 
   form = this.fb.nonNullable.group({
     discountPercent: [10, [Validators.required, Validators.min(1), Validators.max(90)]],
@@ -205,12 +195,14 @@ export class SellerOffersComponent implements OnInit {
     });
   }
 
-  confirmDelete(offerId: string): void {
+  deleteOffer(offerId: string): void {
+    this.deleting.set(offerId);
     this.productService.deleteOffer(this.productId(), offerId).subscribe({
       next: () => {
         this.offers.update(list => list.filter(o => o.id !== offerId));
-        this.confirmDeleteId.set(null);
+        this.deleting.set(null);
       },
+      error: () => this.deleting.set(null),
     });
   }
 }
