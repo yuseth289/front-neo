@@ -97,9 +97,24 @@ const PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9I
           }
         </div>
         <div class="mt-auto">
-          <p class="font-display text-lg font-bold text-text-primary tracking-[-0.01em]">
-            {{ product.finalPrice | copCurrency }}
-          </p>
+          @if (product.activeDiscountPercent) {
+            <div class="flex items-center gap-1.5 mb-0.5">
+              <span class="text-[11px] font-bold px-1.5 py-0.5 rounded-md"
+                    style="background:rgba(239,68,68,0.12);color:var(--color-error)">
+                -{{ product.activeDiscountPercent }}%
+              </span>
+              <span class="text-[12px] text-text-muted line-through font-mono">
+                {{ product.finalPrice | copCurrency }}
+              </span>
+            </div>
+            <p class="font-display text-lg font-bold tracking-[-0.01em]" style="color:var(--color-error)">
+              {{ discountedPrice(product) | copCurrency }}
+            </p>
+          } @else {
+            <p class="font-display text-lg font-bold text-text-primary tracking-[-0.01em]">
+              {{ product.finalPrice | copCurrency }}
+            </p>
+          }
           <p class="text-[10px] text-text-muted font-mono">IVA incluido</p>
         </div>
       </div>
@@ -110,6 +125,11 @@ export class ProductCardComponent {
   @Input({ required: true }) product!: ProductSummary;
   @Input() badge?: 'OFERTA' | 'NUEVO' | null = null;
   @Input() inWishlist = false;
+
+  discountedPrice(p: ProductSummary): number {
+    if (!p.activeDiscountPercent) return p.finalPrice;
+    return p.finalPrice * (1 - p.activeDiscountPercent / 100);
+  }
 
   readonly placeholder = PLACEHOLDER;
   readonly hover = signal(false);
