@@ -12,6 +12,7 @@ import { InventoryResponse } from '../../shared/models/product.models';
   imports: [CommonModule, RouterLink, ReactiveFormsModule, NgIcon],
   template: `
     <div class="max-w-xl">
+
       <div class="flex items-center gap-3 mb-6">
         <a [routerLink]="['/seller/products', productId()]"
           class="flex items-center gap-1.5 text-sm text-text-muted hover:text-text-primary transition-colors">
@@ -23,87 +24,210 @@ import { InventoryResponse } from '../../shared/models/product.models';
       <h1 class="text-xl font-bold text-text-primary mb-6">Inventario</h1>
 
       @if (loading()) {
-        <div class="h-32 rounded-xl bg-bg-surface border border-border animate-pulse"></div>
+        <div class="h-32 rounded-xl bg-bg-surface border border-border animate-pulse mb-4"></div>
+        <div class="h-44 rounded-xl bg-bg-surface border border-border animate-pulse mb-4"></div>
+        <div class="h-44 rounded-xl bg-bg-surface border border-border animate-pulse"></div>
+
       } @else if (loadError()) {
         <div class="flex items-center gap-2 rounded-xl bg-error/10 border border-error/30 px-4 py-3 text-sm text-error">
           <ng-icon name="lucideTriangleAlert" size="15" />{{ loadError() }}
         </div>
+
       } @else if (inventory()) {
-        <!-- Stock actual -->
-        <div class="bg-bg-surface border border-border rounded-xl p-5 mb-5">
-          <h2 class="text-xs font-semibold text-text-secondary uppercase tracking-wide mb-4">Stock actual</h2>
+
+        <!-- ── Stock actual ───────────────────────────────── -->
+        <div class="neo-card-premium p-5 mb-5">
+          <h2 class="text-[11px] font-semibold text-text-muted uppercase tracking-[0.06em] font-mono mb-4">
+            Stock actual
+          </h2>
           <div class="grid grid-cols-3 gap-4 text-center">
             <div>
-              <p class="text-2xl font-bold text-text-primary">{{ inventory()!.physicalStock }}</p>
-              <p class="text-xs text-text-muted mt-1">Físico</p>
+              <p class="text-[28px] font-display font-bold text-text-primary leading-none">
+                {{ inventory()!.physicalStock }}
+              </p>
+              <p class="text-[11px] text-text-muted mt-1.5">Físico</p>
             </div>
             <div>
-              <p class="text-2xl font-bold text-yellow-400">{{ inventory()!.reservedStock }}</p>
-              <p class="text-xs text-text-muted mt-1">Reservado</p>
+              <p class="text-[28px] font-display font-bold leading-none" style="color:var(--color-warning)">
+                {{ inventory()!.reservedStock }}
+              </p>
+              <p class="text-[11px] text-text-muted mt-1.5">Reservado</p>
             </div>
             <div>
-              <p class="text-2xl font-bold text-green-400">{{ inventory()!.availableStock }}</p>
-              <p class="text-xs text-text-muted mt-1">Disponible</p>
+              <p class="text-[28px] font-display font-bold leading-none"
+                 [style.color]="inventory()!.availableStock > 0 ? 'var(--color-success)' : 'var(--color-error)'">
+                {{ inventory()!.availableStock }}
+              </p>
+              <p class="text-[11px] text-text-muted mt-1.5">Disponible</p>
             </div>
           </div>
+          @if (inventory()!.availableStock === 0) {
+            <div class="mt-4 flex items-center gap-2 px-3 py-2 rounded-lg text-[12px] font-medium"
+                 style="background:rgba(239,68,68,0.08);color:var(--color-error);border:1px solid rgba(239,68,68,0.2)">
+              <ng-icon name="lucideTriangleAlert" size="13" />
+              Sin stock disponible — usa una de las opciones de abajo para actualizar.
+            </div>
+          }
         </div>
 
-        <!-- Ajuste de stock -->
-        <div class="bg-bg-surface border border-border rounded-xl p-5">
-          <h2 class="text-xs font-semibold text-text-secondary uppercase tracking-wide mb-4">Ajustar stock</h2>
-
-          @if (adjustSuccess()) {
-            <div class="mb-4 flex items-center gap-2 rounded-lg bg-success/10 border border-success/30 px-4 py-2.5 text-sm text-success">
-              <ng-icon name="lucideCircleCheck" size="14" />Stock actualizado
-            </div>
-          }
-          @if (adjustError()) {
-            <div class="mb-4 flex items-center gap-2 rounded-lg bg-error/10 border border-error/30 px-4 py-2.5 text-sm text-error">
-              <ng-icon name="lucideTriangleAlert" size="14" />{{ adjustError() }}
-            </div>
-          }
-
-          <form [formGroup]="form" (ngSubmit)="adjust()" novalidate class="flex flex-col gap-4">
-            <div>
-              <label class="block text-sm text-text-secondary mb-1.5">
-                Cantidad (positivo = entrada, negativo = salida)
-              </label>
-              <input type="number" formControlName="quantity"
-                class="w-full rounded-lg bg-bg-elevated border border-border px-3 py-2 text-text-primary text-sm
-                       focus:outline-none focus:border-accent transition-colors" />
+        <!-- ── Agregar unidades ───────────────────────────── -->
+        <div class="neo-card-premium p-5 mb-4">
+          <div class="flex items-start gap-3 mb-4">
+            <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                 style="background:rgba(0,200,120,0.1);border:1px solid rgba(0,200,120,0.25);color:var(--color-success)">
+              <ng-icon name="lucidePlus" size="15" />
             </div>
             <div>
-              <label class="block text-sm text-text-secondary mb-1.5">Nota (opcional)</label>
-              <input type="text" formControlName="notes" placeholder="Ej: Recepción mercancía proveedor"
-                class="w-full rounded-lg bg-bg-elevated border border-border px-3 py-2 text-text-primary text-sm
-                       focus:outline-none focus:border-accent transition-colors" />
+              <h2 class="text-[13px] font-semibold text-text-primary">Agregar unidades</h2>
+              <p class="text-[12px] text-text-muted mt-0.5">
+                Recibiste nueva mercancía — suma unidades al stock actual.
+              </p>
             </div>
-            <button type="submit" [disabled]="adjusting()"
-              class="self-start px-5 py-2 rounded-lg bg-accent hover:bg-accent-hover disabled:opacity-50 text-white text-sm font-semibold transition-colors flex items-center gap-2">
-              @if (adjusting()) { <ng-icon name="lucideRefreshCw" size="14" class="animate-spin" /> }
-              Aplicar ajuste
+          </div>
+
+          @if (addSuccess()) {
+            <div class="mb-3 flex items-center gap-2 rounded-lg px-3 py-2 text-[12px] font-medium"
+                 style="background:rgba(0,200,120,0.08);color:var(--color-success);border:1px solid rgba(0,200,120,0.2)">
+              <ng-icon name="lucideCircleCheck" size="13" /> Unidades agregadas correctamente
+            </div>
+          }
+          @if (addError()) {
+            <div class="mb-3 flex items-center gap-2 rounded-lg px-3 py-2 text-[12px]"
+                 style="background:rgba(239,68,68,0.08);color:var(--color-error);border:1px solid rgba(239,68,68,0.2)">
+              <ng-icon name="lucideTriangleAlert" size="13" /> {{ addError() }}
+            </div>
+          }
+
+          <form [formGroup]="addForm" (ngSubmit)="addStock()" novalidate class="flex flex-col gap-3">
+            <div class="flex gap-3">
+              <div class="flex-1">
+                <label class="block text-[12px] font-medium text-text-secondary mb-1.5">
+                  Unidades a agregar
+                </label>
+                <input type="number" formControlName="quantity" min="1"
+                  class="w-full rounded-[10px] bg-bg-elevated border border-border px-3 py-2.5 text-[14px]
+                         text-text-primary focus:outline-none focus:border-accent/50 transition-colors" />
+              </div>
+              <div class="flex-1">
+                <label class="block text-[12px] font-medium text-text-secondary mb-1.5">
+                  Nota (opcional)
+                </label>
+                <input type="text" formControlName="notes" placeholder="Ej: Lote proveedor enero"
+                  class="w-full rounded-[10px] bg-bg-elevated border border-border px-3 py-2.5 text-[13px]
+                         text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent/50 transition-colors" />
+              </div>
+            </div>
+            <button type="submit" [disabled]="adding() || addForm.invalid"
+              class="self-start flex items-center gap-2 px-4 py-2 rounded-[10px] text-[13px] font-semibold
+                     transition-colors disabled:opacity-50"
+              style="background:rgba(0,200,120,0.15);color:var(--color-success);border:1px solid rgba(0,200,120,0.3)">
+              @if (adding()) {
+                <ng-icon name="lucideRefreshCw" size="13" class="animate-spin" />
+              } @else {
+                <ng-icon name="lucidePlus" size="13" />
+              }
+              Agregar al stock
             </button>
           </form>
         </div>
+
+        <!-- ── Reiniciar / Establecer stock exacto ───────── -->
+        <div class="neo-card-premium p-5">
+          <div class="flex items-start gap-3 mb-4">
+            <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                 style="background:rgba(100,93,255,0.1);border:1px solid rgba(100,93,255,0.25);color:var(--color-accent)">
+              <ng-icon name="lucideRefreshCw" size="15" />
+            </div>
+            <div>
+              <h2 class="text-[13px] font-semibold text-text-primary">Reiniciar / Establecer stock exacto</h2>
+              <p class="text-[12px] text-text-muted mt-0.5">
+                Hiciste un conteo físico o quieres corregir el número — reemplaza el stock actual con este valor.
+              </p>
+            </div>
+          </div>
+
+          <div class="flex items-start gap-2 px-3 py-2 rounded-lg mb-4 text-[12px]"
+               style="background:rgba(245,158,11,0.06);color:var(--color-warning);border:1px solid rgba(245,158,11,0.2)">
+            <ng-icon name="lucideInfo" size="13" class="mt-0.5 shrink-0" />
+            <span>El valor que ingreses <strong>reemplaza</strong> el stock actual completo.
+              No puede ser menor al stock reservado ({{ inventory()!.reservedStock }} uds.).</span>
+          </div>
+
+          @if (setSuccess()) {
+            <div class="mb-3 flex items-center gap-2 rounded-lg px-3 py-2 text-[12px] font-medium"
+                 style="background:rgba(0,200,120,0.08);color:var(--color-success);border:1px solid rgba(0,200,120,0.2)">
+              <ng-icon name="lucideCircleCheck" size="13" /> Stock establecido correctamente
+            </div>
+          }
+          @if (setError()) {
+            <div class="mb-3 flex items-center gap-2 rounded-lg px-3 py-2 text-[12px]"
+                 style="background:rgba(239,68,68,0.08);color:var(--color-error);border:1px solid rgba(239,68,68,0.2)">
+              <ng-icon name="lucideTriangleAlert" size="13" /> {{ setError() }}
+            </div>
+          }
+
+          <form [formGroup]="setForm" (ngSubmit)="setStock()" novalidate class="flex flex-col gap-3">
+            <div class="flex gap-3">
+              <div class="flex-1">
+                <label class="block text-[12px] font-medium text-text-secondary mb-1.5">
+                  Nuevo stock total
+                </label>
+                <input type="number" formControlName="quantity" min="0"
+                  class="w-full rounded-[10px] bg-bg-elevated border border-border px-3 py-2.5 text-[14px]
+                         text-text-primary focus:outline-none focus:border-accent/50 transition-colors" />
+              </div>
+              <div class="flex-1">
+                <label class="block text-[12px] font-medium text-text-secondary mb-1.5">
+                  Motivo (opcional)
+                </label>
+                <input type="text" formControlName="notes" placeholder="Ej: Conteo físico 01/06"
+                  class="w-full rounded-[10px] bg-bg-elevated border border-border px-3 py-2.5 text-[13px]
+                         text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent/50 transition-colors" />
+              </div>
+            </div>
+            <button type="submit" [disabled]="setting() || setForm.invalid"
+              class="self-start flex items-center gap-2 px-4 py-2 rounded-[10px] text-[13px] font-semibold
+                     transition-colors disabled:opacity-50"
+              style="background:rgba(100,93,255,0.12);color:var(--color-accent);border:1px solid rgba(100,93,255,0.3)">
+              @if (setting()) {
+                <ng-icon name="lucideRefreshCw" size="13" class="animate-spin" />
+              } @else {
+                <ng-icon name="lucideRefreshCw" size="13" />
+              }
+              Establecer stock
+            </button>
+          </form>
+        </div>
+
       }
     </div>
   `,
 })
 export class SellerInventoryComponent implements OnInit {
-  private route = inject(ActivatedRoute);
+  private route          = inject(ActivatedRoute);
   private productService = inject(SellerProductService);
-  private fb = inject(FormBuilder);
+  private fb             = inject(FormBuilder);
 
-  productId = signal('');
-  inventory = signal<InventoryResponse | null>(null);
-  loading = signal(true);
-  loadError = signal<string | null>(null);
-  adjusting = signal(false);
-  adjustSuccess = signal(false);
-  adjustError = signal<string | null>(null);
+  productId  = signal('');
+  inventory  = signal<InventoryResponse | null>(null);
+  loading    = signal(true);
+  loadError  = signal<string | null>(null);
 
-  form = this.fb.nonNullable.group({
-    quantity: [0, [Validators.required, Validators.min(-9999), Validators.max(9999)]],
+  adding     = signal(false);
+  addSuccess = signal(false);
+  addError   = signal<string | null>(null);
+
+  setting    = signal(false);
+  setSuccess = signal(false);
+  setError   = signal<string | null>(null);
+
+  addForm = this.fb.nonNullable.group({
+    quantity: [1, [Validators.required, Validators.min(1), Validators.max(99999)]],
+    notes: [''],
+  });
+
+  setForm = this.fb.nonNullable.group({
+    quantity: [0, [Validators.required, Validators.min(0), Validators.max(99999)]],
     notes: [''],
   });
 
@@ -119,27 +243,39 @@ export class SellerInventoryComponent implements OnInit {
     });
   }
 
-  adjust(): void {
-    if (this.form.invalid) return;
-    const raw = this.form.getRawValue();
-    if (raw.quantity === 0) return;
-    this.adjusting.set(true);
-    this.adjustError.set(null);
-    this.productService.adjustStock(this.productId(), {
-      quantity: raw.quantity,
-      notes: raw.notes || undefined,
-    }).subscribe({
-      next: (res) => {
-        this.inventory.set(res.data);
-        this.form.reset({ quantity: 0, notes: '' });
-        this.adjusting.set(false);
-        this.adjustSuccess.set(true);
-        setTimeout(() => this.adjustSuccess.set(false), 3000);
-      },
-      error: (err) => {
-        this.adjustError.set(err.error?.message ?? 'Error al ajustar');
-        this.adjusting.set(false);
-      },
-    });
+  addStock(): void {
+    if (this.addForm.invalid) return;
+    const raw = this.addForm.getRawValue();
+    this.adding.set(true);
+    this.addError.set(null);
+    this.productService.adjustStock(this.productId(), { quantity: raw.quantity, notes: raw.notes || undefined })
+      .subscribe({
+        next: (res) => {
+          this.inventory.set(res.data);
+          this.addForm.reset({ quantity: 1, notes: '' });
+          this.adding.set(false);
+          this.addSuccess.set(true);
+          setTimeout(() => this.addSuccess.set(false), 3000);
+        },
+        error: (err) => { this.addError.set(err.error?.message ?? 'Error al agregar'); this.adding.set(false); },
+      });
+  }
+
+  setStock(): void {
+    if (this.setForm.invalid) return;
+    const raw = this.setForm.getRawValue();
+    this.setting.set(true);
+    this.setError.set(null);
+    this.productService.setStock(this.productId(), { quantity: raw.quantity, notes: raw.notes || undefined })
+      .subscribe({
+        next: (res) => {
+          this.inventory.set(res.data);
+          this.setForm.patchValue({ notes: '' });
+          this.setting.set(false);
+          this.setSuccess.set(true);
+          setTimeout(() => this.setSuccess.set(false), 3000);
+        },
+        error: (err) => { this.setError.set(err.error?.message ?? 'Error al establecer'); this.setting.set(false); },
+      });
   }
 }
