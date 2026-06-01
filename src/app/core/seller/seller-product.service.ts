@@ -67,6 +67,13 @@ export class SellerProductService {
     );
   }
 
+  setStock(productId: string, request: AdjustStockRequest): Observable<ApiResponse<InventoryResponse>> {
+    return this.http.patch<ApiResponse<InventoryResponse>>(
+      `${this.base}/inventory/${productId}/stock`,
+      request,
+    );
+  }
+
   getOffers(productId: string): Observable<ApiResponse<OfferResponse[]>> {
     return this.http.get<ApiResponse<OfferResponse[]>>(`${this.base}/products/${productId}/offers`);
   }
