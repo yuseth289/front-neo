@@ -141,25 +141,49 @@ import { Brand } from '../../shared/models/catalog.models';
                     </td>
                     <td class="px-5 py-3.5 text-[12px] text-text-muted font-mono">{{ brand.displayOrder }}</td>
                     <td class="px-5 py-3.5">
-                      <button
-                        (click)="brand.active ? deactivate(brand.id) : activate(brand.id)"
-                        class="relative inline-flex h-[22px] w-10 shrink-0 rounded-full border-2 border-transparent
-                               transition-colors duration-200 focus:outline-none"
-                        [style.background]="brand.active ? 'var(--color-success)' : 'var(--color-border)'"
-                        [style.box-shadow]="brand.active ? '0 0 10px rgba(0,200,120,0.4)' : 'none'"
-                        [attr.title]="brand.active ? 'Desactivar marca' : 'Activar marca'"
-                        role="switch" [attr.aria-checked]="brand.active">
-                        <span class="pointer-events-none inline-block h-[14px] w-[14px] rounded-full
-                                     bg-white shadow-sm transform transition-transform duration-200 mt-[1px]"
-                              [style.transform]="brand.active ? 'translateX(20px)' : 'translateX(1px)'">
+                      <div class="flex flex-col items-start gap-0.5">
+                        <button
+                          (click)="brand.active ? deactivate(brand.id) : activate(brand.id)"
+                          class="relative inline-flex h-[22px] w-10 shrink-0 rounded-full border-2 border-transparent
+                                 transition-colors duration-200 focus:outline-none"
+                          [style.background]="brand.active ? 'var(--color-success)' : 'var(--color-border)'"
+                          [style.box-shadow]="brand.active ? '0 0 10px rgba(0,200,120,0.4)' : 'none'"
+                          [attr.title]="brand.active ? 'Desactivar marca' : 'Activar marca'"
+                          role="switch" [attr.aria-checked]="brand.active">
+                          <span class="pointer-events-none inline-block h-[14px] w-[14px] rounded-full
+                                       bg-white shadow-sm transform transition-transform duration-200 mt-[1px]"
+                                [style.transform]="brand.active ? 'translateX(20px)' : 'translateX(1px)'">
+                          </span>
+                        </button>
+                        <span class="text-[10px] font-medium leading-none"
+                              [style.color]="brand.active ? 'var(--color-success)' : 'var(--color-text-muted)'">
+                          {{ brand.active ? 'Activa' : 'Inactiva' }}
                         </span>
-                      </button>
+                      </div>
                     </td>
                     <td class="px-3 py-3.5 text-right">
-                      <button (click)="openEdit(brand)" title="Editar"
-                        class="p-1.5 rounded-[8px] text-text-muted hover:text-accent hover:bg-accent/10 transition-colors">
-                        <ng-icon name="lucidePencil" size="13" />
-                      </button>
+                      <div class="flex items-center justify-end gap-1">
+                        <button (click)="openEdit(brand)" title="Editar"
+                          class="p-1.5 rounded-[8px] text-text-muted hover:text-accent hover:bg-accent/10 transition-colors">
+                          <ng-icon name="lucidePencil" size="13" />
+                        </button>
+                        @if (confirmingDeleteId() === brand.id) {
+                          <span class="text-[11px] text-error font-medium mr-1">¿Eliminar?</span>
+                          <button (click)="confirmDelete(brand.id)" title="Confirmar eliminación"
+                            class="p-1.5 rounded-[8px] text-error hover:bg-error/10 transition-colors">
+                            <ng-icon name="lucideCheck" size="13" />
+                          </button>
+                          <button (click)="cancelDelete()" title="Cancelar"
+                            class="p-1.5 rounded-[8px] text-text-muted hover:bg-bg-elevated transition-colors">
+                            <ng-icon name="lucideX" size="13" />
+                          </button>
+                        } @else {
+                          <button (click)="askDelete(brand.id)" title="Eliminar marca"
+                            class="p-1.5 rounded-[8px] text-text-muted hover:text-error hover:bg-error/10 transition-colors">
+                            <ng-icon name="lucideTrash2" size="13" />
+                          </button>
+                        }
+                      </div>
                     </td>
                   </tr>
                 }
@@ -175,12 +199,13 @@ export class AdminBrandsComponent implements OnInit {
   private adminService = inject(AdminService);
   private fb = inject(FormBuilder);
 
-  brands   = signal<Brand[]>([]);
-  loading  = signal(true);
-  showForm = signal(false);
-  editingId = signal<string | null>(null);
-  saving   = signal(false);
-  formError = signal<string | null>(null);
+  brands             = signal<Brand[]>([]);
+  loading            = signal(true);
+  showForm           = signal(false);
+  editingId          = signal<string | null>(null);
+  saving             = signal(false);
+  formError          = signal<string | null>(null);
+  confirmingDeleteId = signal<string | null>(null);
 
   form = this.fb.nonNullable.group({
     name: ['', Validators.required],
@@ -241,5 +266,13 @@ export class AdminBrandsComponent implements OnInit {
 
   activate(id: string): void {
     this.adminService.activateBrand(id).subscribe({ next: () => this.load() });
+  }
+
+  askDelete(id: string): void     { this.confirmingDeleteId.set(id); }
+  cancelDelete(): void            { this.confirmingDeleteId.set(null); }
+  confirmDelete(id: string): void {
+    this.adminService.deleteBrandPermanent(id).subscribe({
+      next: () => { this.confirmingDeleteId.set(null); this.load(); },
+    });
   }
 }
