@@ -202,7 +202,7 @@ const STATUS_MAP: Record<ProductStatus, { color: string; bg: string; border: str
 
                   <!-- Actions dropdown -->
                   <div class="relative" data-menu>
-                    <button (click)="toggleMenu(p.id)"
+                    <button (click)="toggleMenu(p.id, $event)"
                       [disabled]="processing() === p.id"
                       class="w-8 h-8 flex items-center justify-center rounded-lg text-text-muted
                              hover:text-text-primary hover:bg-bg-elevated transition-colors
@@ -216,9 +216,13 @@ const STATUS_MAP: Record<ProductStatus, { color: string; bg: string; border: str
                     </button>
 
                     @if (openMenu() === p.id) {
-                      <div class="absolute right-0 top-full mt-1 w-44 z-20
+                      <div class="absolute right-0 w-44 z-20
                                   bg-bg-surface border border-border rounded-[12px]
-                                  shadow-[var(--shadow-card-lift)] overflow-hidden py-1">
+                                  shadow-[var(--shadow-card-lift)] overflow-hidden py-1"
+                           [class.top-full]="!menuAbove()"
+                           [class.mt-1]="!menuAbove()"
+                           [class.bottom-full]="menuAbove()"
+                           [class.mb-1]="menuAbove()">
 
                         <!-- Editar -->
                         <a [routerLink]="['/seller/products', p.id]"
@@ -328,6 +332,7 @@ export class SellerProductsComponent implements OnInit {
   totalPages    = signal(0);
   processing    = signal<string | null>(null);
   openMenu      = signal<string | null>(null);
+  menuAbove     = signal(false);
   confirmDelete = signal<ProductSummaryResponse | null>(null);
 
   statusColor(s: ProductStatus):  string { return (STATUS_MAP[s] ?? STATUS_MAP.DRAFT).color;  }
@@ -335,8 +340,12 @@ export class SellerProductsComponent implements OnInit {
   statusBorder(s: ProductStatus): string { return (STATUS_MAP[s] ?? STATUS_MAP.DRAFT).border; }
   statusLabel(s: ProductStatus):  string { return (STATUS_MAP[s] ?? STATUS_MAP.DRAFT).label;  }
 
-  toggleMenu(id: string): void {
-    this.openMenu.set(this.openMenu() === id ? null : id);
+  toggleMenu(id: string, event: MouseEvent): void {
+    if (this.openMenu() === id) { this.openMenu.set(null); return; }
+    const btn = event.currentTarget as HTMLElement;
+    const rect = btn.getBoundingClientRect();
+    this.menuAbove.set(window.innerHeight - rect.bottom < 300);
+    this.openMenu.set(id);
   }
 
   publish(p: ProductSummaryResponse): void {
