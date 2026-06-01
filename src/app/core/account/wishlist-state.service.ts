@@ -26,6 +26,8 @@ export class WishlistStateService {
 
   toggle(productId: string): void {
     const prev = new Set(this.productIds());
+
+    // Optimistic update — feedback visual inmediato
     const next = new Set(prev);
     if (next.has(productId)) {
       next.delete(productId);
@@ -35,12 +37,8 @@ export class WishlistStateService {
     this.productIds.set(next);
 
     this.wishlistService.toggleItem(productId).subscribe({
-      next: (res) => {
-        this.productIds.set(new Set(res.data.items.map(i => i.productId)));
-      },
-      error: () => {
-        this.productIds.set(prev);
-      },
+      next: () => this.loadProductIds(),  // sincroniza con el estado real del servidor
+      error: () => this.productIds.set(prev),
     });
   }
 
