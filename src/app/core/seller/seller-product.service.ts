@@ -75,15 +75,15 @@ export class SellerProductService {
   }
 
   getOffers(productId: string): Observable<ApiResponse<OfferResponse[]>> {
-    return this.http.get<ApiResponse<OfferResponse[]>>(`${this.base}/products/${productId}/offers`);
+    return this.http.get<ApiResponse<OfferResponse[]>>(`${this.base}/products/me/${productId}/offers`);
   }
 
   createOffer(productId: string, request: CreateOfferRequest): Observable<ApiResponse<OfferResponse>> {
-    return this.http.post<ApiResponse<OfferResponse>>(`${this.base}/products/${productId}/offers`, request);
+    return this.http.post<ApiResponse<OfferResponse>>(`${this.base}/products/me/${productId}/offers`, request);
   }
 
   deleteOffer(productId: string, offerId: string): Observable<ApiResponse<void>> {
-    return this.http.delete<ApiResponse<void>>(`${this.base}/products/${productId}/offers/${offerId}`);
+    return this.http.delete<ApiResponse<void>>(`${this.base}/products/me/${productId}/offers/${offerId}`);
   }
 
   uploadFile(file: File): Observable<string> {
