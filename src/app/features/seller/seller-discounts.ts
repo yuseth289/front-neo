@@ -13,7 +13,7 @@ import { CopCurrencyPipe } from '../../shared/pipes/cop-currency.pipe';
   standalone: true,
   imports: [CommonModule, RouterLink, ReactiveFormsModule, FormsModule, NgIcon, CopCurrencyPipe],
   template: `
-    <div class="max-w-2xl">
+    <div class="max-w-2xl mx-auto">
 
       <!-- Header -->
       <div class="mb-6">
@@ -81,7 +81,7 @@ import { CopCurrencyPipe } from '../../shared/pipes/cop-currency.pipe';
                 <div class="flex-1 min-w-0">
                   <p class="text-[14px] font-semibold text-text-primary truncate">{{ p.name }}</p>
                   <p class="text-[12px] text-text-muted mt-0.5 font-mono">
-                    {{ p.finalPrice | copCurrency }} · {{ p.brand ?? 'Sin marca' }}
+                    {{ p.finalPrice | copCurrency }} · {{ p.brand || 'Sin marca' }}
                   </p>
                 </div>
 
