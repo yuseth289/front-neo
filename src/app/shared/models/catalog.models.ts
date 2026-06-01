@@ -21,6 +21,7 @@ export interface ProductSummary {
   primaryImageUrl: string | null;
   averageRating?: number | null;
   totalReviews?: number | null;
+  activeDiscountPercent?: number | null;
 }
 
 export interface ProductDetail {
@@ -41,6 +42,7 @@ export interface ProductDetail {
   specifications?: Record<string, string>;
   createdAt: string;
   updatedAt: string;
+  activeDiscountPercent?: number | null;
 }
 
 export interface Category {
