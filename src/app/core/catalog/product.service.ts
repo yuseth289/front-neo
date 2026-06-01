@@ -60,11 +60,18 @@ export class ProductService {
   }
 
   getBySeller(sellerId: string, page = 0, size = 20, sortField = 'createdAt', sortDir = 'desc'): Observable<ApiResponse<PageResponse<ProductSummary>>> {
+    // Mapear campos calculados a campos JPA reales del servidor
+    const FIELD_MAP: Record<string, string> = {
+      finalPrice:    'basePrice',
+      averageRating: 'createdAt',
+      totalReviews:  'createdAt',
+    };
+    const backendField = FIELD_MAP[sortField] ?? sortField;
     const params = new HttpParams()
       .set('sellerId', sellerId)
       .set('page', page)
       .set('size', size)
-      .set('sort', `${sortField},${sortDir}`);
+      .set('sort', `${backendField},${sortDir}`);
     return this.http.get<ApiResponse<PageResponse<ProductSummary>>>(`${this.base}/products`, { params });
   }
 }
