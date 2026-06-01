@@ -37,9 +37,47 @@ import { InventoryResponse } from '../../shared/models/product.models';
 
         <!-- ── Stock actual ───────────────────────────────── -->
         <div class="neo-card-premium p-5 mb-5">
-          <h2 class="text-[11px] font-semibold text-text-muted uppercase tracking-[0.06em] font-mono mb-4">
-            Stock actual
-          </h2>
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-[11px] font-semibold text-text-muted uppercase tracking-[0.06em] font-mono">
+              Stock actual
+            </h2>
+            @if (inventory()!.availableStock > 0) {
+              @if (confirmingAgotado()) {
+                <div class="flex items-center gap-2">
+                  <span class="text-[12px] text-text-muted">¿Marcar como agotado?</span>
+                  <button (click)="markAsAgotado()"
+                    [disabled]="setting()"
+                    class="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[12px] font-semibold
+                           transition-colors disabled:opacity-50"
+                    style="background:rgba(239,68,68,0.12);color:var(--color-error);border:1px solid rgba(239,68,68,0.3)">
+                    @if (setting()) {
+                      <ng-icon name="lucideRefreshCw" size="11" class="animate-spin" />
+                    } @else {
+                      <ng-icon name="lucideCheck" size="11" />
+                    }
+                    Sí, agotar
+                  </button>
+                  <button (click)="confirmingAgotado.set(false)"
+                    class="p-1 rounded-lg text-text-muted hover:text-text-primary transition-colors">
+                    <ng-icon name="lucideX" size="13" />
+                  </button>
+                </div>
+              } @else {
+                <button (click)="confirmingAgotado.set(true)"
+                  [disabled]="inventory()!.reservedStock > 0"
+                  class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium
+                         transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  style="background:rgba(239,68,68,0.08);color:var(--color-error);border:1px solid rgba(239,68,68,0.2)"
+                  [attr.title]="inventory()!.reservedStock > 0
+                    ? 'No se puede agotar: hay ' + inventory()!.reservedStock + ' unidades en checkouts activos'
+                    : 'Pone el stock físico a 0'">
+                  <ng-icon name="lucidePackageX" size="13" />
+                  Marcar agotado
+                </button>
+              }
+            }
+          </div>
+
           <div class="grid grid-cols-3 gap-4 text-center">
             <div>
               <p class="text-[28px] font-display font-bold text-text-primary leading-none">
@@ -61,11 +99,12 @@ import { InventoryResponse } from '../../shared/models/product.models';
               <p class="text-[11px] text-text-muted mt-1.5">Disponible</p>
             </div>
           </div>
+
           @if (inventory()!.availableStock === 0) {
             <div class="mt-4 flex items-center gap-2 px-3 py-2 rounded-lg text-[12px] font-medium"
                  style="background:rgba(239,68,68,0.08);color:var(--color-error);border:1px solid rgba(239,68,68,0.2)">
-              <ng-icon name="lucideTriangleAlert" size="13" />
-              Sin stock disponible — usa una de las opciones de abajo para actualizar.
+              <ng-icon name="lucidePackageX" size="13" />
+              Producto agotado — usa "Agregar unidades" o "Establecer stock" para reabastecer.
             </div>
           }
         </div>
@@ -213,13 +252,15 @@ export class SellerInventoryComponent implements OnInit {
   loading    = signal(true);
   loadError  = signal<string | null>(null);
 
-  adding     = signal(false);
-  addSuccess = signal(false);
-  addError   = signal<string | null>(null);
+  adding            = signal(false);
+  addSuccess        = signal(false);
+  addError          = signal<string | null>(null);
 
-  setting    = signal(false);
-  setSuccess = signal(false);
-  setError   = signal<string | null>(null);
+  setting           = signal(false);
+  setSuccess        = signal(false);
+  setError          = signal<string | null>(null);
+
+  confirmingAgotado = signal(false);
 
   addForm = this.fb.nonNullable.group({
     quantity: [1, [Validators.required, Validators.min(1), Validators.max(99999)]],
@@ -258,6 +299,26 @@ export class SellerInventoryComponent implements OnInit {
           setTimeout(() => this.addSuccess.set(false), 3000);
         },
         error: (err) => { this.addError.set(err.error?.message ?? 'Error al agregar'); this.adding.set(false); },
+      });
+  }
+
+  markAsAgotado(): void {
+    this.setting.set(true);
+    this.setError.set(null);
+    this.productService.setStock(this.productId(), { quantity: 0, notes: 'Marcado como agotado' })
+      .subscribe({
+        next: (res) => {
+          this.inventory.set(res.data);
+          this.confirmingAgotado.set(false);
+          this.setting.set(false);
+          this.setSuccess.set(true);
+          setTimeout(() => this.setSuccess.set(false), 3000);
+        },
+        error: (err) => {
+          this.setError.set(err.error?.message ?? 'Error al marcar como agotado');
+          this.confirmingAgotado.set(false);
+          this.setting.set(false);
+        },
       });
   }
 
