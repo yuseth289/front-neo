@@ -228,6 +228,11 @@ export const routes: Routes = [
         data: { title: 'Ofertas' },
       },
       {
+        path: 'discounts',
+        loadComponent: () => import('./features/seller/seller-discounts').then((m) => m.SellerDiscountsComponent),
+        data: { title: 'Descuentos' },
+      },
+      {
         path: 'orders',
         loadComponent: () => import('./features/seller/seller-orders').then((m) => m.SellerOrdersComponent),
         data: { title: 'Órdenes recibidas' },
