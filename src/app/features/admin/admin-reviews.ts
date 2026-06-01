@@ -6,6 +6,7 @@ import { NgIcon } from '@ng-icons/core';
 import { AdminService } from '../../core/admin/admin.service';
 import { ProductService } from '../../core/catalog/product.service';
 import { Review, ProductSummary } from '../../shared/models/catalog.models';
+import { ReviewStatus } from '../../shared/models/enums';
 
 @Component({
   selector: 'app-admin-reviews',
@@ -75,6 +76,23 @@ import { Review, ProductSummary } from '../../shared/models/catalog.models';
               Nueva reseña
             </button>
           </div>
+        </div>
+
+        <!-- ── Status filter tabs ──────────────────────────── -->
+        <div class="neo-reveal flex gap-1 p-1 rounded-xl border border-border mb-6"
+             style="background: var(--color-bg-elevated)">
+          @for (tab of statusTabs; track tab.value) {
+            <button (click)="setStatus(tab.value)"
+              class="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg
+                     text-[12px] font-semibold transition-all duration-200"
+              [style.background]="activeStatus() === tab.value ? 'var(--color-bg-surface)' : 'transparent'"
+              [style.color]="activeStatus() === tab.value ? tab.color : 'var(--color-text-muted)'"
+              [style.box-shadow]="activeStatus() === tab.value ? '0 1px 4px rgba(0,0,0,0.18)' : 'none'">
+              <span class="w-1.5 h-1.5 rounded-full shrink-0"
+                    [style.background]="activeStatus() === tab.value ? tab.color : 'var(--color-text-muted)'"></span>
+              {{ tab.label }}
+            </button>
+          }
         </div>
 
         <!-- ── Create review form ──────────────────────────── -->
@@ -356,6 +374,12 @@ import { Review, ProductSummary } from '../../shared/models/catalog.models';
                         <span class="text-[10px] font-mono px-2 py-0.5 rounded-md bg-bg-elevated border border-border text-text-muted">
                           {{ (review.productId || '------').slice(-6).toUpperCase() }}
                         </span>
+                        <span class="text-[10px] font-semibold px-2 py-0.5 rounded-md border"
+                              [style.color]="statusColor(review.status)"
+                              [style.background]="statusBg(review.status)"
+                              [style.border-color]="statusBorder(review.status)">
+                          {{ statusLabel(review.status) }}
+                        </span>
                       </div>
                       <div class="flex items-center gap-0.5">
                         @for (s of [1,2,3,4,5]; track s) {
@@ -396,6 +420,76 @@ import { Review, ProductSummary } from '../../shared/models/catalog.models';
                       </span>
                     </div>
                   </div>
+
+                  <!-- ── Moderation actions ──────────────────── -->
+                  @if (review.status === 'PENDING') {
+                    <div class="mt-3 pt-3 border-t border-border">
+                      @if (rejectingId() === review.id) {
+                        <div class="flex flex-col gap-2">
+                          <textarea rows="2"
+                            [value]="rejectReason()"
+                            (input)="rejectReason.set($any($event.target).value)"
+                            placeholder="Motivo del rechazo (opcional)…"
+                            class="w-full rounded-[10px] border px-3 py-2 text-[12px] text-text-primary
+                                   placeholder:text-text-muted outline-none resize-none transition-all
+                                   focus:ring-1"
+                            style="background:rgba(239,68,68,0.04);border-color:rgba(239,68,68,0.3)">
+                          </textarea>
+                          <div class="flex gap-2">
+                            <button (click)="confirmReject(review.id)"
+                              class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-colors border"
+                              style="background:rgba(239,68,68,0.1);color:var(--color-error);border-color:rgba(239,68,68,0.3)">
+                              <ng-icon name="lucideX" size="12" />
+                              Confirmar rechazo
+                            </button>
+                            <button (click)="cancelReject()"
+                              class="px-3 py-1.5 rounded-lg text-[12px] font-semibold text-text-muted
+                                     hover:text-text-primary transition-colors border border-border">
+                              Cancelar
+                            </button>
+                          </div>
+                        </div>
+                      } @else {
+                        <div class="flex items-center gap-2">
+                          <button (click)="approve(review.id)"
+                            class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold
+                                   transition-colors border hover:brightness-110"
+                            style="background:rgba(0,200,120,0.1);color:var(--color-success);border-color:rgba(0,200,120,0.3)">
+                            <ng-icon name="lucideCheck" size="12" />
+                            Aprobar
+                          </button>
+                          <button (click)="startReject(review.id)"
+                            class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold
+                                   transition-colors border hover:brightness-110"
+                            style="background:rgba(239,68,68,0.08);color:var(--color-error);border-color:rgba(239,68,68,0.25)">
+                            <ng-icon name="lucideX" size="12" />
+                            Rechazar
+                          </button>
+                        </div>
+                      }
+                    </div>
+                  }
+
+                  @if (review.status === 'REJECTED') {
+                    <div class="mt-3 pt-3 border-t border-border flex items-start gap-3">
+                      <div class="flex-1">
+                        @if (review.rejectReason) {
+                          <p class="text-[10px] font-semibold uppercase tracking-wider mb-1"
+                             style="color:var(--color-error)">Motivo de rechazo</p>
+                          <p class="text-[12px] text-text-secondary">{{ review.rejectReason }}</p>
+                        } @else {
+                          <p class="text-[12px] text-text-muted italic">Sin motivo especificado</p>
+                        }
+                      </div>
+                      <button (click)="approve(review.id)"
+                        class="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold
+                               transition-colors border hover:brightness-110"
+                        style="background:rgba(0,200,120,0.1);color:var(--color-success);border-color:rgba(0,200,120,0.3)">
+                        <ng-icon name="lucideCheck" size="12" />
+                        Re-aprobar
+                      </button>
+                    </div>
+                  }
                 </div>
               </div>
             }
@@ -431,6 +525,16 @@ export class AdminReviewsComponent implements OnInit {
   loading    = signal(true);
   page       = signal(0);
   totalPages = signal(0);
+
+  activeStatus  = signal<ReviewStatus>('PENDING');
+  rejectingId   = signal<string | null>(null);
+  rejectReason  = signal('');
+
+  readonly statusTabs: { value: ReviewStatus; label: string; color: string }[] = [
+    { value: 'PENDING',  label: 'Pendientes', color: '#F59E0B' },
+    { value: 'APPROVED', label: 'Aprobadas',  color: 'var(--color-success)' },
+    { value: 'REJECTED', label: 'Rechazadas', color: 'var(--color-error)' },
+  ];
 
   showCreateForm    = signal(false);
   creating          = signal(false);
@@ -566,7 +670,7 @@ export class AdminReviewsComponent implements OnInit {
 
   private load(): void {
     this.loading.set(true);
-    this.adminService.getAdminReviews(this.page(), 20).subscribe({
+    this.adminService.getAdminReviews(this.page(), 20, this.activeStatus()).subscribe({
       next: (res) => {
         this.reviews.set(res.data.content);
         this.totalPages.set(res.data.totalPages);
@@ -574,6 +678,38 @@ export class AdminReviewsComponent implements OnInit {
       },
       error: () => this.loading.set(false),
     });
+  }
+
+  setStatus(status: ReviewStatus): void {
+    this.activeStatus.set(status);
+    this.page.set(0);
+    this.rejectingId.set(null);
+    this.load();
+  }
+
+  approve(id: string): void {
+    this.adminService.moderateReview(id, 'APPROVED').subscribe({ next: () => this.load() });
+  }
+
+  startReject(id: string): void   { this.rejectingId.set(id); this.rejectReason.set(''); }
+  cancelReject(): void            { this.rejectingId.set(null); this.rejectReason.set(''); }
+  confirmReject(id: string): void {
+    this.adminService.moderateReview(id, 'REJECTED', this.rejectReason() || undefined).subscribe({
+      next: () => { this.cancelReject(); this.load(); },
+    });
+  }
+
+  statusLabel(s: ReviewStatus): string {
+    return s === 'PENDING' ? 'Pendiente' : s === 'APPROVED' ? 'Aprobada' : 'Rechazada';
+  }
+  statusColor(s: ReviewStatus): string {
+    return s === 'PENDING' ? '#F59E0B' : s === 'APPROVED' ? 'var(--color-success)' : 'var(--color-error)';
+  }
+  statusBg(s: ReviewStatus): string {
+    return s === 'PENDING' ? 'rgba(245,158,11,0.1)' : s === 'APPROVED' ? 'rgba(0,200,120,0.1)' : 'rgba(239,68,68,0.08)';
+  }
+  statusBorder(s: ReviewStatus): string {
+    return s === 'PENDING' ? 'rgba(245,158,11,0.35)' : s === 'APPROVED' ? 'rgba(0,200,120,0.3)' : 'rgba(239,68,68,0.25)';
   }
 
   prevPage(): void { if (this.page() > 0) { this.page.update(p => p - 1); this.load(); } }
