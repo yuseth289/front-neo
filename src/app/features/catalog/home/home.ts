@@ -1,12 +1,13 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject, OnInit, OnDestroy, signal, computed, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { NgIcon } from '@ng-icons/core';
 import { ProductCardComponent } from '../../../shared/components/product-card/product-card';
 import { ProductService } from '../../../core/catalog/product.service';
 import { CategoryService } from '../../../core/catalog/category.service';
-import { ProductSummary, Category } from '../../../shared/models/catalog.models';
+import { BrandService } from '../../../core/catalog/brand.service';
+import { ProductSummary, Category, Brand } from '../../../shared/models/catalog.models';
 import { Store } from '@ngrx/store';
 import * as CartActions from '../../../core/cart/store/cart.actions';
 import { selectIsAuthenticated } from '../../../core/auth/store/auth.selectors';
@@ -124,15 +125,21 @@ import { WishlistStateService } from '../../../core/account/wishlist-state.servi
       </section>
 
       <!-- ───── BRAND STRIP ────────────────────────────────────── -->
-      <section class="border-b border-border bg-bg-base py-8 px-6">
-        <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-6
-                    text-text-muted font-display font-semibold text-lg tracking-[0.05em]">
-          <span class="neo-stat-label">Marcas oficiales</span>
-          @for (b of brands; track b; let i = $index) {
-            <span class="opacity-75 hover:opacity-100 transition-opacity neo-reveal" [style.--i]="i + 1">{{ b }}</span>
-          }
-        </div>
-      </section>
+      @if (visibleBrands().length > 0) {
+        <section class="border-b border-border bg-bg-base py-8 px-6">
+          <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-6
+                      text-text-muted font-display font-semibold text-lg tracking-[0.05em]">
+            <span class="neo-stat-label">Marcas oficiales</span>
+            @for (b of visibleBrands(); track b.id; let i = $index) {
+              <a [routerLink]="['/catalog']" [queryParams]="{ brand: b.name }"
+                 class="opacity-75 hover:opacity-100 hover:text-text-primary transition-all neo-reveal cursor-pointer"
+                 [style.--i]="i + 1">
+                {{ b.name.toUpperCase() }}
+              </a>
+            }
+          </div>
+        </section>
+      }
 
       <!-- ───── CATEGORIES ─────────────────────────────────────── -->
       @if (categories().length > 0) {
@@ -201,31 +208,56 @@ import { WishlistStateService } from '../../../core/account/wishlist-state.servi
     </div>
   `,
 })
-export class HomeComponent implements OnInit {
+export class HomeComponent implements OnInit, OnDestroy {
   private productService  = inject(ProductService);
   private categoryService = inject(CategoryService);
+  private brandService    = inject(BrandService);
   private router          = inject(Router);
   private store           = inject(Store);
+  private platformId      = inject(PLATFORM_ID);
   readonly isAuthenticated = this.store.selectSignal(selectIsAuthenticated);
   readonly wishlistState   = inject(WishlistStateService);
 
   products         = signal<ProductSummary[]>([]);
   carouselProducts = signal<ProductSummary[]>([]);
   categories       = signal<Category[]>([]);
+  brands           = signal<Brand[]>([]);
   loading          = signal(true);
   searchQuery      = '';
 
+  private carouselOffset = signal(0);
+  private carouselTimer: ReturnType<typeof setInterval> | null = null;
+  private readonly MAX_VISIBLE = 7;
+
+  visibleBrands = computed(() => {
+    const all = this.brands();
+    if (all.length <= this.MAX_VISIBLE) return all;
+    const offset = this.carouselOffset();
+    return Array.from({ length: this.MAX_VISIBLE }, (_, i) => all[(offset + i) % all.length]);
+  });
+
   readonly skeletons = Array(10);
   readonly placeholder = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgZmlsbD0iIzFBMUExQSIvPjwvc3ZnPg==';
-  readonly brands = ['RAZER', 'LOGITECH G', 'ASUS ROG', 'SECRETLAB', 'SAMSUNG', 'SONY', 'LG'];
 
   split(s: string): string[] {
-    return s.split('').map(ch => ch === ' ' ? ' ' : ch);
+    return s.split('').map(ch => ch === ' ' ? ' ' : ch);
   }
 
   ngOnInit(): void {
     this.categoryService.getTree().subscribe({
       next: (res) => this.categories.set(res.data.slice(0, 8)),
+      error: () => {},
+    });
+
+    this.brandService.getActive().subscribe({
+      next: (res) => {
+        this.brands.set(res.data);
+        if (isPlatformBrowser(this.platformId) && res.data.length > this.MAX_VISIBLE) {
+          this.carouselTimer = setInterval(() => {
+            this.carouselOffset.update(o => (o + 1) % res.data.length);
+          }, 3000);
+        }
+      },
       error: () => {},
     });
 
@@ -238,6 +270,10 @@ export class HomeComponent implements OnInit {
       },
       error: () => this.loading.set(false),
     });
+  }
+
+  ngOnDestroy(): void {
+    if (this.carouselTimer) clearInterval(this.carouselTimer);
   }
 
   search() {
