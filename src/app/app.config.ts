@@ -39,6 +39,8 @@ import {
   lucideBarChart2, lucideTrophy,
   lucideShoppingBag,
   lucidePlay, lucidePause,
+  lucideCpu, lucideHardDrive, lucideServer, lucideSmartphone,
+  lucideCamera, lucideWifi, lucideCircuitBoard, lucideMemoryStick,
 } from '@ng-icons/lucide';
 import { routes } from './app.routes';
 import { environment } from '../environments/environment';
@@ -100,6 +102,8 @@ export const appConfig: ApplicationConfig = {
       lucideBarChart2, lucideTrophy,
       lucideShoppingBag,
       lucideMoreVertical, lucidePlay, lucidePause,
+      lucideCpu, lucideHardDrive, lucideServer, lucideSmartphone,
+      lucideCamera, lucideWifi, lucideCircuitBoard, lucideMemoryStick,
     }),
   ],
 };

@@ -4,6 +4,31 @@ import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { NgIcon } from '@ng-icons/core';
 import { AdminService, AdminCategory, CreateCategoryRequest } from '../../core/admin/admin.service';
 
+const CATEGORY_ICONS: { name: string; label: string }[] = [
+  { name: 'lucideTag',          label: 'General'    },
+  { name: 'lucideGamepad2',     label: 'Gaming'     },
+  { name: 'lucideJoystick',     label: 'Joystick'   },
+  { name: 'lucideMonitor',      label: 'Monitor'    },
+  { name: 'lucideKeyboard',     label: 'Teclado'    },
+  { name: 'lucideMouse',        label: 'Mouse'      },
+  { name: 'lucideHeadphones',   label: 'Audífonos'  },
+  { name: 'lucideLaptop',       label: 'Laptop'     },
+  { name: 'lucideCpu',          label: 'CPU'        },
+  { name: 'lucideHardDrive',    label: 'Disco'      },
+  { name: 'lucideMemoryStick',  label: 'RAM'        },
+  { name: 'lucideServer',       label: 'Servidor'   },
+  { name: 'lucideCircuitBoard', label: 'Circuito'   },
+  { name: 'lucideSmartphone',   label: 'Móvil'      },
+  { name: 'lucideCamera',       label: 'Cámara'     },
+  { name: 'lucideWifi',         label: 'Red'        },
+  { name: 'lucideZap',          label: 'Eléctrico'  },
+  { name: 'lucideTrophy',       label: 'Trofeo'     },
+  { name: 'lucideRocket',       label: 'Novedades'  },
+  { name: 'lucideShield',       label: 'Protección' },
+  { name: 'lucidePackage',      label: 'Paquete'    },
+  { name: 'lucideGlobe',        label: 'Global'     },
+];
+
 @Component({
   selector: 'app-admin-categories',
   standalone: true,
@@ -70,6 +95,58 @@ import { AdminService, AdminCategory, CreateCategoryRequest } from '../../core/a
                        text-text-primary focus:outline-none focus:ring-2 focus:ring-accent/8
                        focus:border-accent transition-colors" />
             </div>
+
+            <!-- Icon picker -->
+            <div>
+              <label class="block text-[12px] font-medium text-text-secondary mb-2">
+                Ícono de categoría
+                @if (selectedIcon()) {
+                  <span class="ml-2 text-[11px] text-accent font-mono">{{ selectedIcon() }}</span>
+                }
+              </label>
+
+              <!-- Preview + clear -->
+              <div class="flex items-center gap-3 mb-3">
+                <div class="w-11 h-11 rounded-xl bg-bg-elevated border-2 flex items-center justify-center shrink-0 transition-colors"
+                     [style.border-color]="selectedIcon() ? 'var(--color-accent)' : 'var(--color-border)'"
+                     [style.color]="selectedIcon() ? 'var(--color-accent)' : 'var(--color-text-muted)'">
+                  <ng-icon [name]="selectedIcon() || 'lucideTag'" size="20" />
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-[12px] text-text-secondary">
+                    {{ selectedIcon() ? getIconLabel(selectedIcon()!) : 'Sin ícono seleccionado — se usará el ícono por defecto' }}
+                  </p>
+                  @if (selectedIcon()) {
+                    <button type="button" (click)="clearIcon()"
+                            class="text-[11px] text-error hover:opacity-70 transition-opacity mt-0.5">
+                      Quitar ícono
+                    </button>
+                  }
+                </div>
+              </div>
+
+              <!-- Icon grid -->
+              <div class="grid grid-cols-6 sm:grid-cols-8 gap-1.5 p-3 rounded-[12px]
+                          bg-bg-elevated border border-border max-h-52 overflow-y-auto">
+                @for (icon of iconOptions; track icon.name) {
+                  <button type="button"
+                          (click)="selectIcon(icon.name)"
+                          [title]="icon.label"
+                          class="flex flex-col items-center gap-1 p-2 rounded-[8px] transition-all group"
+                          [class.bg-accent]="selectedIcon() === icon.name"
+                          [class.text-white]="selectedIcon() === icon.name"
+                          [class.hover:bg-bg-surface]="selectedIcon() !== icon.name"
+                          [class.text-text-muted]="selectedIcon() !== icon.name"
+                          [class.hover:text-text-primary]="selectedIcon() !== icon.name">
+                    <ng-icon [name]="icon.name" size="18" />
+                    <span class="text-[9px] leading-none font-mono truncate w-full text-center">
+                      {{ icon.label }}
+                    </span>
+                  </button>
+                }
+              </div>
+            </div>
+
             <div>
               <label class="block text-[12px] font-medium text-text-secondary mb-1.5">Categoría padre (opcional)</label>
               <select formControlName="parentId"
@@ -143,10 +220,10 @@ import { AdminService, AdminCategory, CreateCategoryRequest } from '../../core/a
                           <span class="text-text-muted text-[11px] font-mono select-none">└</span>
                           <span class="text-[13px] text-text-secondary">{{ cat.name }}</span>
                         } @else {
-                          <div class="w-5 h-5 rounded-md bg-bg-elevated border border-border
+                          <div class="w-6 h-6 rounded-md bg-bg-elevated border border-border
                                       flex items-center justify-center shrink-0"
                                style="color:var(--color-accent);">
-                            <ng-icon name="lucideTag" size="10" />
+                            <ng-icon [name]="cat.iconName || 'lucideTag'" size="12" />
                           </div>
                           <span class="text-[13px] font-semibold text-text-primary">{{ cat.name }}</span>
                         }
@@ -184,12 +261,15 @@ export class AdminCategoriesComponent implements OnInit {
   private adminService = inject(AdminService);
   private fb = inject(FormBuilder);
 
+  readonly iconOptions = CATEGORY_ICONS;
+
   categories = signal<AdminCategory[]>([]);
   loading = signal(true);
   showForm = signal(false);
   editingId = signal<string | null>(null);
   saving = signal(false);
   formError = signal<string | null>(null);
+  selectedIcon = signal<string | null>(null);
 
   rootCategories = signal<AdminCategory[]>([]);
 
@@ -203,6 +283,18 @@ export class AdminCategoriesComponent implements OnInit {
   isInvalid(field: string): boolean {
     const c = this.form.get(field);
     return !!(c?.invalid && c?.touched);
+  }
+
+  getIconLabel(iconName: string): string {
+    return CATEGORY_ICONS.find(i => i.name === iconName)?.label ?? iconName;
+  }
+
+  selectIcon(name: string): void {
+    this.selectedIcon.set(this.selectedIcon() === name ? null : name);
+  }
+
+  clearIcon(): void {
+    this.selectedIcon.set(null);
   }
 
   ngOnInit(): void { this.load(); }
@@ -221,6 +313,7 @@ export class AdminCategoriesComponent implements OnInit {
 
   openCreate(): void {
     this.editingId.set(null);
+    this.selectedIcon.set(null);
     this.form.reset({ name: '', slug: '', description: '', parentId: '' });
     this.formError.set(null);
     this.showForm.set(true);
@@ -228,6 +321,7 @@ export class AdminCategoriesComponent implements OnInit {
 
   openEdit(cat: AdminCategory): void {
     this.editingId.set(cat.id);
+    this.selectedIcon.set(cat.iconName ?? null);
     this.form.patchValue({
       name: cat.name,
       slug: cat.slug,
@@ -250,6 +344,7 @@ export class AdminCategoriesComponent implements OnInit {
       name: raw.name,
       slug: raw.slug,
       description: raw.description || undefined,
+      iconName: this.selectedIcon() ?? null,
       parentId: raw.parentId || undefined,
     };
 

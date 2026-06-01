@@ -17,6 +17,7 @@ export interface AdminCategory {
   description: string | null;
   parentId: string | null;
   imageUrl: string | null;
+  iconName: string | null;
   productCount: number;
 }
 
@@ -24,6 +25,7 @@ export interface CreateCategoryRequest {
   name: string;
   slug: string;
   description?: string;
+  iconName?: string | null;
   parentId?: string;
 }
 

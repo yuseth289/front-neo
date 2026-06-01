@@ -157,7 +157,12 @@ import { WishlistStateService } from '../../../core/account/wishlist-state.servi
                         p-4 flex flex-col items-center justify-center gap-2.5 text-center">
                 <span aria-hidden class="absolute -top-10 left-1/2 -translate-x-1/2 w-[120px] h-[120px] rounded-full
                             bg-[radial-gradient(circle,rgba(255,0,60,0.30),transparent_70%)] blur-2xl opacity-60"></span>
-                @if (cat.imageUrl) {
+                @if (cat.iconName) {
+                  <div class="w-11 h-11 rounded-xl bg-bg-elevated border border-border
+                              flex items-center justify-center text-accent relative">
+                    <ng-icon [name]="cat.iconName" size="22" />
+                  </div>
+                } @else if (cat.imageUrl) {
                   <img [src]="cat.imageUrl" [alt]="" class="w-10 h-10 object-contain relative" />
                 } @else {
                   <div class="w-11 h-11 rounded-xl bg-bg-elevated border border-border
