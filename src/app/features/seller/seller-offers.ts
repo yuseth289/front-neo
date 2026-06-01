@@ -89,28 +89,61 @@ import { OfferResponse } from '../../shared/models/product.models';
       } @else {
         <div class="flex flex-col gap-3">
           @for (offer of offers(); track offer.id) {
-            <div class="bg-bg-surface border border-border rounded-xl p-4 flex items-center justify-between gap-4">
-              <div>
-                <div class="flex items-center gap-2 mb-0.5">
-                  <span class="text-lg font-bold text-accent">-{{ offer.discountPercent }}%</span>
-                  @if (offer.active) {
-                    <span class="text-[10px] font-bold uppercase tracking-wide bg-green-500/15 text-green-400 px-1.5 py-0.5 rounded">
-                      Activa
-                    </span>
-                  } @else {
-                    <span class="text-[10px] font-bold uppercase tracking-wide bg-bg-elevated text-text-muted px-1.5 py-0.5 rounded">
-                      Inactiva
-                    </span>
-                  }
+            <div class="neo-card-premium p-4 flex items-center justify-between gap-4">
+              <!-- Info -->
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 font-display font-bold text-[15px]"
+                     [style.background]="offer.active ? 'rgba(0,200,120,0.12)' : 'var(--color-bg-elevated)'"
+                     [style.color]="offer.active ? 'var(--color-success)' : 'var(--color-text-muted)'"
+                     [style.border]="offer.active ? '1px solid rgba(0,200,120,0.3)' : '1px solid var(--color-border)'">
+                  -{{ offer.discountPercent }}%
                 </div>
-                <p class="text-xs text-text-muted">
-                  {{ offer.startDate | date:'d MMM yyyy':'':'es' }} — {{ offer.endDate | date:'d MMM yyyy':'':'es' }}
-                </p>
+                <div>
+                  <div class="flex items-center gap-2">
+                    <span class="text-[14px] font-bold text-text-primary">
+                      {{ offer.discountPercent }}% de descuento
+                    </span>
+                    @if (offer.active) {
+                      <span class="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md"
+                            style="background:rgba(0,200,120,0.12);color:var(--color-success);border:1px solid rgba(0,200,120,0.25)">
+                        Activa
+                      </span>
+                    } @else {
+                      <span class="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md"
+                            style="background:var(--color-bg-elevated);color:var(--color-text-muted);border:1px solid var(--color-border)">
+                        Inactiva
+                      </span>
+                    }
+                  </div>
+                  <p class="text-[12px] text-text-muted mt-0.5">
+                    {{ offer.startDate | date:'d MMM yyyy':'':'es' }} — {{ offer.endDate | date:'d MMM yyyy':'':'es' }}
+                  </p>
+                </div>
               </div>
-              <button (click)="delete(offer.id)"
-                class="p-1.5 rounded-lg text-text-muted hover:text-error hover:bg-bg-elevated transition-colors shrink-0">
-                <ng-icon name="lucideTrash2" size="15" />
-              </button>
+
+              <!-- Borrar -->
+              @if (confirmDeleteId() === offer.id) {
+                <div class="flex items-center gap-2 shrink-0">
+                  <span class="text-[12px] text-text-muted">¿Eliminar?</span>
+                  <button (click)="confirmDelete(offer.id)"
+                    class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[12px] font-semibold transition-colors"
+                    style="background:rgba(239,68,68,0.12);color:var(--color-error);border:1px solid rgba(239,68,68,0.3)">
+                    <ng-icon name="lucideCheck" size="12" /> Sí
+                  </button>
+                  <button (click)="confirmDeleteId.set(null)"
+                    class="p-1.5 rounded-lg text-text-muted hover:text-text-primary transition-colors border border-border">
+                    <ng-icon name="lucideX" size="12" />
+                  </button>
+                </div>
+              } @else {
+                <button (click)="confirmDeleteId.set(offer.id)"
+                  class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium
+                         transition-colors shrink-0"
+                  style="background:rgba(239,68,68,0.08);color:var(--color-error);border:1px solid rgba(239,68,68,0.2)">
+                  <ng-icon name="lucideTrash2" size="13" />
+                  Eliminar
+                </button>
+              }
             </div>
           }
         </div>
@@ -126,9 +159,10 @@ export class SellerOffersComponent implements OnInit {
   productId = signal('');
   offers = signal<OfferResponse[]>([]);
   loading = signal(true);
-  showForm = signal(false);
-  creating = signal(false);
-  formError = signal<string | null>(null);
+  showForm        = signal(false);
+  creating        = signal(false);
+  formError       = signal<string | null>(null);
+  confirmDeleteId = signal<string | null>(null);
 
   form = this.fb.nonNullable.group({
     discountPercent: [10, [Validators.required, Validators.min(1), Validators.max(90)]],
@@ -171,9 +205,12 @@ export class SellerOffersComponent implements OnInit {
     });
   }
 
-  delete(offerId: string): void {
+  confirmDelete(offerId: string): void {
     this.productService.deleteOffer(this.productId(), offerId).subscribe({
-      next: () => this.offers.update(list => list.filter(o => o.id !== offerId)),
+      next: () => {
+        this.offers.update(list => list.filter(o => o.id !== offerId));
+        this.confirmDeleteId.set(null);
+      },
     });
   }
 }
