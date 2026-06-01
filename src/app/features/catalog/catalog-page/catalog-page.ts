@@ -519,8 +519,12 @@ export class CatalogPageComponent implements OnInit, OnDestroy {
     const snap = this.route.snapshot;
     const initCategoryId = snap.paramMap.get('categoryId');
     const initQ = snap.queryParamMap.get('q') ?? '';
+    const initBrand = snap.queryParamMap.get('brand');
     this.activeCategoryId.set(initCategoryId);
     this.searchQuery = initQ;
+    if (initBrand) {
+      this.selectedBrands = new Set([initBrand]);
+    }
     this.currentPage.set(0);
     this.loadProducts(initQ || undefined);
 
@@ -530,9 +534,13 @@ export class CatalogPageComponent implements OnInit, OnDestroy {
       .subscribe(([params, qp]) => {
         const categoryId = params.get('categoryId');
         const q = qp.get('q') ?? '';
+        const brand = qp.get('brand');
         this.activeCategoryId.set(categoryId);
         this.currentPage.set(0);
         this.searchQuery = q;
+        if (brand) {
+          this.selectedBrands = new Set([brand]);
+        }
         this.loadProducts(q || undefined);
       });
 
