@@ -51,6 +51,7 @@ export interface Category {
   slug: string;
   description: string | null;
   imageUrl: string | null;
+  iconName: string | null;
   parentId: string | null;
   children: Category[];
 }
