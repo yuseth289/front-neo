@@ -198,46 +198,54 @@ const STATUS_MAP: Record<SellerStatus, StatusMeta> = {
                       </span>
                     </td>
                     <td class="px-5 py-3.5">
-                      <div class="flex gap-1.5 justify-end">
+                      <div class="flex flex-col items-end gap-0.5">
                         @if (seller.status === 'PENDING') {
-                          <button (click)="updateStatus(seller, 'ACTIVE')"
+                          <div class="flex gap-1.5">
+                            <button (click)="updateStatus(seller, 'ACTIVE'); $event.stopPropagation()"
+                              [disabled]="processing() === seller.id"
+                              class="p-1.5 rounded-[8px] border transition-colors disabled:opacity-50"
+                              style="color:var(--color-success);background:rgba(0,200,120,0.1);border-color:rgba(0,200,120,0.3);"
+                              title="Aprobar vendedor">
+                              @if (processing() === seller.id) {
+                                <ng-icon name="lucideRefreshCw" size="12" class="neo-spin" />
+                              } @else {
+                                <ng-icon name="lucideCheck" size="12" />
+                              }
+                            </button>
+                            <button (click)="updateStatus(seller, 'SUSPENDED'); $event.stopPropagation()"
+                              [disabled]="processing() === seller.id"
+                              class="p-1.5 rounded-[8px] border transition-colors disabled:opacity-50"
+                              style="color:var(--color-error);background:rgba(239,68,68,0.1);border-color:rgba(239,68,68,0.3);"
+                              title="Rechazar vendedor">
+                              <ng-icon name="lucideX" size="12" />
+                            </button>
+                          </div>
+                          <span class="text-[10px] font-medium" style="color:var(--color-warning)">Pendiente</span>
+                        } @else {
+                          <button
+                            (click)="toggleSeller(seller); $event.stopPropagation()"
                             [disabled]="processing() === seller.id"
-                            class="px-2.5 py-1 rounded-[8px] text-[12px] font-semibold border transition-colors
-                                   disabled:opacity-50 flex items-center gap-1"
-                            style="color:var(--color-success);background:rgba(0,200,120,0.1);border-color:rgba(0,200,120,0.3);">
+                            class="relative inline-flex h-[22px] w-10 shrink-0 rounded-full border-2 border-transparent
+                                   transition-colors duration-200 focus:outline-none disabled:opacity-60"
+                            [style.background]="seller.status === 'ACTIVE' ? 'var(--color-success)' : 'var(--color-border)'"
+                            [style.box-shadow]="seller.status === 'ACTIVE' ? '0 0 10px rgba(0,200,120,0.4)' : 'none'"
+                            [attr.title]="seller.status === 'ACTIVE' ? 'Suspender vendedor' : 'Reactivar vendedor'"
+                            role="switch" [attr.aria-checked]="seller.status === 'ACTIVE'">
                             @if (processing() === seller.id) {
-                              <ng-icon name="lucideRefreshCw" size="11" class="neo-spin" />
+                              <span class="absolute inset-0 flex items-center justify-center">
+                                <ng-icon name="lucideRefreshCw" size="10" class="neo-spin text-white" />
+                              </span>
                             } @else {
-                              <ng-icon name="lucideCheck" size="11" />
+                              <span class="pointer-events-none inline-block h-[14px] w-[14px] rounded-full
+                                           bg-white shadow-sm transform transition-transform duration-200 mt-[1px]"
+                                    [style.transform]="seller.status === 'ACTIVE' ? 'translateX(20px)' : 'translateX(1px)'">
+                              </span>
                             }
-                            Aprobar
                           </button>
-                          <button (click)="updateStatus(seller, 'SUSPENDED')"
-                            [disabled]="processing() === seller.id"
-                            class="px-2.5 py-1 rounded-[8px] text-[12px] font-semibold border transition-colors
-                                   disabled:opacity-50 flex items-center gap-1"
-                            style="color:var(--color-error);background:rgba(239,68,68,0.1);border-color:rgba(239,68,68,0.3);">
-                            <ng-icon name="lucideX" size="11" />
-                            Rechazar
-                          </button>
-                        }
-                        @if (seller.status === 'ACTIVE') {
-                          <button (click)="updateStatus(seller, 'SUSPENDED')"
-                            [disabled]="processing() === seller.id"
-                            class="px-2.5 py-1 rounded-[8px] text-[12px] font-medium border border-border
-                                   text-text-secondary hover:border-error hover:text-error disabled:opacity-50 transition-colors">
-                            Suspender
-                          </button>
-                        }
-                        @if (seller.status === 'SUSPENDED') {
-                          <button (click)="updateStatus(seller, 'ACTIVE')"
-                            [disabled]="processing() === seller.id"
-                            class="px-2.5 py-1 rounded-[8px] text-[12px] font-semibold border transition-colors
-                                   disabled:opacity-50 flex items-center gap-1"
-                            style="color:var(--color-success);background:rgba(0,200,120,0.1);border-color:rgba(0,200,120,0.3);">
-                            <ng-icon name="lucideCheck" size="11" />
-                            Reactivar
-                          </button>
+                          <span class="text-[10px] font-medium"
+                                [style.color]="seller.status === 'ACTIVE' ? 'var(--color-success)' : 'var(--color-error)'">
+                            {{ seller.status === 'ACTIVE' ? 'Activo' : 'Suspendido' }}
+                          </span>
                         }
                       </div>
                     </td>
@@ -362,6 +370,10 @@ export class AdminSellersComponent implements OnInit {
       },
       error: () => this.loading.set(false),
     });
+  }
+
+  toggleSeller(seller: SellerResponse): void {
+    this.updateStatus(seller, seller.status === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE');
   }
 
   updateStatus(seller: SellerResponse, status: SellerStatus): void {
