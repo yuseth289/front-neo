@@ -131,6 +131,10 @@ export class AdminService {
     return this.http.put<ApiResponse<void>>(`${this.base}/brands/${id}/activate`, {});
   }
 
+  deleteBrandPermanent(id: string): Observable<ApiResponse<void>> {
+    return this.http.delete<ApiResponse<void>>(`${this.base}/brands/${id}/permanent`);
+  }
+
   // ── Invoices ─────────────────────────────────────────────────────────────
 
   getInvoices(page = 0, size = 20): Observable<ApiResponse<PageResponse<Invoice>>> {
