@@ -331,43 +331,6 @@ import { WishlistStateService } from '../../../core/account/wishlist-state.servi
                 </div>
               </div>
 
-              <!-- Categorías -->
-              <div>
-                <p class="text-[12px] font-semibold text-text-primary mb-2.5">Categoría</p>
-                <nav class="flex flex-col gap-0.5">
-                  <a routerLink="/catalog"
-                     class="text-[13px] px-2 py-1.5 rounded-lg transition-colors border-l-2"
-                     [class.border-accent]="!activeCategoryId()"
-                     [class.text-accent]="!activeCategoryId()"
-                     [class.bg-bg-elevated]="!activeCategoryId()"
-                     [class.border-transparent]="!!activeCategoryId()"
-                     [class.text-text-secondary]="!!activeCategoryId()">
-                    Todos
-                  </a>
-                  @for (cat of categories(); track cat.id) {
-                    <a [routerLink]="['/catalog/category', cat.id]"
-                       class="text-[13px] px-2 py-1.5 rounded-lg transition-colors border-l-2"
-                       [class.border-accent]="activeCategoryId() === cat.id"
-                       [class.text-accent]="activeCategoryId() === cat.id"
-                       [class.bg-bg-elevated]="activeCategoryId() === cat.id"
-                       [class.border-transparent]="activeCategoryId() !== cat.id"
-                       [class.text-text-secondary]="activeCategoryId() !== cat.id">
-                      {{ cat.name }}
-                    </a>
-                    @for (sub of cat.children; track sub.id) {
-                      <a [routerLink]="['/catalog/category', sub.id]"
-                         class="text-[13px] px-2 py-1.5 pl-5 rounded-lg transition-colors border-l-2"
-                         [class.border-accent]="activeCategoryId() === sub.id"
-                         [class.text-accent]="activeCategoryId() === sub.id"
-                         [class.bg-bg-elevated]="activeCategoryId() === sub.id"
-                         [class.border-transparent]="activeCategoryId() !== sub.id"
-                         [class.text-text-secondary]="activeCategoryId() !== sub.id">
-                        {{ sub.name }}
-                      </a>
-                    }
-                  }
-                </nav>
-              </div>
             </div>
           </aside>
 
