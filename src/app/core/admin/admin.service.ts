@@ -86,9 +86,13 @@ export class AdminService {
     return this.http.post<ApiResponse<Review>>(`${this.base}/admin/reviews`, request);
   }
 
-  getAdminReviews(page = 0, size = 20, status = 'APPROVED'): Observable<ApiResponse<PageResponse<Review>>> {
+  getAdminReviews(page = 0, size = 20, status = 'PENDING'): Observable<ApiResponse<PageResponse<Review>>> {
     const params = new HttpParams().set('page', page).set('size', size).set('status', status);
     return this.http.get<ApiResponse<PageResponse<Review>>>(`${this.base}/admin/reviews`, { params });
+  }
+
+  moderateReview(id: string, status: 'APPROVED' | 'REJECTED', rejectReason?: string): Observable<ApiResponse<void>> {
+    return this.http.patch<ApiResponse<void>>(`${this.base}/admin/reviews/${id}/moderate`, { status, rejectReason });
   }
 
   // ── Categories ───────────────────────────────────────────────────────────
