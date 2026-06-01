@@ -247,6 +247,15 @@ const STATUS_MAP: Record<ProductStatus, { color: string; bg: string; border: str
                           Vista previa
                         </a>
 
+                        <!-- Descuentos -->
+                        <a [routerLink]="['/seller/products', p.id, 'offers']"
+                           (click)="openMenu.set(null)"
+                           class="flex items-center gap-2.5 px-4 py-2.5 text-[13px]
+                                  text-text-primary hover:bg-bg-elevated transition-colors">
+                          <ng-icon name="lucideTag" size="14" class="text-text-muted shrink-0" />
+                          Descuentos
+                        </a>
+
                         @if (p.status !== 'DELETED') {
                           <div class="my-1 border-t border-border mx-2"></div>
 
