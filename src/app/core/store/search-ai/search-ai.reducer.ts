@@ -9,6 +9,8 @@ export interface SearchAiState {
   isLoading: boolean;
   error: string | null;
   processingTimeMs: number | null;
+  searched: boolean;
+  lastQuery: string | null;
 }
 
 const initialState: SearchAiState = {
@@ -18,20 +20,24 @@ const initialState: SearchAiState = {
   isLoading: false,
   error: null,
   processingTimeMs: null,
+  searched: false,
+  lastQuery: null,
 };
 
 export const searchAiReducer = createReducer(
   initialState,
 
-  on(SearchAiActions.search, state => ({
+  on(SearchAiActions.search, (state, { query }) => ({
     ...state,
     isLoading: true,
     error: null,
+    lastQuery: query,
   })),
 
   on(SearchAiActions.searchSuccess, (state, { result }) => ({
     ...state,
     isLoading: false,
+    searched: true,
     recommendations: result.recommendations,
     needsClarification: result.needsClarification,
     clarificationQuestion: result.clarificationQuestion,
@@ -42,6 +48,7 @@ export const searchAiReducer = createReducer(
   on(SearchAiActions.searchFailure, (state, { error }) => ({
     ...state,
     isLoading: false,
+    searched: true,
     error,
   })),
 
