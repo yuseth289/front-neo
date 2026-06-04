@@ -307,30 +307,6 @@ import { WishlistStateService } from '../../../core/account/wishlist-state.servi
                 </div>
               </div>
 
-              <!-- Calificación -->
-              <div class="mb-5">
-                <p class="text-[12px] font-semibold text-text-primary mb-2.5">Calificación</p>
-                <div class="flex flex-col gap-1.5">
-                  @for (r of [5,4,3]; track r) {
-                    <label class="flex items-center gap-2 text-[13px] text-text-secondary cursor-pointer
-                                  hover:text-text-primary transition-colors">
-                      <input type="checkbox"
-                             [checked]="selectedRatings.has(r)"
-                             (change)="toggleRating(r)"
-                             style="accent-color: var(--color-accent);" />
-                      <span class="inline-flex gap-px">
-                        @for (i of [1,2,3,4,5]; track i) {
-                          <ng-icon name="lucideStar" size="11"
-                            [class.text-star]="i <= r"
-                            [class.text-border-strong]="i > r" />
-                        }
-                      </span>
-                      <span class="text-[11px] text-text-muted">y más</span>
-                    </label>
-                  }
-                </div>
-              </div>
-
             </div>
           </aside>
 
@@ -435,10 +411,10 @@ export class CatalogPageComponent implements OnInit, OnDestroy {
   priceMax = '';
 
   readonly PRICE_MIN  = 0;
-  readonly PRICE_MAX  = 5_000_000;
+  readonly PRICE_MAX  = 50_000_000;
   readonly PRICE_STEP = 50_000;
   sliderMin = 0;
-  sliderMax = 5_000_000;
+  sliderMax = 50_000_000;
 
   leftPct():  number { return (this.sliderMin / this.PRICE_MAX) * 100; }
   rightPct(): number { return (this.sliderMax / this.PRICE_MAX) * 100; }
@@ -623,12 +599,14 @@ export class CatalogPageComponent implements OnInit, OnDestroy {
     }
 
     const brands = this.selectedBrands.size > 0 ? [...this.selectedBrands] : undefined;
+    const minPrice = this.sliderMin > this.PRICE_MIN ? this.sliderMin : undefined;
+    const maxPrice = this.sliderMax < this.PRICE_MAX ? this.sliderMax : undefined;
 
     const request$ = q
-      ? this.productService.search(q, { page, sort, brands })
+      ? this.productService.search(q, { page, sort, brands, minPrice, maxPrice })
       : categoryId
-        ? this.productService.getByCategory(categoryId, { page, sort, brands })
-        : this.productService.getCatalog({ page, sort, brands });
+        ? this.productService.getByCategory(categoryId, { page, sort, brands, minPrice, maxPrice })
+        : this.productService.getCatalog({ page, sort, brands, minPrice, maxPrice });
 
     request$.subscribe({
       next: (res) => {

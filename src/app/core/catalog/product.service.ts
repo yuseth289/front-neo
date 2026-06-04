@@ -21,6 +21,8 @@ export class ProductService {
       .set('size', filters.size ?? 20);
     if (filters.sort) params = params.set('sort', filters.sort);
     params = this.appendBrands(params, filters.brands);
+    if (filters.minPrice != null) params = params.set('minPrice', filters.minPrice);
+    if (filters.maxPrice != null) params = params.set('maxPrice', filters.maxPrice);
 
     return this.http.get<ApiResponse<PageResponse<ProductSummary>>>(
       `${this.base}/products`,
@@ -35,6 +37,8 @@ export class ProductService {
       .set('size', filters.size ?? 20);
     if (filters.sort) params = params.set('sort', filters.sort);
     params = this.appendBrands(params, filters.brands);
+    if (filters.minPrice != null) params = params.set('minPrice', filters.minPrice);
+    if (filters.maxPrice != null) params = params.set('maxPrice', filters.maxPrice);
 
     return this.http.get<ApiResponse<PageResponse<ProductSummary>>>(
       `${this.base}/products/search`,
@@ -48,6 +52,8 @@ export class ProductService {
       .set('size', filters.size ?? 20);
     if (filters.sort) params = params.set('sort', filters.sort);
     params = this.appendBrands(params, filters.brands);
+    if (filters.minPrice != null) params = params.set('minPrice', filters.minPrice);
+    if (filters.maxPrice != null) params = params.set('maxPrice', filters.maxPrice);
 
     return this.http.get<ApiResponse<PageResponse<ProductSummary>>>(
       `${this.base}/products/category/${categoryId}`,

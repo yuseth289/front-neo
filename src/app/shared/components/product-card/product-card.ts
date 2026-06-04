@@ -35,7 +35,12 @@ const PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9I
         />
 
         <!-- Badge -->
-        @if (badge) {
+        @if (product.availableStock === 0) {
+          <span class="absolute top-3 left-3 px-2 py-1 rounded text-[10px] font-semibold tracking-[0.08em] font-mono
+                       bg-bg-elevated/90 text-text-muted border border-border-strong backdrop-blur-sm">
+            Agotado
+          </span>
+        } @else if (badge) {
           <span class="absolute top-3 left-3 px-2 py-1 rounded text-[10px] font-semibold tracking-[0.08em] font-mono"
                 [class]="badge === 'OFERTA'
                   ? 'bg-accent text-white shadow-[var(--shadow-glow-accent-sm)]'
@@ -66,14 +71,16 @@ const PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9I
         </div>
 
         <!-- Slide-up CTA -->
-        <div class="absolute left-3 right-3 bottom-3 opacity-0 translate-y-3
-                    transition-[opacity,transform] duration-200 group-hover:opacity-100 group-hover:translate-y-0">
-          <button (click)="$event.stopPropagation(); $event.preventDefault(); addToCart.emit(product)"
-                  class="neo-btn-primary w-full justify-center !py-2.5 !text-[13px] !rounded-[10px]">
-            <ng-icon name="lucideShoppingCart" size="14" />
-            Agregar al carrito
-          </button>
-        </div>
+        @if (product.availableStock !== 0) {
+          <div class="absolute left-3 right-3 bottom-3 opacity-0 translate-y-3
+                      transition-[opacity,transform] duration-200 group-hover:opacity-100 group-hover:translate-y-0">
+            <button (click)="$event.stopPropagation(); $event.preventDefault(); addToCart.emit(product)"
+                    class="neo-btn-primary w-full justify-center !py-2.5 !text-[13px] !rounded-[10px]">
+              <ng-icon name="lucideShoppingCart" size="14" />
+              Agregar al carrito
+            </button>
+          </div>
+        }
       </div>
 
       <!-- Info -->
