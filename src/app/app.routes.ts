@@ -74,6 +74,11 @@ export const routes: Routes = [
           ),
         data: { title: 'Búsqueda inteligente' },
       },
+      {
+        path: 'terms',
+        loadComponent: () => import('./features/legal/terms').then((m) => m.TermsComponent),
+        data: { title: 'Términos y Condiciones — NeoGaming' },
+      },
     ],
   },
 

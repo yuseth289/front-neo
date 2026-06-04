@@ -131,9 +131,11 @@ function passwordsMatchValidator(group: AbstractControl): ValidationErrors | nul
                 <div>
                   <span class="text-sm text-text-primary">
                     Acepto los
-                    <a class="text-accent hover:underline">Términos</a>
+                    <a routerLink="/terms" target="_blank" rel="noopener"
+                       class="text-accent hover:underline">Términos y Condiciones</a>
                     y la
-                    <a class="text-accent hover:underline">Política de Privacidad</a>.
+                    <a routerLink="/terms" target="_blank" rel="noopener"
+                       class="text-accent hover:underline">Política de Privacidad</a>.
                   </span>
                   @if (termsInvalid) {
                     <p class="mt-0.5 text-xs text-error">Debes aceptar los términos para continuar</p>
