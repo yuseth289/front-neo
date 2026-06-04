@@ -9,6 +9,8 @@ export const selectClarificationNeeded = createSelector(selectSearchAiState, s =
 export const selectClarificationQuestion = createSelector(selectSearchAiState, s => s.clarificationQuestion);
 export const selectSearchError = createSelector(selectSearchAiState, s => s.error);
 export const selectSearchProcessingTime = createSelector(selectSearchAiState, s => s.processingTimeMs);
+export const selectHasSearched = createSelector(selectSearchAiState, s => s.searched);
+export const selectLastQuery = createSelector(selectSearchAiState, s => s.lastQuery);
 export const selectHasResults = createSelector(
   selectRecommendations,
   recs => recs.length > 0,
