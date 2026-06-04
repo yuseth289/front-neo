@@ -104,8 +104,9 @@ const PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9I
           }
         </div>
         <div class="mt-auto pt-2">
-          @if (product.activeDiscountPercent) {
-            <div class="flex items-center gap-1.5 flex-wrap mb-1">
+          <!-- Fila de descuento: siempre ocupa h-[24px] para igualar altura con/sin oferta -->
+          <div class="h-[24px] flex items-center gap-1.5 overflow-hidden mb-1">
+            @if (product.activeDiscountPercent) {
               <span class="shrink-0 text-[11px] font-bold px-1.5 py-0.5 rounded-md"
                     style="background:rgba(239,68,68,0.12);color:var(--color-error)">
                 -{{ product.activeDiscountPercent }}%
@@ -113,7 +114,9 @@ const PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9I
               <span class="text-[11px] text-text-muted line-through font-mono truncate min-w-0">
                 {{ product.finalPrice | copCurrency }}
               </span>
-            </div>
+            }
+          </div>
+          @if (product.activeDiscountPercent) {
             <p class="font-display text-[17px] font-bold tracking-[-0.01em] leading-tight" style="color:var(--color-error)">
               {{ discountedPrice(product) | copCurrency }}
             </p>
