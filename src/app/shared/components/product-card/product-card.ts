@@ -84,7 +84,7 @@ const PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9I
       </div>
 
       <!-- Info -->
-      <div class="p-4 flex flex-col h-[140px]">
+      <div class="p-4 flex flex-col flex-1">
         <p class="font-mono text-[10px] uppercase tracking-[0.08em] text-text-muted truncate shrink-0">
           {{ product.brand }}
         </p>
@@ -103,26 +103,26 @@ const PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9I
             <span class="text-[11px] text-text-muted">({{ product.totalReviews ?? 0 }})</span>
           }
         </div>
-        <div class="mt-auto">
+        <div class="mt-auto pt-2">
           @if (product.activeDiscountPercent) {
-            <div class="flex items-center gap-1.5 mb-0.5">
-              <span class="text-[11px] font-bold px-1.5 py-0.5 rounded-md"
+            <div class="flex items-center gap-1.5 flex-wrap mb-1">
+              <span class="shrink-0 text-[11px] font-bold px-1.5 py-0.5 rounded-md"
                     style="background:rgba(239,68,68,0.12);color:var(--color-error)">
                 -{{ product.activeDiscountPercent }}%
               </span>
-              <span class="text-[12px] text-text-muted line-through font-mono">
+              <span class="text-[11px] text-text-muted line-through font-mono truncate min-w-0">
                 {{ product.finalPrice | copCurrency }}
               </span>
             </div>
-            <p class="font-display text-lg font-bold tracking-[-0.01em]" style="color:var(--color-error)">
+            <p class="font-display text-[17px] font-bold tracking-[-0.01em] leading-tight" style="color:var(--color-error)">
               {{ discountedPrice(product) | copCurrency }}
             </p>
           } @else {
-            <p class="font-display text-lg font-bold text-text-primary tracking-[-0.01em]">
+            <p class="font-display text-[17px] font-bold text-text-primary tracking-[-0.01em] leading-tight">
               {{ product.finalPrice | copCurrency }}
             </p>
           }
-          <p class="text-[10px] text-text-muted font-mono">IVA incluido</p>
+          <p class="text-[10px] text-text-muted font-mono mt-0.5">IVA incluido</p>
         </div>
       </div>
     </a>
