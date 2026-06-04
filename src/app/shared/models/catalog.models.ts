@@ -18,6 +18,7 @@ export interface ProductSummary {
   basePrice: number;
   finalPrice: number;
   status: ProductStatus;
+  availableStock?: number | null;
   primaryImageUrl: string | null;
   averageRating?: number | null;
   totalReviews?: number | null;
@@ -100,4 +101,6 @@ export interface ProductFilters {
   size?: number;
   sort?: string;
   brands?: string[];
+  minPrice?: number;
+  maxPrice?: number;
 }
