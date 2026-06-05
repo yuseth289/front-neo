@@ -105,9 +105,12 @@ const PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9I
         <div class="flex items-center gap-1.5 mt-1 shrink-0">
           <span class="inline-flex gap-px">
             @for (i of [1,2,3,4,5]; track i) {
-              <ng-icon name="lucideStar" size="11"
-                [class.text-star]="product.averageRating != null && i <= product.averageRating!"
-                [class.text-border-strong]="product.averageRating == null || i > product.averageRating!" />
+              <svg viewBox="0 0 24 24" width="11" height="11">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
+                  [attr.fill]="product.averageRating != null && i <= product.averageRating! ? 'var(--color-accent)' : 'none'"
+                  [attr.stroke]="product.averageRating != null && i <= product.averageRating! ? 'var(--color-accent)' : 'var(--color-border-strong)'"
+                  stroke-width="1.5"/>
+              </svg>
             }
           </span>
           @if (product.averageRating != null) {
