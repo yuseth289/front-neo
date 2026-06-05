@@ -48,6 +48,8 @@ export interface ProductDetail {
   createdAt: string;
   updatedAt: string;
   activeDiscountPercent?: number | null;
+  averageRating?: number | null;
+  totalReviews?: number | null;
 }
 
 export interface Category {
