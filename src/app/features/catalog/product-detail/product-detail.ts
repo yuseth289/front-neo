@@ -139,6 +139,20 @@ const PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9I
                 {{ product()!.name }}
               </h1>
 
+              <!-- Seller / Store -->
+              @if (product()!.storeName) {
+                <a [routerLink]="['/store', product()!.storeSlug]"
+                   class="inline-flex items-center gap-2 self-start px-3 py-1.5 rounded-[10px]
+                          border border-border bg-bg-surface hover:border-accent/40 hover:bg-accent/5
+                          transition-all duration-200 group/store">
+                  <ng-icon name="lucideStore" size="13" class="text-text-muted group-hover/store:text-accent transition-colors" />
+                  <span class="text-[12px] font-medium text-text-secondary group-hover/store:text-text-primary transition-colors">
+                    {{ product()!.storeName }}
+                  </span>
+                  <ng-icon name="lucideChevronRight" size="11" class="text-text-muted group-hover/store:text-accent transition-colors" />
+                </a>
+              }
+
               <!-- Rating -->
               @if (ratingSummary()) {
                 <div class="flex items-center gap-2.5">
