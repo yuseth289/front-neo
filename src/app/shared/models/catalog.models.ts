@@ -11,6 +11,8 @@ export interface ProductImage {
 export interface ProductSummary {
   id: string;
   sellerId: string;
+  storeName?: string | null;
+  storeSlug?: string | null;
   categoryId: string;
   name: string;
   slug: string;
@@ -28,6 +30,8 @@ export interface ProductSummary {
 export interface ProductDetail {
   id: string;
   sellerId: string;
+  storeName?: string | null;
+  storeSlug?: string | null;
   categoryId: string;
   name: string;
   slug: string;

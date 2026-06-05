@@ -85,9 +85,20 @@ const PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9I
 
       <!-- Info -->
       <div class="p-4 flex flex-col flex-1">
-        <p class="font-mono text-[10px] uppercase tracking-[0.08em] text-text-muted truncate shrink-0">
-          {{ product.brand }}
-        </p>
+        <div class="flex items-center justify-between gap-1 shrink-0">
+          <p class="font-mono text-[10px] uppercase tracking-[0.08em] text-text-muted truncate">
+            {{ product.brand }}
+          </p>
+          @if (product.storeName) {
+            <a [routerLink]="['/store', product.storeSlug]"
+               (click)="$event.stopPropagation()"
+               class="inline-flex items-center gap-1 shrink-0 text-[10px] text-text-muted
+                      hover:text-accent transition-colors font-mono truncate max-w-[50%]">
+              <ng-icon name="lucideStore" size="10" />
+              <span class="truncate">{{ product.storeName }}</span>
+            </a>
+          }
+        </div>
         <h3 class="text-[13px] font-medium text-text-primary line-clamp-2 leading-snug h-[34px] overflow-hidden mt-0.5 shrink-0">
           {{ product.name }}
         </h3>
