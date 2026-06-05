@@ -340,8 +340,8 @@ import { ReviewStatus } from '../../shared/models/enums';
         } @else {
           <div class="neo-stagger flex flex-col gap-3">
             @for (review of reviews(); track review.id) {
-              <div class="review-card neo-card-premium relative cursor-default"
-                   [style.--rating-rgb]="ratingColorRgb(review.rating || 0)">
+              <div class="review-card neo-card-premium relative cursor-default overflow-hidden"
+                   [attr.style]="'--rating-rgb:' + ratingColorRgb(review.rating || 0)">
 
                 <div class="rc-top-bar h-[3px] w-full"
                      style="opacity: 0.65; transition: opacity 0.25s"
@@ -349,8 +349,8 @@ import { ReviewStatus } from '../../shared/models/enums';
 
                 <div class="rc-orb absolute top-0 right-0 w-[240px] h-[240px] rounded-full pointer-events-none
                             -translate-y-1/2 translate-x-1/2"
-                     style="opacity: 0.06; filter: blur(24px); transition: opacity 0.25s"
-                     [style.background]="'radial-gradient(circle, ' + ratingColor(review.rating || 0) + ', transparent 70%)'"></div>
+                     style="opacity: 0.07; transition: opacity 0.25s"
+                     [style.background]="'radial-gradient(circle, ' + ratingColor(review.rating || 0) + ' 0%, transparent 70%)'"></div>
 
                 <div class="relative p-5">
                   <div class="flex items-start gap-3">
