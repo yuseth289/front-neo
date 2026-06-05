@@ -20,8 +20,8 @@ export interface AiProductChatInput {
 }
 
 export interface ApplyDescriptionEvent {
-  seoTitle: string;
-  description: string;
+  seoTitle?: string;
+  description?: string;
 }
 
 interface ChatMessage {
@@ -673,18 +673,12 @@ export class AiProductChatComponent implements OnInit {
   // ── Apply content ──────────────────────────────────────────────────────
 
   applyTitle(result: SellerAssistResultResponse): void {
-    this.applyContent.emit({
-      seoTitle: result.optimizedContent.seoTitle,
-      description: this.productInput.description,
-    });
+    this.applyContent.emit({ seoTitle: result.optimizedContent.seoTitle });
     this.addMessage({ role: 'ai', text: '✅ Título aplicado al formulario.' });
   }
 
   applyDescription(result: SellerAssistResultResponse): void {
-    this.applyContent.emit({
-      seoTitle: this.productInput.name,
-      description: result.optimizedContent.commercialDescription,
-    });
+    this.applyContent.emit({ description: result.optimizedContent.commercialDescription });
     this.addMessage({ role: 'ai', text: '✅ Descripción aplicada al formulario.' });
   }
 
