@@ -158,9 +158,12 @@ const PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9I
                 <div class="flex items-center gap-2.5">
                   <span class="inline-flex gap-0.5">
                     @for (i of [1,2,3,4,5]; track i) {
-                      <ng-icon name="lucideStar" size="15"
-                        [class.text-star]="i <= roundedRating()"
-                        [class.text-border-strong]="i > roundedRating()" />
+                      <svg viewBox="0 0 24 24" width="15" height="15">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
+                          [attr.fill]="i <= roundedRating() ? 'var(--color-accent)' : 'none'"
+                          [attr.stroke]="i <= roundedRating() ? 'var(--color-accent)' : 'var(--color-border-strong)'"
+                          stroke-width="1.5"/>
+                      </svg>
                     }
                   </span>
                   <span class="text-sm font-semibold text-text-primary">
