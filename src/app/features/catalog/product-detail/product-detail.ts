@@ -368,7 +368,7 @@ const PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9I
           <div class="mt-14 pt-10 border-t border-border">
 
             <!-- Reviews header -->
-            <div class="flex items-center justify-between gap-4 mb-8">
+            <div class="flex items-start justify-between gap-6 mb-8 flex-wrap">
               <div>
                 <h2 class="font-display text-[22px] font-bold text-text-primary">Reseñas de clientes</h2>
                 @if (ratingSummary()) {
@@ -378,19 +378,27 @@ const PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9I
                 }
               </div>
               @if (ratingSummary()) {
-                <div class="hidden sm:flex items-center gap-3 neo-card-premium px-5 py-3.5 shrink-0">
-                  <span class="font-display text-[40px] font-black leading-none text-text-primary">
-                    {{ ratingSummary()!.averageRating | number:'1.1-1' }}
-                  </span>
-                  <div class="flex flex-col gap-0.5">
-                    <span class="inline-flex gap-0.5">
+                <div class="flex items-center gap-4 neo-card-premium px-5 py-4 shrink-0">
+                  <div class="text-center">
+                    <span class="font-display text-[48px] font-black leading-none text-text-primary block">
+                      {{ ratingSummary()!.averageRating | number:'1.1-1' }}
+                    </span>
+                    <p class="text-[11px] text-text-muted font-mono mt-1">de 5 estrellas</p>
+                  </div>
+                  <div class="flex flex-col gap-1">
+                    <span class="inline-flex gap-1">
                       @for (i of [1,2,3,4,5]; track i) {
-                        <ng-icon name="lucideStar" size="14"
-                          [class.text-star]="i <= roundedRating()"
-                          [class.text-border-strong]="i > roundedRating()" />
+                        <svg viewBox="0 0 24 24" width="18" height="18">
+                          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
+                            [attr.fill]="i <= roundedRating() ? 'var(--color-accent)' : 'none'"
+                            [attr.stroke]="i <= roundedRating() ? 'var(--color-accent)' : 'var(--color-border-strong)'"
+                            stroke-width="1.5"/>
+                        </svg>
                       }
                     </span>
-                    <p class="text-[11px] text-text-muted font-mono">de 5 estrellas</p>
+                    <p class="text-[11px] text-text-muted font-mono">
+                      {{ ratingSummary()!.totalReviews }} valoraciones
+                    </p>
                   </div>
                 </div>
               }
@@ -398,43 +406,110 @@ const PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9I
 
             <!-- Reviews loading -->
             @if (reviewsLoading()) {
-              <div class="space-y-3">
+              <div class="space-y-4">
                 @for (_ of [1,2,3]; track $index) {
-                  <div class="rounded-2xl bg-bg-surface border border-border p-5 animate-pulse h-24"></div>
+                  <div class="rounded-2xl bg-bg-surface border border-border p-5 animate-pulse">
+                    <div class="flex gap-4">
+                      <div class="w-10 h-10 rounded-full bg-bg-elevated shrink-0"></div>
+                      <div class="flex-1 space-y-2.5">
+                        <div class="h-3 w-32 rounded bg-bg-elevated"></div>
+                        <div class="h-2.5 w-24 rounded bg-bg-elevated"></div>
+                        <div class="h-3 w-full rounded bg-bg-elevated mt-3"></div>
+                        <div class="h-3 w-3/4 rounded bg-bg-elevated"></div>
+                      </div>
+                    </div>
+                  </div>
                 }
               </div>
 
             <!-- No reviews -->
             } @else if (reviews().length === 0) {
-              <div class="neo-card-premium p-10 text-center text-text-muted flex flex-col items-center gap-3">
-                <ng-icon name="lucideStar" size="32" />
-                <p class="text-sm">Este producto aún no tiene reseñas.</p>
+              <div class="neo-card-premium p-12 text-center flex flex-col items-center gap-4">
+                <div class="w-16 h-16 rounded-2xl bg-bg-elevated border border-border
+                            flex items-center justify-center">
+                  <span class="inline-flex gap-0.5">
+                    @for (i of [1,2,3]; track i) {
+                      <svg viewBox="0 0 24 24" width="14" height="14">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
+                          fill="none" stroke="var(--color-border-strong)" stroke-width="1.5"/>
+                      </svg>
+                    }
+                  </span>
+                </div>
+                <div>
+                  <p class="text-[15px] font-semibold text-text-primary">Sin reseñas aún</p>
+                  <p class="text-[13px] text-text-muted mt-1">Sé el primero en valorar este producto.</p>
+                </div>
               </div>
 
             <!-- Review cards -->
             } @else {
-              <div class="flex flex-col gap-3">
+              <div class="flex flex-col gap-4">
                 @for (review of reviews(); track review.id) {
                   <div class="neo-card-premium p-5 neo-reveal">
-                    <div class="flex items-start justify-between gap-4">
-                      <div class="flex flex-col gap-1.5 flex-1 min-w-0">
-                        <div class="flex items-center gap-2 flex-wrap">
-                          <span class="inline-flex gap-0.5">
-                            @for (i of [1,2,3,4,5]; track i) {
-                              <ng-icon name="lucideStar" size="12"
-                                [class.text-star]="i <= (review.rating ?? 0)"
-                                [class.text-border-strong]="i > (review.rating ?? 0)" />
-                            }
-                          </span>
-                          <span class="text-sm font-semibold text-text-primary">{{ review.title }}</span>
-                        </div>
-                        <p class="text-sm text-text-secondary leading-relaxed">{{ review.body }}</p>
+                    <div class="flex gap-4">
+
+                      <!-- Avatar -->
+                      <div class="w-10 h-10 rounded-full shrink-0 flex items-center justify-center
+                                  text-[14px] font-black text-white font-display select-none"
+                           [style.background]="reviewerColor(review.buyerName)">
+                        {{ reviewerInitial(review.buyerName) }}
                       </div>
-                      <div class="text-right shrink-0">
-                        <p class="text-xs font-medium text-text-secondary">{{ review.buyerName }}</p>
-                        <p class="text-[11px] text-text-muted font-mono mt-0.5">
-                          {{ review.createdAt | date:'d MMM yyyy':'':'es' }}
-                        </p>
+
+                      <!-- Content -->
+                      <div class="flex-1 min-w-0">
+
+                        <!-- Top row: name + date -->
+                        <div class="flex items-start justify-between gap-3 flex-wrap">
+                          <div>
+                            <p class="text-[13px] font-semibold text-text-primary leading-tight">
+                              {{ review.buyerName ?? 'Comprador' }}
+                            </p>
+                            <div class="flex items-center gap-2 mt-1">
+                              <!-- Stars con SVG inline relleno -->
+                              <span class="inline-flex gap-0.5">
+                                @for (i of [1,2,3,4,5]; track i) {
+                                  <svg viewBox="0 0 24 24" width="13" height="13">
+                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
+                                      [attr.fill]="i <= (review.rating ?? 0) ? 'var(--color-accent)' : 'none'"
+                                      [attr.stroke]="i <= (review.rating ?? 0) ? 'var(--color-accent)' : 'var(--color-border-strong)'"
+                                      stroke-width="1.5"/>
+                                  </svg>
+                                }
+                              </span>
+                              <span class="text-[11px] font-bold tabular-nums"
+                                    [style.color]="'var(--color-accent)'">
+                                {{ review.rating }}/5
+                              </span>
+                            </div>
+                          </div>
+
+                          <div class="text-right shrink-0">
+                            <p class="text-[11px] text-text-muted font-mono">
+                              {{ review.createdAt | date:'d MMM yyyy':'':'es' }}
+                            </p>
+                            <span class="inline-flex items-center gap-1 mt-1 text-[10px]
+                                         text-success font-mono tracking-[0.04em]">
+                              <ng-icon name="lucideCircleCheck" size="10" />
+                              Compra verificada
+                            </span>
+                          </div>
+                        </div>
+
+                        <!-- Review title -->
+                        @if (review.title) {
+                          <p class="text-[13px] font-semibold text-text-primary mt-3 leading-snug">
+                            {{ review.title }}
+                          </p>
+                        }
+
+                        <!-- Review body -->
+                        @if (review.body) {
+                          <p class="text-[13px] text-text-secondary leading-relaxed mt-1.5">
+                            {{ review.body }}
+                          </p>
+                        }
+
                       </div>
                     </div>
                   </div>
@@ -514,6 +589,16 @@ export class ProductDetailComponent implements OnInit {
 
   incQty(): void { this.qty.update(q => Math.min(q + 1, 99)); }
   decQty(): void { this.qty.update(q => Math.max(q - 1, 1)); }
+
+  reviewerInitial(name: string | null): string {
+    return (name ?? 'C').charAt(0).toUpperCase();
+  }
+
+  reviewerColor(name: string | null): string {
+    const palette = ['#FF003C', '#7C3AED', '#0EA5E9', '#059669', '#D97706'];
+    const code = (name ?? '').split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
+    return palette[code % palette.length];
+  }
 
   ngOnInit(): void {
     const slug = this.route.snapshot.paramMap.get('slug') ?? '';
