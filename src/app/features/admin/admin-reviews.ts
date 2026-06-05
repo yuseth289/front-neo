@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, NgZone, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Subject, debounceTime, distinctUntilChanged, switchMap, of } from 'rxjs';
@@ -525,6 +525,7 @@ export class AdminReviewsComponent implements OnInit {
   private adminService   = inject(AdminService);
   private productService = inject(ProductService);
   private fb             = inject(FormBuilder);
+  private zone           = inject(NgZone);
 
   reviews    = signal<Review[]>([]);
   loading    = signal(true);
@@ -676,12 +677,12 @@ export class AdminReviewsComponent implements OnInit {
   private load(): void {
     this.loading.set(true);
     this.adminService.getAdminReviews(this.page(), 20, this.activeStatus()).subscribe({
-      next: (res) => {
+      next: (res) => this.zone.run(() => {
         this.reviews.set(res.data.content);
         this.totalPages.set(res.data.totalPages);
         this.loading.set(false);
-      },
-      error: () => this.loading.set(false),
+      }),
+      error: () => this.zone.run(() => this.loading.set(false)),
     });
   }
 

@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal, computed } from '@angular/core';
+import { Component, inject, NgZone, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -534,6 +534,7 @@ export class ProductDetailComponent implements OnInit {
   readonly wishlistState  = inject(WishlistStateService);
   private chatService    = inject(ChatService);
   private store          = inject(Store);
+  private zone           = inject(NgZone);
 
   product          = signal<ProductDetail | null>(null);
   ratingSummary    = signal<RatingSummary | null>(null);
@@ -607,14 +608,14 @@ export class ProductDetailComponent implements OnInit {
     const slug = this.route.snapshot.paramMap.get('slug') ?? '';
 
     this.productService.getBySlug(slug).subscribe({
-      next: (res) => {
+      next: (res) => this.zone.run(() => {
         this.product.set(res.data);
         this.loading.set(false);
         const primaryIdx = res.data.images.findIndex((img) => img.primary);
         this.selectedImageIndex.set(primaryIdx >= 0 ? primaryIdx : 0);
         this.loadReviews(res.data.id);
-      },
-      error: () => { this.notFound.set(true); this.loading.set(false); },
+      }),
+      error: () => this.zone.run(() => { this.notFound.set(true); this.loading.set(false); }),
     });
   }
 
@@ -659,12 +660,15 @@ export class ProductDetailComponent implements OnInit {
 
   private loadReviews(productId: string): void {
     this.reviewService.getRatingSummary(productId).subscribe({
-      next: (res) => this.ratingSummary.set(res.data),
+      next: (res) => this.zone.run(() => this.ratingSummary.set(res.data)),
       error: () => {},
     });
     this.reviewService.getProductReviews(productId).subscribe({
-      next: (res) => { this.reviews.set(res.data.content); this.reviewsLoading.set(false); },
-      error: () => this.reviewsLoading.set(false),
+      next: (res) => this.zone.run(() => {
+        this.reviews.set(res.data.content);
+        this.reviewsLoading.set(false);
+      }),
+      error: () => this.zone.run(() => this.reviewsLoading.set(false)),
     });
   }
 }
