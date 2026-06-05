@@ -161,7 +161,7 @@ const PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9I
                       <svg viewBox="0 0 24 24" width="15" height="15">
                         <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
                           [attr.fill]="i <= roundedRating() ? 'var(--color-accent)' : 'none'"
-                          [attr.stroke]="i <= roundedRating() ? 'var(--color-accent)' : 'var(--color-border-strong)'"
+                          [attr.stroke]="i <= roundedRating() ? 'var(--color-accent)' : 'var(--color-text-muted)'"
                           stroke-width="1.5"/>
                       </svg>
                     }
@@ -394,7 +394,7 @@ const PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9I
                         <svg viewBox="0 0 24 24" width="18" height="18">
                           <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
                             [attr.fill]="i <= roundedRating() ? 'var(--color-accent)' : 'none'"
-                            [attr.stroke]="i <= roundedRating() ? 'var(--color-accent)' : 'var(--color-border-strong)'"
+                            [attr.stroke]="i <= roundedRating() ? 'var(--color-accent)' : 'var(--color-text-muted)'"
                             stroke-width="1.5"/>
                         </svg>
                       }
@@ -475,7 +475,7 @@ const PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9I
                                   <svg viewBox="0 0 24 24" width="13" height="13">
                                     <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
                                       [attr.fill]="i <= (review.rating ?? 0) ? 'var(--color-accent)' : 'none'"
-                                      [attr.stroke]="i <= (review.rating ?? 0) ? 'var(--color-accent)' : 'var(--color-border-strong)'"
+                                      [attr.stroke]="i <= (review.rating ?? 0) ? 'var(--color-accent)' : 'var(--color-text-muted)'"
                                       stroke-width="1.5"/>
                                   </svg>
                                 }
