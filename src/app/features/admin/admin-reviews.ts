@@ -340,7 +340,7 @@ import { ReviewStatus } from '../../shared/models/enums';
         } @else {
           <div class="neo-stagger flex flex-col gap-3">
             @for (review of reviews(); track review.id) {
-              <div class="review-card neo-card-premium relative overflow-hidden cursor-default"
+              <div class="review-card neo-card-premium relative cursor-default"
                    [style.--rating-rgb]="ratingColorRgb(review.rating || 0)">
 
                 <div class="rc-top-bar h-[3px] w-full"
@@ -383,12 +383,17 @@ import { ReviewStatus } from '../../shared/models/enums';
                       </div>
                       <div class="flex items-center gap-0.5">
                         @for (s of [1,2,3,4,5]; track s) {
-                          <ng-icon name="lucideStar" size="12"
-                            [style.color]="s <= (review.rating || 0) ? ratingColor(review.rating || 0) : 'var(--color-border)'"
-                            [style.filter]="s <= (review.rating || 0)
-                              ? 'drop-shadow(0 0 3px ' + ratingColor(review.rating || 0) + '99)'
-                              : 'none'" />
+                          <svg viewBox="0 0 24 24" width="13" height="13">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
+                              [attr.fill]="s <= (review.rating || 0) ? ratingColor(review.rating || 0) : 'none'"
+                              [attr.stroke]="s <= (review.rating || 0) ? ratingColor(review.rating || 0) : 'var(--color-text-secondary)'"
+                              stroke-width="1.5"/>
+                          </svg>
                         }
+                        <span class="text-[12px] font-bold tabular-nums ml-1.5"
+                              [style.color]="ratingColor(review.rating || 0)">
+                          {{ review.rating ?? 0 }}/5
+                        </span>
                         <span class="text-[11px] text-text-muted ml-2">
                           {{ review.createdAt | date:'d MMM yyyy':'':'es' }}
                         </span>

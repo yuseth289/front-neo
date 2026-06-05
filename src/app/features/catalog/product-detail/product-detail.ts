@@ -482,7 +482,7 @@ const PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9I
                               </span>
                               <span class="text-[11px] font-bold tabular-nums"
                                     [style.color]="'var(--color-accent)'">
-                                {{ review.rating }}/5
+                                {{ (review.rating ?? 0) }}/5
                               </span>
                             </div>
                           </div>
