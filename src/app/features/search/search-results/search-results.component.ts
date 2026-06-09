@@ -18,72 +18,51 @@ import { AiProductCardComponent } from './ai-product-card.component';
   standalone: true,
   imports: [AiProductCardComponent, NgIcon],
   template: `
-    <section class="max-w-7xl mx-auto px-6 py-8">
-
-      <!-- ── Resultados ──────────────────────────────── -->
-      @if (hasResults() && !isLoading()) {
-        <div class="flex items-center justify-between mb-6">
-          <h2 class="text-lg font-semibold text-text-primary">
-            {{ recommendations().length }}
-            producto{{ recommendations().length !== 1 ? 's' : '' }} recomendados
-          </h2>
+    @if (hasResults() && !isLoading()) {
+      <div class="flex flex-col gap-2">
+        <!-- Count + timing row -->
+        <div class="flex items-center justify-between mb-1">
+          <p class="text-[11px] text-text-muted">
+            {{ recommendations().length }} producto{{ recommendations().length !== 1 ? 's' : '' }} recomendados
+          </p>
           @if (processingTime()) {
-            <span class="text-xs text-text-tertiary font-mono">
-              Procesado en {{ processingTime() }}ms
-            </span>
+            <span class="text-[9px] text-text-muted font-mono opacity-60">{{ processingTime() }}ms</span>
           }
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-          @for (rec of recommendations(); track rec.productId) {
-            <app-ai-product-card [recommendation]="rec" />
-          }
-        </div>
-      }
+        <!-- Compact card list -->
+        @for (rec of recommendations(); track rec.productId) {
+          <app-ai-product-card [recommendation]="rec" />
+        }
+      </div>
+    }
 
-      <!-- ── Sin resultados (búsqueda completada, no hay productos) ── -->
-      @if (searched() && !isLoading() && !hasResults() && !needsClarification()) {
-        <div class="flex flex-col items-center justify-center py-20 gap-6 text-center">
-          <div class="w-20 h-20 rounded-2xl bg-bg-surface border border-border
-                      flex items-center justify-center">
-            <ng-icon name="lucidePackageSearch" size="36" class="text-text-tertiary" />
-          </div>
-          <div class="flex flex-col gap-2">
-            <h3 class="text-xl font-semibold text-text-primary">
-              No encontramos productos
-            </h3>
-            <p class="text-text-secondary text-sm max-w-md">
-              @if (lastQuery()) {
-                No hay productos que coincidan con
-                <span class="text-violet-400 font-medium">"{{ lastQuery() }}"</span>
-                en el catálogo todavía.
-              } @else {
-                No hay productos que coincidan con tu búsqueda en el catálogo todavía.
-              }
-            </p>
-          </div>
-          <div class="flex flex-col items-center gap-2 px-5 py-4 rounded-xl
-                      bg-violet-500/5 border border-violet-500/20 max-w-sm">
-            <ng-icon name="lucideLightbulb" size="18" class="text-violet-400" />
-            <p class="text-xs text-text-secondary leading-relaxed">
-              El catálogo se está llenando con productos gaming. Prueba con otras palabras
-              o vuelve pronto.
-            </p>
-          </div>
+    <!-- No results -->
+    @if (searched() && !isLoading() && !hasResults() && !needsClarification()) {
+      <div class="flex flex-col gap-2.5 p-4 rounded-xl border border-border/50 bg-bg-elevated">
+        <div class="flex items-center gap-2">
+          <ng-icon name="lucidePackageX" size="14" class="text-text-muted" />
+          <p class="text-[13px] text-text-primary">No encontramos productos</p>
         </div>
-      }
-
-    </section>
+        @if (lastQuery()) {
+          <p class="text-[12px] text-text-muted leading-relaxed">
+            Sin coincidencias para
+            <span class="text-violet-400">"{{ lastQuery() }}"</span>.
+            Prueba con otras palabras o vuelve pronto.
+          </p>
+        }
+      </div>
+    }
   `,
 })
 export class SearchResultsComponent {
   private readonly store = inject(Store);
 
   readonly recommendations = toSignal(this.store.select(selectRecommendations), { initialValue: [] });
-  readonly isLoading = toSignal(this.store.select(selectSearchIsLoading), { initialValue: false });
-  readonly hasResults = toSignal(this.store.select(selectHasResults), { initialValue: false });
+  readonly isLoading      = toSignal(this.store.select(selectSearchIsLoading),   { initialValue: false });
+  readonly hasResults     = toSignal(this.store.select(selectHasResults),         { initialValue: false });
   readonly processingTime = toSignal(this.store.select(selectSearchProcessingTime), { initialValue: null });
-  readonly searched = toSignal(this.store.select(selectHasSearched), { initialValue: false });
+  readonly searched       = toSignal(this.store.select(selectHasSearched),        { initialValue: false });
   readonly needsClarification = toSignal(this.store.select(selectClarificationNeeded), { initialValue: false });
-  readonly lastQuery = toSignal(this.store.select(selectLastQuery), { initialValue: null });
+  readonly lastQuery      = toSignal(this.store.select(selectLastQuery),          { initialValue: null });
 }

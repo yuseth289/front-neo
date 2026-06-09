@@ -535,9 +535,9 @@ const OP_CHIPS: { op: EnhancementOperation; label: string }[] = [
                           outline-none border-none min-w-0 disabled:opacity-50" />
             <button (click)="sendMessage()" [disabled]="loading() || enhancing() || !userMessage.trim()"
                     class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0
-                           bg-text-primary hover:opacity-80
-                           disabled:opacity-20 disabled:cursor-not-allowed transition-all">
-              <ng-icon name="lucideArrowUp" size="14" class="text-bg-base" />
+                           bg-white/90 hover:bg-white
+                           disabled:opacity-25 disabled:cursor-not-allowed transition-all">
+              <ng-icon name="lucideArrowUp" size="14" class="text-black" />
             </button>
           </div>
         </div>
