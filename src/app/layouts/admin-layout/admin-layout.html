@@ -8,9 +8,10 @@
 
   <!-- ── SIDEBAR ─────────────────────────────────────────────────── -->
   <aside class="fixed inset-y-0 left-0 z-50 w-60 bg-bg-surface border-r border-border
-                flex flex-col shrink-0 transition-transform duration-300
+                flex flex-col shrink-0 transition-all duration-300 overflow-hidden
                 lg:static lg:translate-x-0"
-         [class.-translate-x-full]="!sidebarOpen()">
+         [class.-translate-x-full]="!sidebarOpen()"
+         [class.sidebar-desktop-hidden]="!desktopOpen()">
 
     <div class="h-16 flex items-center justify-between px-5 border-b border-border shrink-0">
       <a routerLink="/" class="font-black text-base tracking-tight select-none">
@@ -105,10 +106,16 @@
 
     <header class="h-16 bg-bg-surface border-b border-border flex items-center justify-between px-4 sm:px-6 shrink-0">
       <div class="flex items-center gap-3">
-        <!-- Hamburger (solo móvil) -->
+        <!-- Hamburger (móvil) -->
         <button class="lg:hidden p-2 rounded-lg text-text-secondary hover:text-text-primary
                        hover:bg-bg-subtle transition-colors"
                 (click)="sidebarOpen.set(true)" aria-label="Abrir menú">
+          <ng-icon name="lucideMenu" size="20" />
+        </button>
+        <!-- Toggle sidebar (escritorio) -->
+        <button class="hidden lg:flex p-2 rounded-lg text-text-secondary hover:text-text-primary
+                       hover:bg-bg-subtle transition-colors"
+                (click)="desktopOpen.set(!desktopOpen())" aria-label="Toggle sidebar">
           <ng-icon name="lucideMenu" size="20" />
         </button>
         <span class="text-sm font-medium text-text-secondary">Panel de administración</span>
