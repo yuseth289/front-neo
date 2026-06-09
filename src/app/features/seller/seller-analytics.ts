@@ -1,10 +1,10 @@
 import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { NgIcon } from '@ng-icons/core';
 import { CopCurrencyPipe } from '../../shared/pipes/cop-currency.pipe';
 import { AnalyticsService, SellerDashboard } from '../../core/analytics/analytics.service';
 import { SellerOrderService, SellerOrderSummary } from '../../core/seller/seller-order.service';
-import { SellerBiChatComponent } from './analytics/seller-bi-chat.component';
 
 
 
@@ -20,7 +20,7 @@ const ACTIVITY_META: Record<string, { icon: string; color: string; label: string
 @Component({
   selector: 'app-seller-analytics',
   standalone: true,
-  imports: [CommonModule, NgIcon, CopCurrencyPipe, SellerBiChatComponent],
+  imports: [CommonModule, RouterLink, NgIcon, CopCurrencyPipe],
   template: `
     <div class="relative">
       <div class="absolute inset-0 pointer-events-none overflow-hidden -z-[1]">
@@ -32,12 +32,30 @@ const ACTIVITY_META: Record<string, { icon: string; color: string; label: string
       <div class="relative max-w-[1100px] mx-auto">
 
         <!-- Header -->
-        <div class="neo-reveal mb-7">
+        <div class="neo-reveal mb-5">
           <p class="neo-stat-label">Seller</p>
           <h1 class="font-display text-[32px] font-bold tracking-[-0.02em] mt-1 text-text-primary">
             Analíticas de tu tienda
           </h1>
         </div>
+
+        <!-- IA Banner -->
+        <a routerLink="/seller/analytics-ai"
+           class="neo-card-premium flex items-center gap-4 p-4 mb-7 hover:border-violet-500/40
+                  hover:bg-violet-500/5 transition-all group cursor-pointer">
+          <div class="w-10 h-10 rounded-xl bg-violet-500/10 border border-violet-500/20
+                      flex items-center justify-center shrink-0">
+            <ng-icon name="lucideBrainCircuit" size="20" class="text-violet-400" />
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-[14px] font-semibold text-text-primary">Asistente BI IA</p>
+            <p class="text-[12px] text-text-muted mt-0.5">
+              Consulta y analiza tus datos de ventas con inteligencia artificial
+            </p>
+          </div>
+          <ng-icon name="lucideArrowRight" size="16"
+                   class="text-text-muted group-hover:text-violet-400 transition-colors shrink-0" />
+        </a>
 
         <!-- Loading -->
         @if (loading()) {
@@ -326,25 +344,12 @@ const ACTIVITY_META: Record<string, { icon: string; color: string; label: string
       </div>
     </div>
 
-    <!-- Floating AI button -->
-    <button (click)="showBiChat.set(true)"
-            class="fixed bottom-6 right-6 z-30 flex items-center gap-2 px-4 py-3 rounded-full
-                   bg-violet-600 hover:bg-violet-500 text-white font-medium text-[13px]
-                   shadow-lg hover:shadow-violet-500/30 hover:shadow-xl transition-all
-                   hover:-translate-y-0.5">
-      <ng-icon name="lucideSparkles" size="15" />
-      Asistente BI
-    </button>
-
-    <!-- BI Chat panel -->
-    <app-seller-bi-chat [isOpen]="showBiChat()" (close)="showBiChat.set(false)" />
   `,
 })
 export class SellerAnalyticsComponent implements OnInit {
   private analyticsService = inject(AnalyticsService);
   private orderService     = inject(SellerOrderService);
 
-  showBiChat   = signal(false);
   data         = signal<SellerDashboard | null>(null);
   loading      = signal(true);
   error        = signal(false);
