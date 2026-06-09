@@ -66,435 +66,485 @@ const OP_CHIPS: { op: EnhancementOperation; label: string }[] = [
   imports: [DecimalPipe, FormsModule, NgIcon, AiTypingIndicatorComponent],
   template: `
     <!-- Overlay -->
-    <div class="fixed inset-0 z-40 bg-black/30 backdrop-blur-[2px]"
+    <div class="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
          (click)="close.emit()"></div>
 
-    <!-- Panel -->
-    <div class="fixed right-0 top-0 bottom-0 z-50 w-full max-w-[440px]
-                bg-bg-surface border-l border-border shadow-2xl flex flex-col
-                animate-slide-in-right">
+    <!-- Panel — full-height slide-in, bg-bg-base like Vercel's main chat area -->
+    <div class="fixed right-0 top-0 bottom-0 z-50 w-full max-w-[460px]
+                bg-bg-base flex flex-col animate-slide-in-right
+                border-l border-border/40">
 
-      <!-- Header -->
-      <div class="flex items-center justify-between px-5 py-4 border-b border-border shrink-0">
-        <div class="flex items-center gap-3">
-          <div class="w-9 h-9 rounded-xl bg-violet-500/10 flex items-center justify-center">
-            <ng-icon name="lucideSparkles" size="18" class="text-violet-400" />
+      <!-- ── Header ─────────────────────────────────────────── -->
+      <div class="flex items-center justify-between px-4 py-3 border-b border-border/40 shrink-0">
+        <div class="flex items-center gap-2">
+          <div class="w-7 h-7 rounded-lg bg-violet-500/10 flex items-center justify-center">
+            <ng-icon name="lucideSparkles" size="13" class="text-violet-400" />
           </div>
-          <div>
-            <p class="text-sm font-semibold text-text-primary">Asistente IA</p>
-            <p class="text-xs text-text-tertiary">Sugerencias y mejora de imágenes</p>
-          </div>
+          <span class="text-[13px] font-semibold text-text-primary">Asistente IA</span>
+          @if (productInput.name) {
+            <span class="hidden sm:block text-[11px] text-text-muted truncate max-w-[120px]">
+              · {{ productInput.name }}
+            </span>
+          }
         </div>
-        <div class="flex items-center gap-1">
+        <div class="flex items-center gap-0.5">
           @if (messages().length > 0) {
-            <button (click)="clearHistory()"
-                    title="Limpiar conversación"
-                    class="w-8 h-8 rounded-lg flex items-center justify-center
-                           text-text-tertiary hover:text-red-400 hover:bg-red-500/10 transition-colors">
-              <ng-icon name="lucideTrash2" size="14" />
+            <button (click)="clearHistory()" title="Limpiar conversación"
+                    class="w-7 h-7 rounded-lg flex items-center justify-center
+                           text-text-muted hover:text-red-400 hover:bg-red-500/10 transition-colors">
+              <ng-icon name="lucideTrash2" size="13" />
             </button>
           }
           <button (click)="close.emit()"
-                  class="w-8 h-8 rounded-lg flex items-center justify-center
-                         text-text-tertiary hover:text-text-primary hover:bg-bg-elevated transition-colors">
-            <ng-icon name="lucideX" size="16" />
+                  class="w-7 h-7 rounded-lg flex items-center justify-center
+                         text-text-muted hover:text-text-primary hover:bg-bg-elevated transition-colors">
+            <ng-icon name="lucideX" size="14" />
           </button>
         </div>
       </div>
 
-      <!-- Messages -->
-      <div #scrollRef class="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3 min-h-0">
+      <!-- ── Messages scroll area ───────────────────────────── -->
+      <div #scrollRef class="flex-1 overflow-y-auto min-h-0">
 
-        <!-- Welcome -->
-        <div class="flex gap-2.5">
-          <div class="w-7 h-7 rounded-full bg-violet-500/15 flex items-center justify-center shrink-0 mt-0.5">
-            <ng-icon name="lucideSparkles" size="13" class="text-violet-400" />
-          </div>
-          <div class="bg-bg-elevated rounded-2xl rounded-tl-sm px-4 py-3 max-w-[88%]">
-            <p class="text-sm text-text-primary leading-relaxed">
-              ¡Hola! Soy tu asistente IA para
-              @if (productInput.name) {
-                <strong class="text-violet-400">"{{ productInput.name }}"</strong>.
-              } @else {
-                tu producto.
-              }
-              Puedo mejorar la descripción, analizar y transformar imágenes con
-              <span class="text-yellow-400 font-semibold">Nano Banana</span>.
-            </p>
-          </div>
-        </div>
+        <!-- ── GREETING (empty state — like Vercel's "What can I help with?") -->
+        @if (messages().length === 0 && !loading()) {
+          <div class="flex flex-col h-full px-5 py-6">
 
-        <!-- Quick actions -->
-        @if (!hasResult() && !loading()) {
-          <div class="flex flex-wrap gap-2 ml-9">
-            <button (click)="requestOptimize()"
-                    class="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-violet-500/30
-                           bg-violet-500/5 text-xs text-violet-300 hover:bg-violet-500/10 transition-colors">
-              <ng-icon name="lucidePenLine" size="12" />Mejorar descripción
-            </button>
-            <button (click)="imgFileRef.click()"
-                    class="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-yellow-500/30
-                           bg-yellow-500/5 text-xs text-yellow-300 hover:bg-yellow-500/10 transition-colors">
-              <ng-icon name="lucideCamera" size="12" />Analizar imagen
-            </button>
-            <button (click)="requestScore()"
-                    class="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-green-500/30
-                           bg-green-500/5 text-xs text-green-300 hover:bg-green-500/10 transition-colors">
-              <ng-icon name="lucideBarChart2" size="12" />Puntuar listing
-            </button>
-            <button (click)="requestSalesQuery()"
-                    class="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-blue-500/30
-                           bg-blue-500/5 text-xs text-blue-300 hover:bg-blue-500/10 transition-colors">
-              <ng-icon name="lucideTrendingUp" size="12" />Mis ventas
-            </button>
+            <!-- Centered greeting text -->
+            <div class="flex-1 flex flex-col items-center justify-center gap-3 text-center">
+              <div class="w-14 h-14 rounded-2xl bg-violet-500/10 border border-violet-500/20
+                          flex items-center justify-center">
+                <ng-icon name="lucideSparkles" size="22" class="text-violet-400" />
+              </div>
+              <h2 class="text-[20px] font-semibold text-text-primary tracking-tight">
+                ¿En qué puedo ayudarte?
+              </h2>
+              <p class="text-[12px] text-text-muted max-w-[220px] leading-relaxed">
+                @if (productInput.name) {
+                  Pregúntame sobre
+                  <span class="text-text-secondary font-medium">{{ productInput.name }}</span>
+                  o sube una imagen para analizarla.
+                } @else {
+                  Optimiza títulos, analiza imágenes o consulta tus datos de ventas.
+                }
+              </p>
+            </div>
+
+            <!-- Suggested actions — 2×2 grid (like Vercel's SuggestedActions) -->
+            <div class="grid grid-cols-2 gap-2 mt-6">
+              <button (click)="requestOptimize()"
+                      class="flex flex-col gap-1.5 p-3.5 rounded-xl border border-border/60 bg-bg-elevated
+                             text-left hover:bg-bg-subtle hover:-translate-y-0.5 hover:border-border
+                             transition-all duration-200">
+                <ng-icon name="lucidePenLine" size="15" class="text-violet-400" />
+                <p class="text-[12px] font-medium text-text-primary">Mejorar contenido</p>
+                <p class="text-[10px] text-text-muted leading-relaxed">Optimiza título y descripción</p>
+              </button>
+
+              <button (click)="requestScore()"
+                      class="flex flex-col gap-1.5 p-3.5 rounded-xl border border-border/60 bg-bg-elevated
+                             text-left hover:bg-bg-subtle hover:-translate-y-0.5 hover:border-border
+                             transition-all duration-200">
+                <ng-icon name="lucideBarChart2" size="15" class="text-green-400" />
+                <p class="text-[12px] font-medium text-text-primary">Puntuar listing</p>
+                <p class="text-[10px] text-text-muted leading-relaxed">Analiza qué mejorar</p>
+              </button>
+
+              <button (click)="imgFileRef.click()"
+                      class="flex flex-col gap-1.5 p-3.5 rounded-xl border border-border/60 bg-bg-elevated
+                             text-left hover:bg-bg-subtle hover:-translate-y-0.5 hover:border-border
+                             transition-all duration-200">
+                <ng-icon name="lucideCamera" size="15" class="text-yellow-400" />
+                <p class="text-[12px] font-medium text-text-primary">Analizar imagen</p>
+                <p class="text-[10px] text-text-muted leading-relaxed">Calidad y mejoras con IA</p>
+              </button>
+
+              <button (click)="requestSalesQuery()"
+                      class="flex flex-col gap-1.5 p-3.5 rounded-xl border border-border/60 bg-bg-elevated
+                             text-left hover:bg-bg-subtle hover:-translate-y-0.5 hover:border-border
+                             transition-all duration-200">
+                <ng-icon name="lucideTrendingUp" size="15" class="text-blue-400" />
+                <p class="text-[12px] font-medium text-text-primary">Ver mis ventas</p>
+                <p class="text-[10px] text-text-muted leading-relaxed">Ingresos y tendencias</p>
+              </button>
+            </div>
           </div>
         }
 
-        <!-- Chat messages -->
-        @for (msg of messages(); track $index) {
+        <!-- ── MESSAGES ────────────────────────────────────── -->
+        @if (messages().length > 0 || loading()) {
+          <div class="px-5 py-5 flex flex-col gap-6">
 
-          @if (msg.role === 'user') {
-            <!-- User bubble -->
-            <div class="flex justify-end">
-              <div class="flex flex-col items-end gap-1.5 max-w-[82%]">
-                @if (msg.imagePreview) {
-                  <div class="rounded-xl overflow-hidden border border-violet-500/30 w-40 shrink-0">
-                    <img [src]="msg.imagePreview" alt="Imagen subida"
-                         class="w-full h-32 object-cover" />
-                  </div>
-                }
-                @if (msg.text) {
-                  <div class="bg-violet-600 rounded-2xl rounded-tr-sm px-4 py-2.5">
-                    <p class="text-sm text-white">{{ msg.text }}</p>
-                  </div>
-                }
-              </div>
-            </div>
+            @for (msg of messages(); track $index) {
 
-          } @else {
-            <!-- AI bubble -->
-            <div class="flex gap-2.5">
-              <div class="w-7 h-7 rounded-full bg-violet-500/15 flex items-center justify-center shrink-0 mt-0.5">
-                <ng-icon name="lucideSparkles" size="13" class="text-violet-400" />
-              </div>
-              <div class="flex flex-col gap-2 max-w-[88%]">
-                @if (msg.text) {
-                  <div class="bg-bg-elevated rounded-2xl rounded-tl-sm px-4 py-3">
-                    <p class="text-sm text-text-primary leading-relaxed whitespace-pre-wrap">{{ msg.text }}</p>
-                  </div>
-                }
-
-                @if (msg.result) {
-
-                  <!-- SEO Title card -->
-                  @if (msg.result.optimizedContent.seoTitle) {
-                    <div class="bg-violet-500/5 border border-violet-500/20 rounded-xl p-3 flex flex-col gap-2">
-                      <p class="text-xs font-semibold text-violet-400 uppercase tracking-wider">Título SEO sugerido</p>
-                      <p class="text-sm text-text-primary font-medium">{{ msg.result.optimizedContent.seoTitle }}</p>
-                      <button (click)="applyTitle(msg.result)"
-                              class="flex items-center gap-1.5 w-fit px-3 py-1.5 rounded-lg
-                                     bg-violet-600 hover:bg-violet-500 text-xs text-white font-medium transition-colors">
-                        <ng-icon name="lucideCheck" size="11" />Aplicar título
-                      </button>
-                    </div>
-                  }
-
-                  <!-- Description card -->
-                  @if (msg.result.optimizedContent.commercialDescription) {
-                    <div class="bg-bg-elevated border border-border rounded-xl p-3 flex flex-col gap-2">
-                      <p class="text-xs font-semibold text-text-secondary uppercase tracking-wider">Descripción optimizada</p>
-                      <p class="text-xs text-text-secondary leading-relaxed line-clamp-4">
-                        {{ msg.result.optimizedContent.commercialDescription }}
-                      </p>
-                      <button (click)="applyDescription(msg.result)"
-                              class="flex items-center gap-1.5 w-fit px-3 py-1.5 rounded-lg
-                                     bg-bg-surface border border-border hover:border-violet-500/50
-                                     text-xs text-text-secondary hover:text-violet-400 transition-colors">
-                        <ng-icon name="lucideCopy" size="11" />Aplicar descripción
-                      </button>
-                    </div>
-                  }
-
-                  <!-- Listing score card -->
-                  @if (msg.result.listingScore.totalScore !== undefined) {
-                    <div class="bg-bg-elevated border border-border rounded-xl p-3">
-                      <div class="flex items-center justify-between mb-2">
-                        <p class="text-xs font-semibold text-text-secondary">Puntaje del listing</p>
-                        <span class="text-sm font-bold"
-                              [class.text-green-400]="msg.result.listingScore.totalScore >= 70"
-                              [class.text-yellow-400]="msg.result.listingScore.totalScore >= 40 && msg.result.listingScore.totalScore < 70"
-                              [class.text-red-400]="msg.result.listingScore.totalScore < 40">
-                          {{ msg.result.listingScore.totalScore | number:'1.0-0' }}/100
-                        </span>
+              @if (msg.role === 'user') {
+                <!-- User message: right, pill bubble (like Vercel) -->
+                <div class="flex justify-end">
+                  <div class="flex flex-col items-end gap-1.5 max-w-[82%]">
+                    @if (msg.imagePreview) {
+                      <div class="rounded-2xl overflow-hidden border border-border/50 w-44">
+                        <img [src]="msg.imagePreview" alt="Imagen subida" class="w-full h-36 object-cover" />
                       </div>
-                      <div class="w-full h-1.5 bg-bg-base rounded-full overflow-hidden">
-                        <div class="h-full rounded-full transition-all duration-700"
-                             [style.width.%]="msg.result.listingScore.totalScore"
-                             [class.bg-green-400]="msg.result.listingScore.totalScore >= 70"
-                             [class.bg-yellow-400]="msg.result.listingScore.totalScore >= 40 && msg.result.listingScore.totalScore < 70"
-                             [class.bg-red-400]="msg.result.listingScore.totalScore < 40"></div>
+                    }
+                    @if (msg.text) {
+                      <div class="px-4 py-2.5 rounded-2xl rounded-br-sm
+                                  bg-bg-elevated border border-border/50
+                                  text-[13px] text-text-primary leading-relaxed">
+                        {{ msg.text }}
                       </div>
-                      @if (msg.result.listingScore.improvementSuggestions.length) {
-                        <ul class="mt-2 flex flex-col gap-1">
-                          @for (s of msg.result.listingScore.improvementSuggestions; track $index) {
-                            <li class="text-xs text-text-tertiary flex gap-1.5">
-                              <ng-icon name="lucideArrowRight" size="11" class="text-violet-400 mt-0.5 shrink-0" />{{ s }}
-                            </li>
-                          }
-                        </ul>
+                    }
+                  </div>
+                </div>
+
+              } @else {
+                <!-- AI message: left, NO bubble on text (like Vercel) -->
+                <div class="flex gap-2.5">
+                  <div class="w-6 h-6 rounded-full bg-violet-500/15 flex items-center justify-center shrink-0 mt-0.5">
+                    <ng-icon name="lucideSparkles" size="11" class="text-violet-400" />
+                  </div>
+
+                  <div class="flex-1 flex flex-col gap-3 min-w-0">
+
+                    <!-- AI text — no bubble, just plain text like Vercel -->
+                    @if (msg.text) {
+                      <p class="text-[13px] text-text-primary leading-[1.65] whitespace-pre-wrap">{{ msg.text }}</p>
+                    }
+
+                    @if (msg.result) {
+
+                      <!-- SEO Title — tool output card -->
+                      @if (msg.result.optimizedContent.seoTitle) {
+                        <div class="rounded-xl border border-border/50 bg-bg-elevated overflow-hidden">
+                          <div class="px-3.5 py-2 border-b border-border/40 flex items-center gap-2">
+                            <ng-icon name="lucideTag" size="10" class="text-violet-400" />
+                            <span class="text-[10px] font-semibold text-text-muted uppercase tracking-wider">Título SEO</span>
+                          </div>
+                          <div class="px-3.5 py-3 flex flex-col gap-3">
+                            <p class="text-[13px] font-medium text-text-primary leading-snug">
+                              {{ msg.result.optimizedContent.seoTitle }}
+                            </p>
+                            <button (click)="applyTitle(msg.result)"
+                                    class="w-fit flex items-center gap-1.5 px-3 py-1.5 rounded-lg
+                                           bg-violet-600 hover:bg-violet-500 text-[11px] text-white font-medium transition-colors">
+                              <ng-icon name="lucideCheck" size="10" />Aplicar título
+                            </button>
+                          </div>
+                        </div>
                       }
-                    </div>
-                  }
 
-                  <!-- Image analysis card -->
-                  @if (msg.result.imageAnalysis.length) {
-                    @for (analysis of msg.result.imageAnalysis; track analysis.imageIndex) {
-                      <div class="bg-bg-elevated border border-border rounded-xl p-3 flex flex-col gap-2">
-                        <div class="flex items-center justify-between">
-                          <p class="text-xs font-semibold text-text-secondary uppercase tracking-wider">
-                            Análisis de imagen {{ analysis.imageIndex + 1 }}
-                          </p>
-                          <span class="text-xs font-bold px-2 py-0.5 rounded-full"
-                                [class.bg-green-500/15]="analysis.qualityScore >= 70"
-                                [class.text-green-400]="analysis.qualityScore >= 70"
-                                [class.bg-yellow-500/15]="analysis.qualityScore >= 40 && analysis.qualityScore < 70"
-                                [class.text-yellow-400]="analysis.qualityScore >= 40 && analysis.qualityScore < 70"
-                                [class.bg-red-500/15]="analysis.qualityScore < 40"
-                                [class.text-red-400]="analysis.qualityScore < 40">
-                            {{ analysis.qualityScore | number:'1.0-0' }}/100
-                          </span>
-                        </div>
-                        <!-- Quality row -->
-                        <div class="grid grid-cols-3 gap-1.5 text-center">
-                          <div class="rounded-lg bg-bg-base px-2 py-1.5">
-                            <p class="text-[9px] text-text-tertiary uppercase tracking-wider">Fondo</p>
-                            <p class="text-[11px] font-medium text-text-secondary mt-0.5 capitalize">
-                              {{ bgLabel(analysis.backgroundType) }}
-                            </p>
+                      <!-- Description — tool output card -->
+                      @if (msg.result.optimizedContent.commercialDescription) {
+                        <div class="rounded-xl border border-border/50 bg-bg-elevated overflow-hidden">
+                          <div class="px-3.5 py-2 border-b border-border/40 flex items-center gap-2">
+                            <ng-icon name="lucideFileText" size="10" class="text-text-muted" />
+                            <span class="text-[10px] font-semibold text-text-muted uppercase tracking-wider">Descripción optimizada</span>
                           </div>
-                          <div class="rounded-lg bg-bg-base px-2 py-1.5">
-                            <p class="text-[9px] text-text-tertiary uppercase tracking-wider">Luz</p>
-                            <p class="text-[11px] font-medium mt-0.5"
-                               [class.text-green-400]="analysis.lightingQuality === 'excellent'"
-                               [class.text-yellow-400]="analysis.lightingQuality === 'good'"
-                               [class.text-red-400]="analysis.lightingQuality === 'poor'">
-                              {{ lightLabel(analysis.lightingQuality) }}
+                          <div class="px-3.5 py-3 flex flex-col gap-3">
+                            <p class="text-[12px] text-text-secondary leading-relaxed line-clamp-4">
+                              {{ msg.result.optimizedContent.commercialDescription }}
                             </p>
-                          </div>
-                          <div class="rounded-lg bg-bg-base px-2 py-1.5">
-                            <p class="text-[9px] text-text-tertiary uppercase tracking-wider">Foco</p>
-                            <p class="text-[11px] font-medium mt-0.5"
-                               [class.text-green-400]="analysis.sharpness === 'sharp'"
-                               [class.text-yellow-400]="analysis.sharpness === 'acceptable'"
-                               [class.text-red-400]="analysis.sharpness === 'blurry'">
-                              {{ sharpLabel(analysis.sharpness) }}
-                            </p>
+                            <button (click)="applyDescription(msg.result)"
+                                    class="w-fit flex items-center gap-1.5 px-3 py-1.5 rounded-lg
+                                           border border-border hover:border-violet-500/50
+                                           text-[11px] text-text-secondary hover:text-violet-400 transition-colors">
+                              <ng-icon name="lucideCopy" size="10" />Aplicar descripción
+                            </button>
                           </div>
                         </div>
-                        <!-- Issues -->
-                        @if (analysis.issues.length) {
-                          <div class="flex flex-col gap-1">
-                            @for (issue of analysis.issues; track $index) {
-                              <p class="text-xs text-red-400/80 flex gap-1.5 items-start">
-                                <ng-icon name="lucideAlertCircle" size="11" class="shrink-0 mt-0.5" />{{ issue }}
-                              </p>
+                      }
+
+                      <!-- Listing score — tool output card -->
+                      @if (msg.result.listingScore.totalScore !== undefined) {
+                        <div class="rounded-xl border border-border/50 bg-bg-elevated overflow-hidden">
+                          <div class="px-3.5 py-2 border-b border-border/40 flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                              <ng-icon name="lucideBarChart2" size="10" class="text-text-muted" />
+                              <span class="text-[10px] font-semibold text-text-muted uppercase tracking-wider">Puntaje del listing</span>
+                            </div>
+                            <span class="text-[13px] font-bold"
+                                  [class.text-green-400]="msg.result.listingScore.totalScore >= 70"
+                                  [class.text-yellow-400]="msg.result.listingScore.totalScore >= 40 && msg.result.listingScore.totalScore < 70"
+                                  [class.text-red-400]="msg.result.listingScore.totalScore < 40">
+                              {{ msg.result.listingScore.totalScore | number:'1.0-0' }}/100
+                            </span>
+                          </div>
+                          <div class="px-3.5 py-3 flex flex-col gap-2">
+                            <div class="h-1 w-full bg-bg-base rounded-full overflow-hidden">
+                              <div class="h-full rounded-full transition-all duration-700"
+                                   [style.width.%]="msg.result.listingScore.totalScore"
+                                   [class.bg-green-400]="msg.result.listingScore.totalScore >= 70"
+                                   [class.bg-yellow-400]="msg.result.listingScore.totalScore >= 40 && msg.result.listingScore.totalScore < 70"
+                                   [class.bg-red-400]="msg.result.listingScore.totalScore < 40"></div>
+                            </div>
+                            @if (msg.result.listingScore.improvementSuggestions.length) {
+                              <ul class="flex flex-col gap-1 mt-1">
+                                @for (s of msg.result.listingScore.improvementSuggestions; track $index) {
+                                  <li class="text-[11px] text-text-muted flex gap-1.5 items-start">
+                                    <ng-icon name="lucideArrowRight" size="10" class="text-violet-400 mt-0.5 shrink-0" />{{ s }}
+                                  </li>
+                                }
+                              </ul>
+                            }
+                          </div>
+                        </div>
+                      }
+
+                      <!-- Image analysis -->
+                      @if (msg.result.imageAnalysis.length) {
+                        @for (analysis of msg.result.imageAnalysis; track analysis.imageIndex) {
+                          <div class="rounded-xl border border-border/50 bg-bg-elevated overflow-hidden">
+                            <div class="px-3.5 py-2 border-b border-border/40 flex items-center justify-between">
+                              <span class="text-[10px] font-semibold text-text-muted uppercase tracking-wider">
+                                Análisis · imagen {{ analysis.imageIndex + 1 }}
+                              </span>
+                              <span class="text-[11px] font-bold px-2 py-0.5 rounded-full"
+                                    [class.bg-green-500/15]="analysis.qualityScore >= 70"
+                                    [class.text-green-400]="analysis.qualityScore >= 70"
+                                    [class.bg-yellow-500/15]="analysis.qualityScore >= 40 && analysis.qualityScore < 70"
+                                    [class.text-yellow-400]="analysis.qualityScore >= 40 && analysis.qualityScore < 70"
+                                    [class.bg-red-500/15]="analysis.qualityScore < 40"
+                                    [class.text-red-400]="analysis.qualityScore < 40">
+                                {{ analysis.qualityScore | number:'1.0-0' }}/100
+                              </span>
+                            </div>
+                            <div class="px-3.5 py-3 flex flex-col gap-2.5">
+                              <div class="grid grid-cols-3 gap-1.5 text-center">
+                                <div class="rounded-lg bg-bg-base px-2 py-2">
+                                  <p class="text-[9px] text-text-muted uppercase tracking-wider">Fondo</p>
+                                  <p class="text-[11px] font-medium text-text-secondary mt-1 capitalize">{{ bgLabel(analysis.backgroundType) }}</p>
+                                </div>
+                                <div class="rounded-lg bg-bg-base px-2 py-2">
+                                  <p class="text-[9px] text-text-muted uppercase tracking-wider">Luz</p>
+                                  <p class="text-[11px] font-medium mt-1"
+                                     [class.text-green-400]="analysis.lightingQuality === 'excellent'"
+                                     [class.text-yellow-400]="analysis.lightingQuality === 'good'"
+                                     [class.text-red-400]="analysis.lightingQuality === 'poor'">
+                                    {{ lightLabel(analysis.lightingQuality) }}
+                                  </p>
+                                </div>
+                                <div class="rounded-lg bg-bg-base px-2 py-2">
+                                  <p class="text-[9px] text-text-muted uppercase tracking-wider">Foco</p>
+                                  <p class="text-[11px] font-medium mt-1"
+                                     [class.text-green-400]="analysis.sharpness === 'sharp'"
+                                     [class.text-yellow-400]="analysis.sharpness === 'acceptable'"
+                                     [class.text-red-400]="analysis.sharpness === 'blurry'">
+                                    {{ sharpLabel(analysis.sharpness) }}
+                                  </p>
+                                </div>
+                              </div>
+                              @if (analysis.issues.length) {
+                                <div class="flex flex-col gap-1">
+                                  @for (issue of analysis.issues; track $index) {
+                                    <p class="text-[11px] text-red-400/80 flex gap-1.5 items-start">
+                                      <ng-icon name="lucideAlertCircle" size="10" class="shrink-0 mt-0.5" />{{ issue }}
+                                    </p>
+                                  }
+                                </div>
+                              }
+                            </div>
+                          </div>
+                        }
+
+                        <!-- Nano Banana controls -->
+                        @if ($index === lastAnalysisIndex() && currentImageBase64()) {
+                          <div class="rounded-xl border border-yellow-500/25 bg-yellow-500/5 overflow-hidden">
+                            <div class="px-3.5 py-2 border-b border-yellow-500/20 flex items-center gap-2">
+                              <span class="text-sm">🍌</span>
+                              <span class="text-[10px] font-semibold text-yellow-400 uppercase tracking-wider">Transformar con Nano Banana</span>
+                            </div>
+                            <div class="px-3.5 py-3 flex flex-col gap-2.5">
+                              <div class="flex flex-wrap gap-1.5">
+                                @for (chip of opChips; track chip.op) {
+                                  <button type="button" (click)="toggleOp(chip.op)"
+                                          class="px-2.5 py-1 rounded-full text-[11px] font-medium border transition-all"
+                                          [class.border-yellow-500]="isOpSelected(chip.op)"
+                                          [class.bg-yellow-500/15]="isOpSelected(chip.op)"
+                                          [class.text-yellow-300]="isOpSelected(chip.op)"
+                                          [class.border-border]="!isOpSelected(chip.op)"
+                                          [class.text-text-muted]="!isOpSelected(chip.op)">
+                                    {{ chip.label }}
+                                  </button>
+                                }
+                              </div>
+                              <button (click)="enhanceCurrentImage()"
+                                      [disabled]="enhancing() || selectedOps().length === 0"
+                                      class="flex items-center justify-center gap-2 py-2 rounded-lg
+                                             bg-yellow-500 hover:bg-yellow-400 disabled:opacity-40
+                                             disabled:cursor-not-allowed text-[12px] font-semibold text-black transition-colors">
+                                @if (enhancing()) {
+                                  <ng-icon name="lucideRefreshCw" size="12" class="animate-spin" />Procesando…
+                                } @else {
+                                  <ng-icon name="lucideZap" size="12" />Transformar (~30 s)
+                                }
+                              </button>
+                            </div>
+                          </div>
+                        }
+                      }
+                    }
+
+                    <!-- BI response -->
+                    @if (msg.biResponse) {
+                      <div class="flex flex-col gap-2.5">
+                        @if (msg.biResponse.narrative) {
+                          <p class="text-[13px] text-text-primary leading-[1.65]">{{ msg.biResponse.narrative }}</p>
+                        }
+                        @if (msg.biResponse.kpis.length) {
+                          <div class="grid grid-cols-2 gap-2">
+                            @for (kpi of msg.biResponse.kpis; track kpi.name) {
+                              <div class="rounded-xl border bg-bg-elevated p-3 flex flex-col gap-0.5"
+                                   [class.border-red-500/30]="kpi.isAlert"
+                                   [class.border-border/50]="!kpi.isAlert">
+                                <p class="text-[9px] text-text-muted uppercase tracking-wider truncate">{{ kpi.name }}</p>
+                                <div class="flex items-baseline gap-1 mt-0.5">
+                                  <p class="text-[13px] font-bold text-text-primary truncate">{{ formatKpiValue(kpi) }}</p>
+                                  <span class="text-[11px] shrink-0" [class]="kpiTrendColor(kpi)">{{ kpiTrend(kpi) }}</span>
+                                </div>
+                                <p class="text-[9px] text-text-muted mt-0.5">
+                                  {{ kpi.unit !== 'COP' ? kpi.unit + ' · ' : '' }}{{ kpi.period }}
+                                  @if (kpi.variationPct !== null) {
+                                    · {{ kpi.variationPct > 0 ? '+' : '' }}{{ kpi.variationPct }}%
+                                  }
+                                </p>
+                              </div>
                             }
                           </div>
                         }
-                      </div>
-                    }
-
-                    <!-- Nano Banana controls — shown only on last analysis message -->
-                    @if ($index === lastAnalysisIndex() && currentImageBase64()) {
-                      <div class="bg-yellow-500/5 border border-yellow-500/20 rounded-xl p-3 flex flex-col gap-2.5">
-                        <div class="flex items-center gap-2">
-                          <span class="text-base">🍌</span>
-                          <p class="text-xs font-semibold text-yellow-400">Transformar con Nano Banana</p>
-                        </div>
-                        <div class="flex flex-wrap gap-1.5">
-                          @for (chip of opChips; track chip.op) {
-                            <button type="button" (click)="toggleOp(chip.op)"
-                                    class="px-2.5 py-1 rounded-full text-[11px] font-medium border transition-all"
-                                    [class.border-yellow-500]="isOpSelected(chip.op)"
-                                    [class.bg-yellow-500/15]="isOpSelected(chip.op)"
-                                    [class.text-yellow-300]="isOpSelected(chip.op)"
-                                    [class.border-border]="!isOpSelected(chip.op)"
-                                    [class.text-text-tertiary]="!isOpSelected(chip.op)">
-                              {{ chip.label }}
-                            </button>
-                          }
-                        </div>
-                        <button (click)="enhanceCurrentImage()"
-                                [disabled]="enhancing() || selectedOps().length === 0"
-                                class="flex items-center justify-center gap-2 py-2 rounded-lg
-                                       bg-yellow-500 hover:bg-yellow-400 disabled:opacity-40
-                                       disabled:cursor-not-allowed text-xs font-semibold text-black transition-colors">
-                          @if (enhancing()) {
-                            <ng-icon name="lucideRefreshCw" size="13" class="animate-spin" />Procesando…
-                          } @else {
-                            <ng-icon name="lucideZap" size="13" />Transformar imagen (~30 s)
-                          }
-                        </button>
-                      </div>
-                    }
-                  }
-                }
-
-                <!-- BI response -->
-                @if (msg.biResponse) {
-                  <div class="flex flex-col gap-2">
-                    <!-- Narrative -->
-                    @if (msg.biResponse.narrative) {
-                      <div class="bg-bg-elevated rounded-2xl rounded-tl-sm px-4 py-3">
-                        <p class="text-sm text-text-primary leading-relaxed">{{ msg.biResponse.narrative }}</p>
-                      </div>
-                    }
-                    <!-- KPI grid -->
-                    @if (msg.biResponse.kpis.length) {
-                      <div class="grid grid-cols-2 gap-2">
-                        @for (kpi of msg.biResponse.kpis; track kpi.name) {
-                          <div class="bg-bg-elevated border rounded-xl p-2.5 flex flex-col gap-0.5"
-                               [class.border-red-500/30]="kpi.isAlert"
-                               [class.border-border]="!kpi.isAlert">
-                            <p class="text-[10px] text-text-tertiary uppercase tracking-wider truncate">{{ kpi.name }}</p>
-                            <div class="flex items-baseline gap-1">
-                              <p class="text-sm font-bold text-text-primary truncate">{{ formatKpiValue(kpi) }}</p>
-                              <span class="text-xs shrink-0" [class]="kpiTrendColor(kpi)">{{ kpiTrend(kpi) }}</span>
+                        @if (msg.biResponse.recommendations.length) {
+                          <div class="rounded-xl border border-border/50 bg-bg-elevated overflow-hidden">
+                            <div class="px-3.5 py-2 border-b border-border/40">
+                              <span class="text-[10px] font-semibold text-text-muted uppercase tracking-wider">Recomendaciones</span>
                             </div>
-                            <p class="text-[10px] text-text-tertiary">
-                              {{ kpi.unit !== 'COP' ? kpi.unit + ' · ' : '' }}{{ kpi.period }}
-                              @if (kpi.variationPct !== null) {
-                                · {{ kpi.variationPct > 0 ? '+' : '' }}{{ kpi.variationPct }}%
+                            <ul class="px-3.5 py-3 flex flex-col gap-1.5">
+                              @for (rec of msg.biResponse.recommendations; track $index) {
+                                <li class="text-[12px] text-text-secondary flex gap-2 items-start">
+                                  <ng-icon name="lucideArrowRight" size="10" class="text-violet-400 mt-0.5 shrink-0" />{{ rec }}
+                                </li>
                               }
-                            </p>
+                            </ul>
                           </div>
                         }
                       </div>
                     }
-                    <!-- Recommendations -->
-                    @if (msg.biResponse.recommendations.length) {
-                      <div class="bg-bg-elevated border border-border rounded-xl p-3">
-                        <p class="text-xs font-semibold text-text-secondary mb-2">Recomendaciones</p>
-                        <ul class="flex flex-col gap-1.5">
-                          @for (rec of msg.biResponse.recommendations; track $index) {
-                            <li class="text-xs text-text-secondary flex gap-2 items-start">
-                              <ng-icon name="lucideArrowRight" size="11" class="text-violet-400 mt-0.5 shrink-0" />
-                              {{ rec }}
-                            </li>
-                          }
-                        </ul>
-                      </div>
+
+                    <!-- Enhancement result -->
+                    @if (msg.enhancementResult) {
+                      @if (msg.enhancementResult.enhancedImages.length) {
+                        <div class="rounded-xl border border-yellow-500/25 bg-bg-elevated overflow-hidden">
+                          <div class="px-3.5 py-2 border-b border-yellow-500/20 flex items-center justify-between">
+                            <span class="text-[10px] font-semibold text-yellow-400 uppercase tracking-wider">Imagen transformada</span>
+                            <span class="text-[11px] text-green-400 font-medium">
+                              +{{ msg.enhancementResult.overallQualityImprovement | number:'1.0-0' }} pts
+                            </span>
+                          </div>
+                          <div class="p-3 flex flex-col gap-2">
+                            <div class="rounded-lg overflow-hidden border border-border/50">
+                              <img [src]="'data:image/jpeg;base64,' + msg.enhancementResult.enhancedImages[0].enhancedBase64"
+                                   alt="Imagen mejorada" class="w-full max-h-52 object-contain bg-white" />
+                            </div>
+                            <p class="text-[10px] text-text-muted">{{ msg.enhancementResult.enhancedImages[0].modificationSummary }}</p>
+                            <div class="flex gap-2">
+                              <button (click)="saveEnhancedImageToGallery(msg.enhancementResult.enhancedImages[0].enhancedBase64)"
+                                      class="flex items-center gap-1.5 flex-1 justify-center py-1.5 rounded-lg
+                                             bg-yellow-500/15 border border-yellow-500/30 text-[11px] text-yellow-300
+                                             hover:bg-yellow-500/25 font-medium transition-colors">
+                                <ng-icon name="lucideImagePlus" size="11" />Guardar en galería
+                              </button>
+                              <a [href]="'data:image/jpeg;base64,' + msg.enhancementResult.enhancedImages[0].enhancedBase64"
+                                 download="producto-mejorado.jpg"
+                                 class="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border/50
+                                        text-[11px] text-text-muted hover:text-text-secondary transition-colors">
+                                <ng-icon name="lucideDownload" size="11" />
+                              </a>
+                            </div>
+                          </div>
+                        </div>
+                      }
+                      @if (msg.enhancementResult.promotionalImageBase64) {
+                        <div class="rounded-xl border border-purple-500/25 bg-bg-elevated overflow-hidden">
+                          <div class="px-3.5 py-2 border-b border-purple-500/20">
+                            <span class="text-[10px] font-semibold text-purple-400 uppercase tracking-wider">Imagen promocional</span>
+                          </div>
+                          <div class="p-3 flex flex-col gap-2">
+                            <div class="rounded-lg overflow-hidden border border-border/50">
+                              <img [src]="'data:image/jpeg;base64,' + msg.enhancementResult.promotionalImageBase64"
+                                   alt="Imagen promocional" class="w-full max-h-52 object-contain bg-white" />
+                            </div>
+                            <button (click)="saveEnhancedImageToGallery(msg.enhancementResult.promotionalImageBase64!)"
+                                    class="flex items-center gap-1.5 justify-center py-1.5 rounded-lg
+                                           bg-purple-500/10 border border-purple-500/30 text-[11px] text-purple-300
+                                           hover:bg-purple-500/20 font-medium transition-colors">
+                              <ng-icon name="lucideImagePlus" size="11" />Guardar imagen promocional
+                            </button>
+                          </div>
+                        </div>
+                      }
                     }
+
                   </div>
-                }
+                </div>
+              }
+            }
 
-                <!-- Enhancement result -->
-                @if (msg.enhancementResult) {
-                  @if (msg.enhancementResult.enhancedImages.length) {
-                    <div class="bg-bg-elevated border border-yellow-500/20 rounded-xl p-3 flex flex-col gap-2">
-                      <div class="flex items-center justify-between">
-                        <p class="text-xs font-semibold text-yellow-400">Imagen transformada</p>
-                        <span class="text-xs text-green-400 font-medium">
-                          +{{ msg.enhancementResult.overallQualityImprovement | number:'1.0-0' }} pts
-                        </span>
-                      </div>
-                      <div class="rounded-lg overflow-hidden border border-border">
-                        <img [src]="'data:image/jpeg;base64,' + msg.enhancementResult.enhancedImages[0].enhancedBase64"
-                             alt="Imagen mejorada" class="w-full max-h-52 object-contain bg-white" />
-                      </div>
-                      <p class="text-[11px] text-text-tertiary">{{ msg.enhancementResult.enhancedImages[0].modificationSummary }}</p>
-                      <div class="flex gap-2">
-                        <button (click)="saveEnhancedImageToGallery(msg.enhancementResult.enhancedImages[0].enhancedBase64)"
-                                class="flex items-center gap-1.5 flex-1 justify-center py-1.5 rounded-lg
-                                       bg-yellow-500/15 border border-yellow-500/30 text-xs text-yellow-300
-                                       hover:bg-yellow-500/25 font-medium transition-colors">
-                          <ng-icon name="lucideImagePlus" size="12" />Guardar en galería
-                        </button>
-                        <a [href]="'data:image/jpeg;base64,' + msg.enhancementResult.enhancedImages[0].enhancedBase64"
-                           download="producto-mejorado.jpg"
-                           class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border
-                                  text-xs text-text-tertiary hover:text-text-secondary transition-colors">
-                          <ng-icon name="lucideDownload" size="12" />
-                        </a>
-                      </div>
-                    </div>
+            <!-- Loading indicator (like Vercel's ThinkingMessage) -->
+            @if (loading() || enhancing()) {
+              <div class="flex gap-2.5">
+                <div class="w-6 h-6 rounded-full bg-violet-500/15 flex items-center justify-center shrink-0 mt-0.5">
+                  @if (enhancing()) { <span class="text-xs">🍌</span> }
+                  @else { <ng-icon name="lucideSparkles" size="11" class="text-violet-400" /> }
+                </div>
+                <div class="pt-1 flex flex-col gap-1">
+                  @if (enhancing()) {
+                    <p class="text-[11px] text-yellow-400 mb-1">Nano Banana procesando imagen…</p>
                   }
-                  <!-- Promotional image -->
-                  @if (msg.enhancementResult.promotionalImageBase64) {
-                    <div class="bg-bg-elevated border border-purple-500/20 rounded-xl p-3 flex flex-col gap-2">
-                      <p class="text-xs font-semibold text-purple-400">Imagen promocional</p>
-                      <div class="rounded-lg overflow-hidden border border-border">
-                        <img [src]="'data:image/jpeg;base64,' + msg.enhancementResult.promotionalImageBase64"
-                             alt="Imagen promocional" class="w-full max-h-52 object-contain bg-white" />
-                      </div>
-                      <button (click)="saveEnhancedImageToGallery(msg.enhancementResult.promotionalImageBase64!)"
-                              class="flex items-center gap-1.5 justify-center py-1.5 rounded-lg
-                                     bg-purple-500/10 border border-purple-500/30 text-xs text-purple-300
-                                     hover:bg-purple-500/20 font-medium transition-colors">
-                        <ng-icon name="lucideImagePlus" size="12" />Guardar imagen promocional
-                      </button>
-                    </div>
-                  }
-                }
+                  <app-ai-typing-indicator />
+                </div>
               </div>
-            </div>
-          }
-        }
+            }
 
-        <!-- Loading -->
-        @if (loading() || enhancing()) {
-          <div class="flex gap-2.5">
-            <div class="w-7 h-7 rounded-full bg-violet-500/15 flex items-center justify-center shrink-0 mt-0.5">
-              @if (enhancing()) {
-                <span class="text-sm">🍌</span>
-              } @else {
-                <ng-icon name="lucideSparkles" size="13" class="text-violet-400" />
-              }
-            </div>
-            <div class="bg-bg-elevated rounded-2xl rounded-tl-sm px-4 py-3">
-              @if (enhancing()) {
-                <p class="text-xs text-yellow-400 mb-1.5">Nano Banana procesando imagen…</p>
-              }
-              <app-ai-typing-indicator />
-            </div>
-          </div>
-        }
+            <!-- Error -->
+            @if (error()) {
+              <div class="px-3.5 py-2.5 rounded-xl bg-red-500/8 border border-red-500/20 text-[12px] text-red-400">
+                {{ error() }}
+              </div>
+            }
 
-        <!-- Error -->
-        @if (error()) {
-          <div class="mx-1 px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/20 text-xs text-red-400">
-            {{ error() }}
           </div>
         }
       </div>
 
-      <!-- Input bar -->
-      <div class="px-4 py-3 border-t border-border shrink-0">
-        <!-- Hidden file input for image upload -->
+      <!-- ── Input bar — Vercel PromptInput style ────────────── -->
+      <div class="px-4 py-3 border-t border-border/40 bg-bg-base shrink-0">
         <input #imgFileRef type="file" accept="image/jpeg,image/png,image/webp" class="hidden"
                (change)="onImageSelect($event)" />
-        <div class="flex gap-2">
-          <button type="button" (click)="imgFileRef.click()" [disabled]="loading() || enhancing()"
-                  title="Subir imagen para analizar"
-                  class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0
-                         border border-yellow-500/30 bg-yellow-500/5 text-yellow-400
-                         hover:bg-yellow-500/15 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
-            <ng-icon name="lucideCamera" size="15" />
-          </button>
-          <input type="text" [(ngModel)]="userMessage" (keydown.enter)="sendMessage()"
-                 [disabled]="loading() || enhancing()"
-                 placeholder="Pregunta algo sobre tu producto…"
-                 class="flex-1 px-3 py-2 rounded-xl border border-border bg-bg-elevated
-                        text-sm text-text-primary placeholder:text-text-tertiary
-                        focus:outline-none focus:ring-2 focus:ring-violet-500/30
-                        disabled:opacity-50 min-w-0" />
-          <button (click)="sendMessage()" [disabled]="loading() || enhancing() || !userMessage.trim()"
-                  class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0
-                         bg-violet-600 hover:bg-violet-500 disabled:opacity-40
-                         disabled:cursor-not-allowed transition-colors">
-            <ng-icon name="lucideSend" size="15" class="text-white" />
-          </button>
+
+        <div class="rounded-2xl border border-border/60 bg-bg-elevated
+                    focus-within:border-border transition-colors">
+          <div class="flex items-center gap-1.5 px-3 py-2.5">
+            <button type="button" (click)="imgFileRef.click()" [disabled]="loading() || enhancing()"
+                    title="Subir imagen"
+                    class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0
+                           text-text-muted hover:text-text-secondary hover:bg-bg-subtle
+                           disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+              <ng-icon name="lucidePaperclip" size="14" />
+            </button>
+            <input type="text" [(ngModel)]="userMessage" (keydown.enter)="sendMessage()"
+                   [disabled]="loading() || enhancing()"
+                   placeholder="Pregunta sobre tu producto…"
+                   class="flex-1 bg-transparent text-[13px] text-text-primary placeholder:text-text-muted
+                          outline-none border-none min-w-0 disabled:opacity-50" />
+            <button (click)="sendMessage()" [disabled]="loading() || enhancing() || !userMessage.trim()"
+                    class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0
+                           bg-text-primary hover:opacity-80
+                           disabled:opacity-20 disabled:cursor-not-allowed transition-all">
+              <ng-icon name="lucideArrowUp" size="14" class="text-bg-base" />
+            </button>
+          </div>
         </div>
+
+        <p class="text-[10px] text-text-muted text-center mt-1.5 opacity-60">
+          Enter para enviar
+        </p>
       </div>
     </div>
   `,
@@ -503,7 +553,7 @@ const OP_CHIPS: { op: EnhancementOperation; label: string }[] = [
       from { transform: translateX(100%); }
       to   { transform: translateX(0); }
     }
-    .animate-slide-in-right { animation: slide-in-right 0.25s cubic-bezier(0.16,1,0.3,1); }
+    .animate-slide-in-right { animation: slide-in-right 0.22s cubic-bezier(0.16,1,0.3,1); }
   `],
 })
 export class AiProductChatComponent implements OnInit {
