@@ -6,6 +6,8 @@ import { AnalyticsService, SellerDashboard } from '../../core/analytics/analytic
 import { SellerOrderService, SellerOrderSummary } from '../../core/seller/seller-order.service';
 import { SellerBiChatComponent } from './analytics/seller-bi-chat.component';
 
+
+
 const ACTIVITY_META: Record<string, { icon: string; color: string; label: string }> = {
   PENDING:   { icon: 'lucideShoppingBag', color: 'var(--color-warning)',   label: 'Nueva orden' },
   CONFIRMED: { icon: 'lucideCheck',       color: 'var(--color-success)',   label: 'Orden confirmada' },
@@ -319,26 +321,30 @@ const ACTIVITY_META: Record<string, { icon: string; color: string; label: string
             </div>
           </div>
 
-          <!-- ── Asistente BI ──────────────────────────────────────── -->
-          <div class="neo-reveal">
-            <div class="flex items-center gap-2 mb-4">
-              <ng-icon name="lucideSparkles" size="16" class="text-violet-400" />
-              <h2 class="text-sm font-semibold text-text-primary">Asistente de inteligencia de negocio</h2>
-              <span class="ml-auto text-[11px] px-2 py-0.5 rounded-full bg-violet-500/10 text-violet-400
-                           border border-violet-500/20 font-medium">IA</span>
-            </div>
-            <app-seller-bi-chat />
-          </div>
         }
 
       </div>
     </div>
+
+    <!-- Floating AI button -->
+    <button (click)="showBiChat.set(true)"
+            class="fixed bottom-6 right-6 z-30 flex items-center gap-2 px-4 py-3 rounded-full
+                   bg-violet-600 hover:bg-violet-500 text-white font-medium text-[13px]
+                   shadow-lg hover:shadow-violet-500/30 hover:shadow-xl transition-all
+                   hover:-translate-y-0.5">
+      <ng-icon name="lucideSparkles" size="15" />
+      Asistente BI
+    </button>
+
+    <!-- BI Chat panel -->
+    <app-seller-bi-chat [isOpen]="showBiChat()" (close)="showBiChat.set(false)" />
   `,
 })
 export class SellerAnalyticsComponent implements OnInit {
   private analyticsService = inject(AnalyticsService);
   private orderService     = inject(SellerOrderService);
 
+  showBiChat   = signal(false);
   data         = signal<SellerDashboard | null>(null);
   loading      = signal(true);
   error        = signal(false);
