@@ -248,6 +248,11 @@ export const routes: Routes = [
         data: { title: 'Analytics' },
       },
       {
+        path: 'analytics-ai',
+        loadComponent: () => import('./features/seller/analytics/seller-bi-chat.component').then((m) => m.SellerBiChatComponent),
+        data: { title: 'Asistente BI' },
+      },
+      {
         path: 'product-assistant',
         loadComponent: () =>
           import('./features/seller/product-assistant/seller-assistant.component').then(
