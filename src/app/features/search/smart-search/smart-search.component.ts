@@ -22,121 +22,194 @@ import { AiTypingIndicatorComponent } from '../../../shared/components/ai-typing
   standalone: true,
   imports: [FormsModule, NgIcon, SearchResultsComponent, AiTypingIndicatorComponent],
   template: `
-    <div class="min-h-screen bg-bg-base">
+    <div class="flex flex-col bg-bg-base" style="min-height: calc(100vh - 72px)">
 
-      <!-- ── Hero ─────────────────────────────────────────────────── -->
-      <section class="relative overflow-hidden border-b border-border py-16 px-6">
-        <div class="neo-ambient">
-          <span class="neo-orb violet" style="width:420px;height:420px;top:-8%;left:5%;animation-delay:0s;"></span>
-          <span class="neo-orb cyan"   style="width:360px;height:360px;bottom:-10%;right:8%;animation-delay:1.8s;"></span>
-        </div>
+      <!-- Ambient orbs in background -->
+      <div class="neo-ambient pointer-events-none">
+        <span class="neo-orb violet" style="width:500px;height:500px;top:-5%;left:-5%;animation-delay:0s;"></span>
+        <span class="neo-orb cyan"   style="width:400px;height:400px;bottom:-10%;right:5%;animation-delay:2s;"></span>
+      </div>
 
-        <div class="relative z-10 max-w-3xl mx-auto text-center flex flex-col items-center gap-6">
-          <span class="inline-flex items-center gap-2 px-3.5 py-1.5 border border-border-strong rounded-full
-                       bg-bg-surface/70 backdrop-blur text-xs text-text-secondary font-mono tracking-widest">
-            <ng-icon name="lucideSparkles" size="12" class="text-violet-400" />
-            BÚSQUEDA INTELIGENTE CON IA
-          </span>
+      <!-- ── Messages area ──────────────────────────────────────── -->
+      <div class="relative flex-1 flex flex-col items-center px-4">
 
-          <h1 class="text-4xl font-bold tracking-tight text-text-primary">
-            Encuentra exactamente lo que buscas
-          </h1>
-          <p class="text-text-secondary text-lg">
-            Describe lo que necesitas en lenguaje natural. La IA entiende tu presupuesto, juego y preferencias.
-          </p>
+        <!-- EMPTY STATE — centered greeting (Vercel style) -->
+        @if (!hasSearched() && !isLoading()) {
+          <div class="w-full max-w-2xl flex flex-col items-center justify-center gap-6 text-center py-16">
 
-          <!-- Search box -->
-          <form (ngSubmit)="onSearch()" class="w-full flex gap-2">
-            <div class="relative flex-1">
-              <ng-icon name="lucideSearch" size="18"
-                       class="absolute left-4 top-1/2 -translate-y-1/2 text-text-tertiary pointer-events-none" />
-              <input
-                type="text"
-                [(ngModel)]="query"
-                name="query"
-                placeholder="ej. mouse gamer para FPS con menos de 150mil"
-                class="w-full pl-11 pr-4 py-3.5 rounded-xl border border-border bg-bg-surface
-                       text-text-primary placeholder:text-text-tertiary text-sm
-                       focus:outline-none focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500/60"
-                [disabled]="isLoading()"
-              />
-            </div>
-            <button type="submit"
-                    [disabled]="isLoading() || !query.trim()"
-                    class="px-5 py-3.5 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-50
-                           disabled:cursor-not-allowed text-white text-sm font-medium transition-colors
-                           flex items-center gap-2 shrink-0">
-              <ng-icon name="lucideSparkles" size="16" />
-              Buscar
-            </button>
-          </form>
-
-          <!-- Error -->
-          @if (searchError()) {
-            <div class="w-full flex items-center gap-2 px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/20
-                        text-red-400 text-sm">
-              <ng-icon name="lucideCircleAlert" size="16" />
-              {{ searchError() }}
-            </div>
-          }
-        </div>
-      </section>
-
-      <!-- ── Loading ──────────────────────────────────────────────── -->
-      @if (isLoading()) {
-        <div class="max-w-3xl mx-auto px-6 py-10 flex flex-col items-center gap-4">
-          <app-ai-typing-indicator />
-          <p class="text-sm text-text-secondary animate-pulse">
-            La IA está analizando tu búsqueda...
-          </p>
-        </div>
-      }
-
-      <!-- ── Clarification ──────────────────────────────────────── -->
-      @if (clarificationNeeded() && clarificationQuestion() && !isLoading()) {
-        <div #clarificationRef class="max-w-3xl mx-auto px-6 py-6">
-          <div class="p-5 rounded-2xl border border-violet-500/40 bg-violet-500/8
-                      shadow-[0_0_24px_0_rgba(139,92,246,0.08)]">
-            <div class="flex items-start gap-3">
-              <div class="w-8 h-8 rounded-full bg-violet-600/20 border border-violet-500/30
-                          flex items-center justify-center shrink-0 mt-0.5">
-                <ng-icon name="lucideSparkles" size="14" class="text-violet-400" />
+            <div class="flex flex-col items-center gap-4">
+              <div class="w-16 h-16 rounded-2xl bg-violet-500/10 border border-violet-500/20
+                          flex items-center justify-center">
+                <ng-icon name="lucideSparkles" size="22" class="text-violet-400" />
               </div>
-              <div class="flex-1 flex flex-col gap-3">
-                <div>
-                  <p class="text-xs text-violet-400 font-medium mb-1">Asistente IA</p>
-                  <p class="text-text-primary text-sm leading-relaxed font-medium">
-                    {{ clarificationQuestion() }}
-                  </p>
-                </div>
-                <form (ngSubmit)="onClarify()" class="flex gap-2">
-                  <input
-                    type="text"
-                    [(ngModel)]="clarification"
-                    name="clarification"
-                    placeholder="Escribe tu respuesta aquí..."
-                    autofocus
-                    class="flex-1 px-3 py-2.5 rounded-lg border border-border bg-bg-base
-                           text-text-primary text-sm focus:outline-none focus:ring-2
-                           focus:ring-violet-500/40 focus:border-violet-500/60"
-                  />
-                  <button type="submit"
-                          [disabled]="!clarification.trim()"
-                          class="px-4 py-2.5 rounded-lg bg-violet-600 hover:bg-violet-500
-                                 disabled:opacity-50 disabled:cursor-not-allowed
-                                 text-white text-sm font-medium transition-colors flex items-center gap-1.5">
-                    <ng-icon name="lucideSend" size="14" />
-                    Enviar
-                  </button>
-                </form>
+              <div class="flex flex-col gap-2">
+                <h1 class="text-[26px] font-semibold text-text-primary tracking-tight">
+                  ¿Qué estás buscando hoy?
+                </h1>
+                <p class="text-[13px] text-text-muted max-w-sm leading-relaxed">
+                  Describe lo que necesitas — presupuesto, juego, uso. La IA encuentra los mejores productos.
+                </p>
               </div>
+            </div>
+
+            @if (searchError()) {
+              <div class="w-full flex items-center gap-2 px-4 py-3 rounded-xl
+                          bg-red-500/8 border border-red-500/20 text-red-400 text-[13px]">
+                <ng-icon name="lucideCircleAlert" size="14" />{{ searchError() }}
+              </div>
+            }
+
+            <!-- Suggested queries 2×2 grid -->
+            <div class="grid grid-cols-2 gap-2 w-full mt-2">
+              <button (click)="runSuggestedQuery('mouse gamer para FPS menos de 150 mil')"
+                      class="flex flex-col gap-1.5 p-3.5 rounded-xl border border-border/60 bg-bg-elevated
+                             text-left hover:bg-bg-subtle hover:-translate-y-0.5 hover:border-border
+                             transition-all duration-200">
+                <ng-icon name="lucideMouse" size="15" class="text-violet-400" />
+                <p class="text-[12px] font-medium text-text-primary">Mouse FPS</p>
+                <p class="text-[10px] text-text-muted leading-relaxed">mouse gamer para FPS menos de 150 mil</p>
+              </button>
+
+              <button (click)="runSuggestedQuery('teclado mecánico para oficina silencioso')"
+                      class="flex flex-col gap-1.5 p-3.5 rounded-xl border border-border/60 bg-bg-elevated
+                             text-left hover:bg-bg-subtle hover:-translate-y-0.5 hover:border-border
+                             transition-all duration-200">
+                <ng-icon name="lucideKeyboard" size="15" class="text-blue-400" />
+                <p class="text-[12px] font-medium text-text-primary">Teclado silencioso</p>
+                <p class="text-[10px] text-text-muted leading-relaxed">teclado mecánico para oficina silencioso</p>
+              </button>
+
+              <button (click)="runSuggestedQuery('audífonos gaming con micrófono menos de 200 mil')"
+                      class="flex flex-col gap-1.5 p-3.5 rounded-xl border border-border/60 bg-bg-elevated
+                             text-left hover:bg-bg-subtle hover:-translate-y-0.5 hover:border-border
+                             transition-all duration-200">
+                <ng-icon name="lucideHeadphones" size="15" class="text-green-400" />
+                <p class="text-[12px] font-medium text-text-primary">Audífonos gaming</p>
+                <p class="text-[10px] text-text-muted leading-relaxed">audífonos gaming con micrófono menos de 200 mil</p>
+              </button>
+
+              <button (click)="runSuggestedQuery('setup gamer completo con 1 millón de pesos')"
+                      class="flex flex-col gap-1.5 p-3.5 rounded-xl border border-border/60 bg-bg-elevated
+                             text-left hover:bg-bg-subtle hover:-translate-y-0.5 hover:border-border
+                             transition-all duration-200">
+                <ng-icon name="lucideMonitor" size="15" class="text-yellow-400" />
+                <p class="text-[12px] font-medium text-text-primary">Setup completo</p>
+                <p class="text-[10px] text-text-muted leading-relaxed">setup gamer completo con 1 millón</p>
+              </button>
             </div>
           </div>
-        </div>
-      }
+        }
 
-      <!-- ── Results ───────────────────────────────────────────────── -->
-      <app-search-results />
+        <!-- CHAT FLOW — after search is triggered -->
+        @if (hasSearched() || isLoading()) {
+          <div class="w-full max-w-2xl flex flex-col gap-6 py-8">
+
+            <!-- User message pill -->
+            @if (query.trim()) {
+              <div class="flex justify-end">
+                <div class="px-4 py-2.5 rounded-2xl rounded-br-sm
+                            bg-bg-elevated border border-border/50
+                            text-[13px] text-text-primary max-w-[80%]">
+                  {{ query }}
+                </div>
+              </div>
+            }
+
+            <!-- Loading -->
+            @if (isLoading()) {
+              <div class="flex gap-2.5">
+                <div class="w-6 h-6 rounded-full bg-violet-500/15 flex items-center justify-center shrink-0 mt-0.5">
+                  <ng-icon name="lucideSparkles" size="11" class="text-violet-400" />
+                </div>
+                <div class="pt-0.5 flex flex-col gap-1">
+                  <app-ai-typing-indicator />
+                  <p class="text-[11px] text-text-muted animate-pulse">Analizando tu búsqueda…</p>
+                </div>
+              </div>
+            }
+
+            <!-- Clarification question -->
+            @if (clarificationNeeded() && clarificationQuestion() && !isLoading()) {
+              <div #clarificationRef class="flex gap-2.5">
+                <div class="w-6 h-6 rounded-full bg-violet-500/15 flex items-center justify-center shrink-0 mt-0.5">
+                  <ng-icon name="lucideSparkles" size="11" class="text-violet-400" />
+                </div>
+                <div class="flex-1 flex flex-col gap-3 min-w-0">
+                  <p class="text-[13px] text-text-primary leading-[1.65]">{{ clarificationQuestion() }}</p>
+                  <form (ngSubmit)="onClarify()"
+                        class="rounded-2xl border border-border/60 bg-bg-elevated focus-within:border-border transition-colors">
+                    <div class="flex items-center gap-1.5 px-3 py-2.5">
+                      <input type="text" [(ngModel)]="clarification" name="clarification"
+                             placeholder="Escribe tu respuesta…" autofocus
+                             class="flex-1 bg-transparent text-[13px] text-text-primary
+                                    placeholder:text-text-muted outline-none border-none min-w-0" />
+                      <button type="submit" [disabled]="!clarification.trim()"
+                              class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0
+                                     bg-text-primary hover:opacity-80 disabled:opacity-20
+                                     disabled:cursor-not-allowed transition-all">
+                        <ng-icon name="lucideArrowUp" size="14" class="text-bg-base" />
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            }
+
+            <!-- Error -->
+            @if (searchError() && !isLoading()) {
+              <div class="flex gap-2.5">
+                <div class="w-6 h-6 rounded-full bg-red-500/15 flex items-center justify-center shrink-0 mt-0.5">
+                  <ng-icon name="lucideCircleAlert" size="11" class="text-red-400" />
+                </div>
+                <p class="text-[13px] text-red-400 leading-relaxed">{{ searchError() }}</p>
+              </div>
+            }
+
+            <!-- Results -->
+            @if (hasResults() && !isLoading()) {
+              <div class="flex gap-2.5">
+                <div class="w-6 h-6 rounded-full bg-violet-500/15 flex items-center justify-center shrink-0 mt-0.5">
+                  <ng-icon name="lucideSparkles" size="11" class="text-violet-400" />
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-[13px] text-text-primary leading-relaxed mb-5">
+                    Aquí están los mejores resultados para tu búsqueda:
+                  </p>
+                  <app-search-results />
+                </div>
+              </div>
+            }
+
+          </div>
+        }
+      </div>
+
+      <!-- ── Bottom input — Vercel PromptInput style ──────────── -->
+      <div class="sticky bottom-0 z-10 px-4 py-4 bg-bg-base/90 backdrop-blur-sm border-t border-border/40">
+        <div class="max-w-2xl mx-auto">
+          <form (ngSubmit)="onSearch()">
+            <div class="rounded-2xl border border-border/60 bg-bg-elevated
+                        focus-within:border-border transition-colors">
+              <div class="flex items-center gap-1.5 px-3 py-2.5">
+                <ng-icon name="lucideSparkles" size="14" class="text-violet-400 shrink-0" />
+                <input type="text" [(ngModel)]="query" name="query"
+                       placeholder="Describe lo que buscas…"
+                       [disabled]="isLoading()"
+                       class="flex-1 bg-transparent text-[13px] text-text-primary
+                              placeholder:text-text-muted outline-none border-none min-w-0
+                              disabled:opacity-50" />
+                <button type="submit" [disabled]="isLoading() || !query.trim()"
+                        class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0
+                               bg-text-primary hover:opacity-80
+                               disabled:opacity-20 disabled:cursor-not-allowed transition-all">
+                  <ng-icon name="lucideArrowUp" size="14" class="text-bg-base" />
+                </button>
+              </div>
+            </div>
+          </form>
+          <p class="text-[10px] text-text-muted text-center mt-1.5 opacity-60">Enter para buscar</p>
+        </div>
+      </div>
 
     </div>
   `,
@@ -190,5 +263,10 @@ export class SmartSearchComponent implements OnInit, AfterViewChecked {
       clarification: this.clarification.trim(),
     }));
     this.clarification = '';
+  }
+
+  runSuggestedQuery(q: string): void {
+    this.query = q;
+    this.onSearch();
   }
 }
