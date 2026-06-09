@@ -50,6 +50,7 @@ import {
   lucideCamera, lucideWifi, lucideCircuitBoard, lucideMemoryStick,
   lucideArrowUp, lucidePenLine, lucideCopy, lucideAlertCircle,
   lucideImagePlus, lucideDownload,
+  lucideBrainCircuit, lucideActivity, lucideCheckCheck, lucideXCircle,
 } from '@ng-icons/lucide';
 import { routes } from './app.routes';
 import { environment } from '../environments/environment';
@@ -116,6 +117,7 @@ export const appConfig: ApplicationConfig = {
       lucideCamera, lucideWifi, lucideCircuitBoard, lucideMemoryStick,
       lucideArrowUp, lucidePenLine, lucideCopy, lucideAlertCircle,
       lucideImagePlus, lucideDownload,
+      lucideBrainCircuit, lucideActivity, lucideCheckCheck, lucideXCircle,
     }),
   ],
 };

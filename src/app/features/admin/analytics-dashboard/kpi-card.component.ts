@@ -8,39 +8,37 @@ import { KPIResult } from '../../../shared/models/analytics.models';
   standalone: true,
   imports: [NgIcon, DecimalPipe],
   template: `
-    <div class="flex flex-col gap-3 p-5 rounded-xl border border-border bg-bg-surface"
+    <div class="rounded-xl border bg-bg-elevated p-4 flex flex-col gap-2"
          [class.border-red-500/30]="kpi.isAlert"
-         [class.bg-red-500/5]="kpi.isAlert">
-      <div class="flex items-center justify-between">
-        <span class="text-xs text-text-tertiary font-medium uppercase tracking-wider">{{ kpi.name }}</span>
-        <span class="flex items-center gap-1 text-xs font-medium"
-              [class.text-emerald-400]="kpi.trend === 'up'"
-              [class.text-red-400]="kpi.trend === 'down'"
-              [class.text-text-tertiary]="kpi.trend === 'stable'">
-          @if (kpi.trend === 'up') {
-            <ng-icon name="lucideTrendingUp" size="14" />
-          } @else if (kpi.trend === 'down') {
-            <ng-icon name="lucideTrendingDown" size="14" />
-          }
-          @if (kpi.variationPct !== null) {
-            {{ kpi.variationPct > 0 ? '+' : '' }}{{ kpi.variationPct | number:'1.1-1' }}%
-          }
-        </span>
-      </div>
+         [class.bg-red-500/5]="kpi.isAlert"
+         [class.border-border/50]="!kpi.isAlert">
 
-      <div class="flex items-end gap-1">
-        <span class="text-2xl font-bold text-text-primary">{{ kpi.value }}</span>
-        @if (kpi.unit) {
-          <span class="text-sm text-text-tertiary mb-0.5">{{ kpi.unit }}</span>
+      <div class="flex items-center justify-between gap-1">
+        <span class="text-[9px] font-semibold text-text-muted uppercase tracking-wider truncate">{{ kpi.name }}</span>
+        @if (kpi.variationPct !== null) {
+          <span class="shrink-0 text-[11px] font-semibold flex items-center gap-0.5"
+                [class.text-green-400]="kpi.trend === 'up'"
+                [class.text-red-400]="kpi.trend === 'down'"
+                [class.text-text-muted]="kpi.trend === 'stable'">
+            @if (kpi.trend === 'up') { <ng-icon name="lucideTrendingUp" size="11" /> }
+            @else if (kpi.trend === 'down') { <ng-icon name="lucideTrendingDown" size="11" /> }
+            {{ kpi.variationPct > 0 ? '+' : '' }}{{ kpi.variationPct | number:'1.1-1' }}%
+          </span>
         }
       </div>
 
-      <span class="text-xs text-text-tertiary">{{ kpi.period }}</span>
+      <div class="flex items-baseline gap-1">
+        <span class="text-[22px] font-bold text-text-primary leading-none">{{ kpi.value }}</span>
+        @if (kpi.unit) {
+          <span class="text-[11px] text-text-muted">{{ kpi.unit }}</span>
+        }
+      </div>
+
+      <span class="text-[10px] text-text-muted">{{ kpi.period }}</span>
 
       @if (kpi.isAlert) {
-        <div class="flex items-center gap-1.5 text-xs text-red-400">
-          <ng-icon name="lucideTriangleAlert" size="12" />
-          Requiere atención
+        <div class="flex items-center gap-1 text-[10px] text-red-400">
+          <ng-icon name="lucideTriangleAlert" size="10" />Requiere atención
         </div>
       }
     </div>
