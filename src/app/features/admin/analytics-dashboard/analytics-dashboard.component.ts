@@ -38,21 +38,40 @@ const QUICK_QUERIES = [
   standalone: true,
   imports: [FormsModule, NgIcon, KpiCardComponent, AiTypingIndicatorComponent],
   template: `
-    <div class="flex bg-bg-base overflow-hidden" style="height: calc(100vh - 72px)">
+    <div class="relative flex bg-bg-base overflow-hidden" style="height: calc(100vh - 72px)">
+
+      <!-- Expand sidebar button (visible when collapsed) -->
+      @if (!sidebarOpen()) {
+        <button (click)="sidebarOpen.set(true)"
+                class="hidden md:flex absolute top-3 left-3 z-20 w-8 h-8 rounded-xl border border-border/60
+                       bg-bg-elevated items-center justify-center text-text-muted
+                       hover:text-text-primary hover:border-border transition-colors">
+          <ng-icon name="lucideMenu" size="15" />
+        </button>
+      }
 
       <!-- ── LEFT: Conversation sidebar ──────────────────────────── -->
+      @if (sidebarOpen()) {
       <div class="hidden md:flex shrink-0 w-[240px] flex-col border-r border-border/40 bg-bg-surface">
 
         <div class="px-4 py-4 border-b border-border/40 shrink-0">
-          <div class="flex items-center gap-2.5 mb-4">
-            <div class="w-8 h-8 rounded-xl bg-violet-500/10 border border-violet-500/20
-                        flex items-center justify-center">
-              <ng-icon name="lucideSparkles" size="15" class="text-violet-400" />
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-2">
+              <div class="w-8 h-8 rounded-xl bg-violet-500/10 border border-violet-500/20
+                          flex items-center justify-center">
+                <ng-icon name="lucideSparkles" size="15" class="text-violet-400" />
+              </div>
+              <div>
+                <p class="text-[13px] font-semibold text-text-primary leading-tight">Analytics IA</p>
+                <p class="text-[9px] text-text-muted">Panel Admin</p>
+              </div>
             </div>
-            <div>
-              <p class="text-[13px] font-semibold text-text-primary leading-tight">Analytics IA</p>
-              <p class="text-[9px] text-text-muted">Panel Admin</p>
-            </div>
+            <button (click)="sidebarOpen.set(false)"
+                    class="w-6 h-6 rounded-lg flex items-center justify-center
+                           text-text-muted hover:text-text-primary hover:bg-bg-elevated/80 transition-colors"
+                    title="Ocultar panel">
+              <ng-icon name="lucideX" size="12" />
+            </button>
           </div>
           <button (click)="newConversation()"
                   class="w-full flex items-center gap-2 px-3 py-2 rounded-xl
@@ -98,6 +117,7 @@ const QUICK_QUERIES = [
           }
         </div>
       </div>
+      }
 
       <!-- ── RIGHT: Chat area ───────────────────────────────────── -->
       <div class="flex-1 flex flex-col min-w-0 min-h-0">
@@ -295,6 +315,7 @@ export class AnalyticsDashboardComponent implements AfterViewChecked {
 
   private readonly store = inject(Store);
 
+  sidebarOpen   = signal(true);
   input         = '';
   viewingConv   = signal<SavedConv | null>(null);
   conversations = signal<SavedConv[]>([]);
