@@ -5,7 +5,7 @@ import { ReactiveFormsModule, FormBuilder, Validators, FormsModule } from '@angu
 import { NgIcon } from '@ng-icons/core';
 import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
 import { SellerProductService } from '../../core/seller/seller-product.service';
-import { ProductSummaryResponse } from '../../shared/models/product.models';
+import { ProductSummaryResponse, OfferResponse } from '../../shared/models/product.models';
 import { CopCurrencyPipe } from '../../shared/pipes/cop-currency.pipe';
 
 @Component({
@@ -103,6 +103,43 @@ import { CopCurrencyPipe } from '../../shared/pipes/cop-currency.pipe';
               @if (expandedId() === p.id) {
                 <div class="border-t border-border px-4 py-4 bg-bg-elevated/50">
 
+                  <!-- Ofertas activas existentes -->
+                  @if (activeOffers(p.id).length > 0) {
+                    <div class="mb-4">
+                      <p class="text-[11px] font-semibold text-text-muted uppercase tracking-wider mb-2">
+                        Descuentos activos
+                      </p>
+                      <div class="flex flex-col gap-2">
+                        @for (offer of activeOffers(p.id); track offer.id) {
+                          <div class="flex items-center justify-between gap-3 px-3 py-2.5 rounded-[10px]"
+                               style="background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.18)">
+                            <div>
+                              <span class="text-[14px] font-bold" style="color:var(--color-error)">
+                                -{{ offer.discountPercent }}%
+                              </span>
+                              <span class="text-[11px] text-text-muted ml-2">
+                                {{ offer.startDate | date:'d MMM yyyy' }} — {{ offer.endDate | date:'d MMM yyyy' }}
+                              </span>
+                            </div>
+                            <button type="button" (click)="deleteActiveOffer(p.id, offer.id)"
+                              [disabled]="deletingOffer() === offer.id"
+                              class="flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] text-[12px] font-semibold
+                                     transition-colors disabled:opacity-50 shrink-0"
+                              style="background:rgba(239,68,68,0.12);color:var(--color-error);border:1px solid rgba(239,68,68,0.3)">
+                              @if (deletingOffer() === offer.id) {
+                                <ng-icon name="lucideRefreshCw" size="12" class="animate-spin" />
+                              } @else {
+                                <ng-icon name="lucideTrash2" size="12" />
+                              }
+                              Eliminar
+                            </button>
+                          </div>
+                        }
+                      </div>
+                      <div class="border-t border-border mt-4 mb-4"></div>
+                    </div>
+                  }
+
                   @if (successId() === p.id) {
                     <div class="flex items-center gap-2 px-3 py-2.5 rounded-[10px] text-[13px] font-medium mb-3"
                          style="background:rgba(0,200,120,0.1);color:var(--color-success);border:1px solid rgba(0,200,120,0.25)">
@@ -183,12 +220,14 @@ export class SellerDiscountsComponent implements OnInit, OnDestroy {
   private destroy$       = new Subject<void>();
   private search$        = new Subject<string>();
 
-  products   = signal<ProductSummaryResponse[]>([]);
-  loading    = signal(true);
-  expandedId = signal<string | null>(null);
-  creating   = signal(false);
-  createError = signal<string | null>(null);
-  successId  = signal<string | null>(null);
+  products      = signal<ProductSummaryResponse[]>([]);
+  loading       = signal(true);
+  expandedId    = signal<string | null>(null);
+  creating      = signal(false);
+  createError   = signal<string | null>(null);
+  successId     = signal<string | null>(null);
+  offersMap     = signal<Record<string, OfferResponse[]>>({});
+  deletingOffer = signal<string | null>(null);
 
   searchQ = '';
 
@@ -213,6 +252,10 @@ export class SellerDiscountsComponent implements OnInit, OnDestroy {
     this.load();
   }
 
+  activeOffers(productId: string): OfferResponse[] {
+    return (this.offersMap()[productId] ?? []).filter(o => o.active);
+  }
+
   toggleExpand(productId: string): void {
     if (this.expandedId() === productId) {
       this.expandedId.set(null);
@@ -221,7 +264,29 @@ export class SellerDiscountsComponent implements OnInit, OnDestroy {
       this.form.reset({ discountPercent: 10, startDate: '', endDate: '' });
       this.createError.set(null);
       this.successId.set(null);
+      this.loadOffers(productId);
     }
+  }
+
+  private loadOffers(productId: string): void {
+    this.productService.getOffers(productId).subscribe({
+      next: (res) => this.offersMap.update(m => ({ ...m, [productId]: res.data })),
+      error: () => {},
+    });
+  }
+
+  deleteActiveOffer(productId: string, offerId: string): void {
+    this.deletingOffer.set(offerId);
+    this.productService.deleteOffer(productId, offerId).subscribe({
+      next: () => {
+        this.offersMap.update(m => ({
+          ...m,
+          [productId]: (m[productId] ?? []).filter(o => o.id !== offerId),
+        }));
+        this.deletingOffer.set(null);
+      },
+      error: () => this.deletingOffer.set(null),
+    });
   }
 
   createOffer(productId: string): void {
