@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, OnDestroy, signal } from '@angular/core';
+import { Component, inject, NgZone, OnInit, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, Validators, FormsModule } from '@angular/forms';
@@ -217,6 +217,7 @@ import { CopCurrencyPipe } from '../../shared/pipes/cop-currency.pipe';
 export class SellerDiscountsComponent implements OnInit, OnDestroy {
   private productService = inject(SellerProductService);
   private fb             = inject(FormBuilder);
+  private zone           = inject(NgZone);
   private destroy$       = new Subject<void>();
   private search$        = new Subject<string>();
 
@@ -270,7 +271,8 @@ export class SellerDiscountsComponent implements OnInit, OnDestroy {
 
   private loadOffers(productId: string): void {
     this.productService.getOffers(productId).subscribe({
-      next: (res) => this.offersMap.update(m => ({ ...m, [productId]: res.data })),
+      next: (res) => this.zone.run(() =>
+        this.offersMap.update(m => ({ ...m, [productId]: res.data }))),
       error: () => {},
     });
   }
@@ -278,14 +280,14 @@ export class SellerDiscountsComponent implements OnInit, OnDestroy {
   deleteActiveOffer(productId: string, offerId: string): void {
     this.deletingOffer.set(offerId);
     this.productService.deleteOffer(productId, offerId).subscribe({
-      next: () => {
+      next: () => this.zone.run(() => {
         this.offersMap.update(m => ({
           ...m,
           [productId]: (m[productId] ?? []).filter(o => o.id !== offerId),
         }));
         this.deletingOffer.set(null);
-      },
-      error: () => this.deletingOffer.set(null),
+      }),
+      error: () => this.zone.run(() => this.deletingOffer.set(null)),
     });
   }
 
@@ -295,27 +297,31 @@ export class SellerDiscountsComponent implements OnInit, OnDestroy {
     this.createError.set(null);
     const raw = this.form.getRawValue();
     this.productService.createOffer(productId, raw).subscribe({
-      next: () => {
+      next: () => this.zone.run(() => {
         this.creating.set(false);
         this.successId.set(productId);
         this.form.reset({ discountPercent: 10, startDate: '', endDate: '' });
+        this.loadOffers(productId);
         setTimeout(() => {
           this.successId.set(null);
           this.expandedId.set(null);
         }, 2500);
-      },
-      error: (err) => {
+      }),
+      error: (err) => this.zone.run(() => {
         this.createError.set(err.error?.message ?? 'Error al crear el descuento');
         this.creating.set(false);
-      },
+      }),
     });
   }
 
   private load(q?: string): void {
     this.loading.set(true);
     this.productService.getMyProducts(0, 30, q).subscribe({
-      next: (res) => { this.products.set(res.data.content); this.loading.set(false); },
-      error: () => this.loading.set(false),
+      next: (res) => this.zone.run(() => {
+        this.products.set(res.data.content);
+        this.loading.set(false);
+      }),
+      error: () => this.zone.run(() => this.loading.set(false)),
     });
   }
 }
