@@ -67,7 +67,8 @@ export interface OfferResponse {
   discountPercent: number;
   startDate: string;
   endDate: string;
-  active: boolean;
+  active: boolean;   // status == ACTIVE (no desactivada)
+  vigente: boolean;  // activa y dentro del rango de fechas ahora mismo
 }
 
 export interface CreateOfferRequest {

@@ -103,10 +103,15 @@ import { OfferResponse } from '../../shared/models/product.models';
                     <span class="text-[14px] font-bold text-text-primary">
                       {{ offer.discountPercent }}% de descuento
                     </span>
-                    @if (offer.active) {
+                    @if (offer.vigente) {
                       <span class="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md"
                             style="background:rgba(0,200,120,0.12);color:var(--color-success);border:1px solid rgba(0,200,120,0.25)">
                         Activa
+                      </span>
+                    } @else if (offer.active) {
+                      <span class="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md"
+                            style="background:rgba(100,93,255,0.1);color:var(--color-accent);border:1px solid rgba(100,93,255,0.3)">
+                        Programada
                       </span>
                     } @else {
                       <span class="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md"
