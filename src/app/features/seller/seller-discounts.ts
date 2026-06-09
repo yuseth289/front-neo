@@ -113,11 +113,15 @@ import { CopCurrencyPipe } from '../../shared/pipes/cop-currency.pipe';
                         @for (offer of activeOffers(p.id); track offer.id) {
                           <div class="flex items-center justify-between gap-3 px-3 py-2.5 rounded-[10px]"
                                style="background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.18)">
-                            <div>
+                            <div class="flex items-center gap-2 flex-wrap">
                               <span class="text-[14px] font-bold" style="color:var(--color-error)">
                                 -{{ offer.discountPercent }}%
                               </span>
-                              <span class="text-[11px] text-text-muted ml-2">
+                              <span class="text-[10px] font-bold px-1.5 py-0.5 rounded-md"
+                                    [attr.style]="offerStatus(offer).style">
+                                {{ offerStatus(offer).label }}
+                              </span>
+                              <span class="text-[11px] text-text-muted">
                                 {{ offer.startDate | date:'d MMM yyyy' }} — {{ offer.endDate | date:'d MMM yyyy' }}
                               </span>
                             </div>
@@ -255,6 +259,13 @@ export class SellerDiscountsComponent implements OnInit, OnDestroy {
 
   activeOffers(productId: string): OfferResponse[] {
     return (this.offersMap()[productId] ?? []).filter(o => o.active);
+  }
+
+  offerStatus(o: OfferResponse): { label: string; style: string } {
+    if (o.vigente) return { label: 'Activa', style: 'background:rgba(0,200,120,0.12);color:var(--color-success);border:1px solid rgba(0,200,120,0.25)' };
+    const now = new Date();
+    if (new Date(o.startDate) > now) return { label: 'Programada', style: 'background:rgba(100,93,255,0.1);color:var(--color-accent);border:1px solid rgba(100,93,255,0.3)' };
+    return { label: 'Vencida', style: 'background:var(--color-bg-elevated);color:var(--color-text-muted);border:1px solid var(--color-border)' };
   }
 
   toggleExpand(productId: string): void {
