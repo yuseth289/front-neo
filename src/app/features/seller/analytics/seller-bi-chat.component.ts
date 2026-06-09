@@ -38,17 +38,36 @@ const QUICK_QUESTIONS = [
   standalone: true,
   imports: [FormsModule, DecimalPipe, NgIcon, AiTypingIndicatorComponent],
   template: `
-    <div class="flex bg-bg-base overflow-hidden" style="height: calc(100vh - 72px)">
+    <div class="relative flex bg-bg-base overflow-hidden" style="height: calc(100vh - 72px)">
+
+      <!-- Expand sidebar button (visible when sidebar is collapsed) -->
+      @if (!sidebarOpen()) {
+        <button (click)="sidebarOpen.set(true)"
+                class="hidden md:flex absolute top-3 left-3 z-20 w-8 h-8 rounded-xl border border-border/60
+                       bg-bg-elevated items-center justify-center text-text-muted
+                       hover:text-text-primary hover:border-border transition-colors">
+          <ng-icon name="lucideMenu" size="15" />
+        </button>
+      }
 
       <!-- ── LEFT: Conversation sidebar ──────────────────────── -->
+      @if (sidebarOpen()) {
       <div class="hidden md:flex shrink-0 w-[240px] flex-col border-r border-border/40 bg-bg-surface">
 
         <div class="px-4 py-4 border-b border-border/40 shrink-0">
-          <button (click)="goBack()"
-                  class="flex items-center gap-1.5 text-[11px] text-text-muted hover:text-text-primary
-                         transition-colors mb-4">
-            <ng-icon name="lucideChevronLeft" size="13" />Analytics
-          </button>
+          <div class="flex items-center justify-between mb-4">
+            <button (click)="goBack()"
+                    class="flex items-center gap-1.5 text-[11px] text-text-muted hover:text-text-primary
+                           transition-colors">
+              <ng-icon name="lucideChevronLeft" size="13" />Analytics
+            </button>
+            <button (click)="sidebarOpen.set(false)"
+                    class="w-6 h-6 rounded-lg flex items-center justify-center
+                           text-text-muted hover:text-text-primary hover:bg-bg-elevated/80 transition-colors"
+                    title="Ocultar panel">
+              <ng-icon name="lucideX" size="12" />
+            </button>
+          </div>
           <div class="flex items-center gap-2 mb-3">
             <div class="w-7 h-7 rounded-lg bg-violet-500/10 flex items-center justify-center">
               <ng-icon name="lucideBrainCircuit" size="14" class="text-violet-400" />
@@ -99,6 +118,7 @@ const QUICK_QUESTIONS = [
           }
         </div>
       </div>
+      }
 
       <!-- ── RIGHT: Chat area ─────────────────────────────────── -->
       <div class="flex-1 flex flex-col min-w-0 min-h-0">
@@ -260,6 +280,7 @@ export class SellerBiChatComponent implements AfterViewChecked {
   private readonly sellerAi = inject(SellerAiService);
   private readonly router   = inject(Router);
 
+  sidebarOpen   = signal(true);
   messages      = signal<BiMessage[]>([]);
   conversations = signal<SavedConv[]>([]);
   activeConvId  = signal<string | null>(null);
