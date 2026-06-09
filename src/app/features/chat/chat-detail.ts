@@ -313,14 +313,17 @@ const EMOJIS = [
       </button>
 
       <button (click)="send()" [disabled]="(!draft.trim() && !imagePreview()) || sending()"
-        class="w-9 h-9 rounded-full bg-accent flex items-center justify-center shrink-0
-               shadow-[0_0_16px_var(--color-accent-glow)] transition-all
-               hover:bg-accent-hover disabled:opacity-40 disabled:cursor-not-allowed
-               disabled:shadow-none">
+        class="w-9 h-9 rounded-full flex items-center justify-center shrink-0
+               transition-all duration-200
+               disabled:cursor-not-allowed"
+        [style.background]="(!draft.trim() && !imagePreview()) || sending() ? 'var(--color-bg-elevated)' : 'var(--color-accent)'"
+        [style.box-shadow]="(!draft.trim() && !imagePreview()) || sending() ? 'none' : '0 0 14px var(--color-accent-glow)'">
         @if (sending()) {
-          <ng-icon name="lucideRefreshCw" size="15" class="text-white animate-spin" />
+          <ng-icon name="lucideRefreshCw" size="16" class="animate-spin"
+            [style.color]="'var(--color-accent)'" />
         } @else {
-          <ng-icon name="lucideArrowRight" size="15" class="text-white" />
+          <ng-icon name="lucideSend" size="16"
+            [style.color]="(!draft.trim() && !imagePreview()) ? 'var(--color-text-muted)' : 'white'" />
         }
       </button>
     </div>
