@@ -2,7 +2,7 @@ import {
   Component, inject, OnInit, OnDestroy, signal,
   AfterViewChecked, ElementRef, ViewChild, HostListener,
 } from '@angular/core';
-import { CommonModule, NgClass } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { NgIcon } from '@ng-icons/core';
@@ -23,36 +23,40 @@ const EMOJIS = [
   selector: 'app-chat-detail',
   standalone: true,
   host: { class: 'flex flex-col h-full min-h-0 overflow-hidden relative' },
-  imports: [CommonModule, FormsModule, NgIcon, NgClass],
+  imports: [CommonModule, FormsModule, NgIcon],
   template: `
-    <!-- ── HEADER ─────────────────────────────────────────────── -->
-    <div class="px-4 py-3 flex items-center gap-3 shrink-0 border-b border-border bg-bg-surface">
+    <!-- ── HEADER ──────────────────────────────────────────────────── -->
+    <div class="px-4 py-3 flex items-center gap-3 shrink-0 border-b border-border/40 bg-bg-base">
 
-      <!-- Botón atrás solo en móvil -->
+      <!-- Back (mobile) -->
       <button class="md:hidden p-1.5 -ml-1 rounded-lg text-text-muted hover:text-text-primary
                      hover:bg-bg-elevated transition-colors shrink-0"
-              (click)="goBack()" aria-label="Volver">
-        <ng-icon name="lucideArrowLeft" size="18" />
+              (click)="goBack()">
+        <ng-icon name="lucideArrowLeft" size="16" />
       </button>
 
       @if (conversation()) {
-        <div class="w-9 h-9 rounded-full overflow-hidden border border-border bg-bg-elevated
-                    flex items-center justify-center font-bold text-accent text-sm shrink-0">
+        <!-- Avatar -->
+        <div class="w-8 h-8 rounded-full overflow-hidden border border-border/60 bg-bg-elevated
+                    flex items-center justify-center font-bold text-accent text-xs shrink-0">
           @if (!isSeller() && conversation()!.storeLogoUrl) {
             <img [src]="conversation()!.storeLogoUrl" alt="" class="w-full h-full object-cover" />
           } @else {
             {{ (isSeller() ? conversation()!.buyerName : conversation()!.storeName)[0] }}
           }
         </div>
+
+        <!-- Name + status -->
         <div class="flex-1 min-w-0">
-          <p class="text-[14px] font-semibold text-text-primary truncate leading-tight">
+          <p class="text-[13px] font-semibold text-text-primary truncate leading-tight">
             {{ isSeller() ? conversation()!.buyerName : conversation()!.storeName }}
           </p>
           <div class="flex items-center gap-1.5 mt-0.5">
             <span class="w-1.5 h-1.5 rounded-full shrink-0"
                   [class.bg-success]="polling()"
-                  [class.bg-text-muted]="!polling()"></span>
-            <span class="text-[11px]"
+                  [class.bg-text-muted]="!polling()"
+                  [class.opacity-40]="!polling()"></span>
+            <span class="text-[10px]"
                   [class.text-success]="polling()"
                   [class.text-text-muted]="!polling()">
               {{ polling() ? 'En línea' : 'Desconectado' }}
@@ -63,53 +67,56 @@ const EMOJIS = [
         <div class="flex-1"></div>
       }
 
-      <button (click)="toggleSearch()"
-        class="p-1.5 rounded-lg transition-colors"
-        [ngClass]="searchOpen()
-          ? 'text-accent bg-accent/10'
-          : 'text-text-muted hover:text-text-primary hover:bg-bg-elevated'">
-        <ng-icon name="lucideSearch" size="16" />
-      </button>
-      <!-- More options -->
-      <div class="relative" data-menu>
-        <button (click)="menuOpen.set(!menuOpen())"
-          class="p-1.5 rounded-lg text-text-muted hover:text-text-primary
-                 hover:bg-bg-elevated transition-colors"
-          [ngClass]="menuOpen() ? 'bg-bg-elevated text-text-primary' : ''">
-          <ng-icon name="lucideMoreHorizontal" size="16" />
+      <!-- Actions -->
+      <div class="flex items-center gap-0.5">
+        <button (click)="toggleSearch()"
+          class="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
+          [class.text-accent]="searchOpen()"
+          [class.bg-accent/8]="searchOpen()"
+          [class.text-text-muted]="!searchOpen()"
+          [class.hover:text-text-primary]="!searchOpen()"
+          [class.hover:bg-bg-elevated]="!searchOpen()">
+          <ng-icon name="lucideSearch" size="14" />
         </button>
 
-        @if (menuOpen()) {
-          <div class="absolute right-0 top-full mt-1 w-52 z-50
-                      bg-bg-surface border border-border rounded-[12px]
-                      shadow-[var(--shadow-card-lift)] overflow-hidden py-1">
+        <div class="relative" data-menu>
+          <button (click)="menuOpen.set(!menuOpen())"
+            class="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
+            [class.text-text-primary]="menuOpen()"
+            [class.bg-bg-elevated]="menuOpen()"
+            [class.text-text-muted]="!menuOpen()"
+            [class.hover:text-text-primary]="!menuOpen()"
+            [class.hover:bg-bg-elevated]="!menuOpen()">
+            <ng-icon name="lucideMoreHorizontal" size="14" />
+          </button>
 
-            <!-- Info de contacto -->
-            <button (click)="openInfo()"
-              class="w-full flex items-center gap-3 px-4 py-2.5 text-[13px]
-                     text-text-primary hover:bg-bg-elevated transition-colors text-left">
-              <ng-icon name="lucideUser" size="15" class="text-text-muted shrink-0" />
-              Info de contacto
-            </button>
-
-            <div class="my-1 border-t border-border mx-2"></div>
-
-            <!-- Borrar chat -->
-            <button (click)="confirmDelete()"
-              class="w-full flex items-center gap-3 px-4 py-2.5 text-[13px]
-                     text-error hover:bg-error/8 transition-colors text-left">
-              <ng-icon name="lucideTrash2" size="15" class="shrink-0" />
-              Borrar chat
-            </button>
-          </div>
-        }
+          @if (menuOpen()) {
+            <div class="absolute right-0 top-full mt-1.5 w-48 z-50
+                        bg-bg-elevated border border-border/60 rounded-[12px]
+                        shadow-[var(--shadow-card-lift)] overflow-hidden py-1">
+              <button (click)="openInfo()"
+                class="w-full flex items-center gap-2.5 px-3.5 py-2 text-[12px]
+                       text-text-secondary hover:text-text-primary hover:bg-bg-subtle transition-colors text-left">
+                <ng-icon name="lucideUser" size="13" class="shrink-0" />
+                Info de contacto
+              </button>
+              <div class="my-1 border-t border-border/50 mx-2"></div>
+              <button (click)="confirmDelete()"
+                class="w-full flex items-center gap-2.5 px-3.5 py-2 text-[12px]
+                       text-error hover:bg-error/8 transition-colors text-left">
+                <ng-icon name="lucideTrash2" size="13" class="shrink-0" />
+                Borrar conversación
+              </button>
+            </div>
+          }
+        </div>
       </div>
     </div>
 
-    <!-- ── INFO PANEL ──────────────────────────────────────────── -->
+    <!-- ── INFO PANEL ───────────────────────────────────────────────── -->
     @if (infoOpen() && conversation()) {
-      <div class="border-b border-border bg-bg-elevated px-4 py-4 shrink-0 flex items-center gap-4">
-        <div class="w-12 h-12 rounded-full overflow-hidden border border-border bg-bg-surface
+      <div class="border-b border-border/40 bg-bg-elevated/50 px-4 py-3.5 shrink-0 flex items-center gap-3">
+        <div class="w-11 h-11 rounded-full overflow-hidden border border-border bg-bg-surface
                     flex items-center justify-center font-bold text-accent text-base shrink-0">
           @if (!isSeller() && conversation()!.storeLogoUrl) {
             <img [src]="conversation()!.storeLogoUrl" alt="" class="w-full h-full object-cover" />
@@ -118,52 +125,49 @@ const EMOJIS = [
           }
         </div>
         <div class="flex-1 min-w-0">
-          <p class="text-[14px] font-semibold text-text-primary">
+          <p class="text-[13px] font-semibold text-text-primary">
             {{ isSeller() ? conversation()!.buyerName : conversation()!.storeName }}
           </p>
           @if (conversation()!.productName) {
-            <p class="text-[12px] text-text-muted mt-0.5 flex items-center gap-1">
-              <ng-icon name="lucidePackage" size="11" />
+            <p class="text-[11px] text-text-muted mt-0.5 flex items-center gap-1">
+              <ng-icon name="lucidePackage" size="10" />
               Sobre: {{ conversation()!.productName }}
             </p>
           }
-          <p class="text-[11px] text-text-muted mt-0.5">
-            Conversación iniciada {{ conversation()!.createdAt | date:'d MMM yyyy' }}
+          <p class="text-[10px] text-text-muted mt-0.5">
+            Iniciada el {{ conversation()!.createdAt | date:'d MMM yyyy' }}
           </p>
         </div>
         <button (click)="infoOpen.set(false)"
-          class="p-1.5 rounded-lg text-text-muted hover:text-text-primary hover:bg-bg-surface transition-colors">
-          <ng-icon name="lucideX" size="15" />
+          class="w-7 h-7 rounded-lg text-text-muted hover:text-text-primary hover:bg-bg-subtle transition-colors flex items-center justify-center">
+          <ng-icon name="lucideX" size="13" />
         </button>
       </div>
     }
 
-    <!-- ── CONFIRM DELETE ─────────────────────────────────────── -->
+    <!-- ── CONFIRM DELETE ────────────────────────────────────────────── -->
     @if (deleteConfirm()) {
-      <div class="absolute inset-0 z-40 bg-black/50 flex items-center justify-center p-4">
-        <div class="bg-bg-surface border border-border rounded-[16px] p-6 max-w-sm w-full
+      <div class="absolute inset-0 z-40 bg-black/60 backdrop-blur-[2px] flex items-center justify-center p-5">
+        <div class="bg-bg-elevated border border-border/60 rounded-2xl p-6 max-w-sm w-full
                     shadow-[var(--shadow-card-lift)]">
-          <div class="w-10 h-10 rounded-full bg-error/10 border border-error/30
+          <div class="w-10 h-10 rounded-xl bg-error/10 border border-error/25
                       flex items-center justify-center mb-4">
-            <ng-icon name="lucideTrash2" size="18" class="text-error" />
+            <ng-icon name="lucideTrash2" size="16" class="text-error" />
           </div>
-          <p class="text-[15px] font-semibold text-text-primary">¿Borrar este chat?</p>
-          <p class="text-[13px] text-text-muted mt-1 mb-5">
-            Se eliminarán todos los mensajes de forma permanente. Esta acción no se puede deshacer.
+          <p class="text-[14px] font-semibold text-text-primary">¿Borrar esta conversación?</p>
+          <p class="text-[12px] text-text-muted mt-1.5 mb-5 leading-relaxed">
+            Todos los mensajes se eliminarán permanentemente. Esta acción no se puede deshacer.
           </p>
           <div class="flex gap-2">
             <button (click)="deleteConfirm.set(false)"
-              class="flex-1 py-2.5 rounded-[10px] border border-border text-[13px]
-                     text-text-secondary hover:bg-bg-elevated transition-colors">
+              class="flex-1 py-2 rounded-xl border border-border text-[12px]
+                     text-text-secondary hover:bg-bg-subtle transition-colors">
               Cancelar
             </button>
-            <button (click)="deleteChat()"
-              [disabled]="deleting()"
-              class="flex-1 py-2.5 rounded-[10px] bg-error text-white text-[13px] font-medium
-                     hover:bg-error/90 disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
-              @if (deleting()) {
-                <ng-icon name="lucideRefreshCw" size="13" class="animate-spin" />
-              }
+            <button (click)="deleteChat()" [disabled]="deleting()"
+              class="flex-1 py-2 rounded-xl bg-error text-white text-[12px] font-medium
+                     hover:bg-error/90 disabled:opacity-50 transition-colors flex items-center justify-center gap-1.5">
+              @if (deleting()) { <ng-icon name="lucideRefreshCw" size="12" class="animate-spin" /> }
               Borrar
             </button>
           </div>
@@ -171,107 +175,152 @@ const EMOJIS = [
       </div>
     }
 
-    <!-- ── SEARCH BAR ─────────────────────────────────────────── -->
+    <!-- ── SEARCH ────────────────────────────────────────────────────── -->
     @if (searchOpen()) {
-      <div class="px-4 py-2 border-b border-border bg-bg-elevated flex items-center gap-2 shrink-0">
-        <ng-icon name="lucideSearch" size="14" class="text-text-muted shrink-0" />
+      <div class="px-4 py-2 border-b border-border/40 bg-bg-elevated/40 flex items-center gap-2 shrink-0">
+        <ng-icon name="lucideSearch" size="13" class="text-text-muted shrink-0" />
         <input #searchInput
           [(ngModel)]="searchQuery"
           placeholder="Buscar en esta conversación…"
-          class="flex-1 bg-transparent text-[13px] text-text-primary placeholder:text-text-muted
-                 outline-none border-none" />
+          class="flex-1 bg-transparent text-[12px] text-text-primary placeholder:text-text-muted outline-none" />
         @if (searchQuery) {
-          <span class="text-[11px] text-text-muted shrink-0">
+          <span class="text-[10px] text-text-muted font-mono shrink-0">
             {{ filteredMessages().length }} resultado{{ filteredMessages().length !== 1 ? 's' : '' }}
           </span>
-          <button (click)="searchQuery = ''" class="text-text-muted hover:text-text-primary">
-            <ng-icon name="lucideX" size="14" />
+          <button (click)="searchQuery = ''" class="text-text-muted hover:text-text-primary transition-colors">
+            <ng-icon name="lucideX" size="13" />
           </button>
         }
       </div>
     }
 
-    <!-- ── MESSAGES ───────────────────────────────────────────── -->
-    <div #scrollContainer
-         class="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-4 min-h-0">
+    <!-- ── MESSAGES ──────────────────────────────────────────────────── -->
+    <div #scrollContainer class="flex-1 overflow-y-auto min-h-0">
+      <div class="max-w-2xl mx-auto px-4 py-6 flex flex-col gap-2">
 
-      @if (loading()) {
-        <div class="flex-1 flex items-center justify-center">
-          <ng-icon name="lucideRefreshCw" size="20" class="text-text-muted animate-spin" />
-        </div>
-      }
+        @if (loading()) {
+          <div class="flex-1 flex items-center justify-center py-20">
+            <ng-icon name="lucideRefreshCw" size="18" class="text-text-muted animate-spin" />
+          </div>
+        }
 
-      @for (msg of filteredMessages(); track msg.id) {
-        <div class="flex gap-2 max-w-[88%] sm:max-w-[78%]"
-             [class.ml-auto]="isOwn(msg)"
-             [class.flex-row-reverse]="isOwn(msg)">
-
-          <div class="w-7 h-7 rounded-full overflow-hidden border border-border bg-bg-elevated
-                      flex items-center justify-center text-[11px] font-bold shrink-0 self-end"
-               [class.text-accent]="!isOwn(msg)"
-               [class.text-text-muted]="isOwn(msg)">
-            @if (msg.senderAvatar) {
-              <img [src]="msg.senderAvatar" alt="" class="w-full h-full object-cover" />
-            } @else {
-              {{ msg.senderName[0] }}
+        @if (!loading() && filteredMessages().length === 0 && !searchQuery) {
+          <!-- Empty conversation greeting -->
+          <div class="flex flex-col items-center justify-center py-16 gap-3 text-center">
+            @if (conversation()) {
+              <div class="w-12 h-12 rounded-full overflow-hidden border border-border/60 bg-bg-elevated
+                          flex items-center justify-center font-bold text-accent text-base">
+                @if (!isSeller() && conversation()!.storeLogoUrl) {
+                  <img [src]="conversation()!.storeLogoUrl" alt="" class="w-full h-full object-cover" />
+                } @else {
+                  {{ (isSeller() ? conversation()!.buyerName : conversation()!.storeName)[0] }}
+                }
+              </div>
+              <p class="text-[14px] font-semibold text-text-primary">
+                {{ isSeller() ? conversation()!.buyerName : conversation()!.storeName }}
+              </p>
+              <p class="text-[12px] text-text-muted max-w-[220px] leading-relaxed">
+                Este es el comienzo de tu conversación. Envía un mensaje para empezar.
+              </p>
             }
           </div>
+        }
 
-          <div class="flex flex-col gap-1" [class.items-end]="isOwn(msg)">
-            @if (isImage(msg.content)) {
-              <div class="rounded-2xl overflow-hidden max-w-[240px]"
-                   [class.rounded-br-sm]="isOwn(msg)"
-                   [class.rounded-bl-sm]="!isOwn(msg)">
-                <img [src]="msg.content" alt="imagen" class="w-full object-cover" />
-              </div>
-            } @else {
-              <div class="px-3.5 py-2.5 rounded-2xl text-[13px] leading-relaxed"
-                   [class.rounded-br-sm]="isOwn(msg)"
-                   [class.rounded-bl-sm]="!isOwn(msg)"
-                   [class.bg-accent]="isOwn(msg)"
-                   [class.text-white]="isOwn(msg)"
-                   [class.bg-bg-elevated]="!isOwn(msg)"
-                   [class.border]="!isOwn(msg)"
-                   [class.border-border]="!isOwn(msg)"
-                   [class.text-text-primary]="!isOwn(msg)"
-                   [innerHTML]="highlight(msg.content)">
-              </div>
+        @for (msg of filteredMessages(); track msg.id; let i = $index) {
+          @let own = isOwn(msg);
+          @let showAvatar = !own && (i === 0 || filteredMessages()[i-1].senderId !== msg.senderId);
+
+          <div class="flex flex-col gap-0.5" [class.items-end]="own">
+
+            <!-- Sender name (others only, first in group) -->
+            @if (showAvatar && !own) {
+              <p class="text-[10px] text-text-muted ml-9 mb-0.5">{{ msg.senderName }}</p>
             }
-            <span class="text-[10px] text-text-muted px-1 flex items-center gap-1">
-              {{ msg.createdAt | date:'h:mm a' }}
-              @if (isOwn(msg) && ((isSeller() && msg.readByBuyer) || (!isSeller() && msg.readBySeller))) {
-                <ng-icon name="lucideCheck" size="10" class="text-success" />
+
+            <div class="flex items-end gap-2" [class.flex-row-reverse]="own">
+
+              <!-- Avatar (others only, last in group) -->
+              @if (!own) {
+                <div class="w-7 h-7 rounded-full overflow-hidden border border-border/60 bg-bg-elevated
+                            flex items-center justify-center text-[10px] font-bold shrink-0 self-end"
+                     [class.opacity-0]="i < filteredMessages().length - 1 && filteredMessages()[i+1].senderId === msg.senderId">
+                  @if (msg.senderAvatar) {
+                    <img [src]="msg.senderAvatar" alt="" class="w-full h-full object-cover" />
+                  } @else {
+                    <span class="text-accent">{{ msg.senderName[0] }}</span>
+                  }
+                </div>
               }
-            </span>
+
+              <!-- Bubble + time -->
+              <div class="flex flex-col gap-1" [class.items-end]="own">
+                @if (isImage(msg.content)) {
+                  <div class="rounded-2xl overflow-hidden max-w-[220px] border border-border/40"
+                       [class.rounded-br-sm]="own"
+                       [class.rounded-bl-sm]="!own">
+                    <img [src]="msg.content" alt="imagen" class="w-full object-cover" />
+                  </div>
+                } @else {
+                  <div class="px-3.5 py-2 rounded-2xl text-[13px] leading-relaxed max-w-[min(80%,38ch)]"
+                       [class.rounded-br-sm]="own"
+                       [class.rounded-bl-sm]="!own"
+                       [class.bg-bg-elevated]="own"
+                       [class.border]="own"
+                       [class.border-border]="own"
+                       [class.text-text-primary]="own"
+                       [class.bg-bg-surface]="!own"
+                       [class.border-border]="!own"
+                       [class.border]="!own"
+                       [class.text-text-primary]="!own"
+                       [innerHTML]="highlight(msg.content)">
+                  </div>
+                }
+
+                <!-- Timestamp + read receipt -->
+                <div class="flex items-center gap-1 px-1"
+                     [class.flex-row-reverse]="own">
+                  <span class="text-[9px] text-text-muted font-mono">
+                    {{ msg.createdAt | date:'h:mm a' }}
+                  </span>
+                  @if (own && ((isSeller() && msg.readByBuyer) || (!isSeller() && msg.readBySeller))) {
+                    <ng-icon name="lucideCheckCheck" size="11" class="text-neon-cyan" />
+                  } @else if (own) {
+                    <ng-icon name="lucideCheck" size="11" class="text-text-muted opacity-50" />
+                  }
+                </div>
+              </div>
+
+            </div>
           </div>
-        </div>
-      }
-      <div class="h-1 shrink-0"></div>
+        }
+
+        <div class="h-1 shrink-0"></div>
+      </div>
     </div>
 
-    <!-- ── IMAGE PREVIEW ─────────────────────────────────────── -->
+    <!-- ── IMAGE PREVIEW ─────────────────────────────────────────────── -->
     @if (imagePreview()) {
-      <div class="px-4 py-2 border-t border-border bg-bg-elevated flex items-center gap-3 shrink-0">
-        <div class="relative w-14 h-14 rounded-xl overflow-hidden border border-border shrink-0">
+      <div class="px-4 py-2.5 border-t border-border/40 bg-bg-elevated/50 flex items-center gap-3 shrink-0">
+        <div class="relative w-12 h-12 rounded-xl overflow-hidden border border-border/60 shrink-0">
           <img [src]="imagePreview()!" alt="" class="w-full h-full object-cover" />
           <button (click)="removeImage()"
-            class="absolute top-0.5 right-0.5 w-5 h-5 rounded-full bg-black/60 text-white
+            class="absolute top-0.5 right-0.5 w-5 h-5 rounded-full bg-black/70 text-white
                    flex items-center justify-center">
-            <ng-icon name="lucideX" size="10" />
+            <ng-icon name="lucideX" size="9" />
           </button>
         </div>
-        <span class="text-[12px] text-text-muted truncate flex-1">{{ imageFileName() }}</span>
+        <span class="text-[11px] text-text-muted truncate flex-1">{{ imageFileName() }}</span>
       </div>
     }
 
-    <!-- ── EMOJI PICKER ──────────────────────────────────────── -->
+    <!-- ── EMOJI PICKER ──────────────────────────────────────────────── -->
     @if (emojiOpen()) {
-      <div class="border-t border-border bg-bg-elevated px-3 py-2.5 shrink-0">
-        <div class="grid grid-cols-8 sm:grid-cols-10 gap-0.5">
+      <div class="border-t border-border/40 bg-bg-elevated/60 px-3 py-2.5 shrink-0">
+        <div class="max-w-2xl mx-auto grid grid-cols-10 gap-0.5">
           @for (e of emojis; track e) {
             <button (click)="insertEmoji(e)"
-              class="h-8 w-full flex items-center justify-center text-[18px] rounded-lg
-                     hover:bg-bg-surface transition-colors">
+              class="h-8 flex items-center justify-center text-[17px] rounded-lg
+                     hover:bg-bg-subtle transition-colors">
               {{ e }}
             </button>
           }
@@ -279,50 +328,61 @@ const EMOJIS = [
       </div>
     }
 
-    <!-- ── INPUT ─────────────────────────────────────────────── -->
-    <div class="px-3 py-2.5 flex items-end gap-2 shrink-0 border-t border-border bg-bg-surface">
+    <!-- ── INPUT ─────────────────────────────────────────────────────── -->
+    <div class="px-4 py-3 border-t border-border/40 bg-bg-base shrink-0">
+      <div class="max-w-2xl mx-auto">
+        <div class="flex items-end gap-2 rounded-2xl border border-border/60 bg-bg-elevated
+                    px-3 py-2 focus-within:border-border transition-colors">
 
-      <input #fileInput type="file" accept="image/*" class="hidden"
-             (change)="onFileSelected($event)" />
+          <input #fileInput type="file" accept="image/*" class="hidden"
+                 (change)="onFileSelected($event)" />
 
-      <button (click)="fileInput.click()"
-        class="p-2 transition-colors shrink-0"
-        [ngClass]="imagePreview()
-          ? 'text-accent'
-          : 'text-text-muted hover:text-text-primary'">
-        <ng-icon name="lucidePaperclip" size="18" />
-      </button>
+          <button (click)="fileInput.click()"
+            class="p-1.5 rounded-lg transition-colors shrink-0 self-end mb-0.5"
+            [class.text-accent]="imagePreview()"
+            [class.text-text-muted]="!imagePreview()"
+            [class.hover:text-text-secondary]="!imagePreview()">
+            <ng-icon name="lucidePaperclip" size="15" />
+          </button>
 
-      <textarea #msgInput
-        [(ngModel)]="draft"
-        (keydown.enter)="onEnter($event)"
-        placeholder="Escribe un mensaje…"
-        rows="1"
-        class="flex-1 bg-transparent border-none outline-none resize-none
-               text-[14px] text-text-primary placeholder:text-text-muted
-               max-h-[120px] leading-relaxed py-1.5"
-        (input)="autoGrow($event)">
-      </textarea>
+          <textarea #msgInput
+            [(ngModel)]="draft"
+            (keydown.enter)="onEnter($event)"
+            placeholder="Escribe un mensaje…"
+            rows="1"
+            class="flex-1 bg-transparent border-none outline-none resize-none
+                   text-[13px] text-text-primary placeholder:text-text-muted
+                   max-h-[120px] leading-relaxed py-1.5"
+            (input)="autoGrow($event)">
+          </textarea>
 
-      <button (click)="toggleEmoji()"
-        class="p-2 transition-colors shrink-0"
-        [ngClass]="emojiOpen()
-          ? 'text-accent'
-          : 'text-text-muted hover:text-text-primary'">
-        <ng-icon name="lucideSmile" size="18" />
-      </button>
+          <div class="flex items-center gap-1 self-end mb-0.5">
+            <button (click)="toggleEmoji()"
+              class="p-1.5 rounded-lg transition-colors"
+              [class.text-accent]="emojiOpen()"
+              [class.text-text-muted]="!emojiOpen()"
+              [class.hover:text-text-secondary]="!emojiOpen()">
+              <ng-icon name="lucideSmile" size="15" />
+            </button>
 
-      <button (click)="send()" [disabled]="(!draft.trim() && !imagePreview()) || sending()"
-        class="w-9 h-9 rounded-full bg-accent flex items-center justify-center shrink-0
-               shadow-[0_0_16px_var(--color-accent-glow)] transition-all
-               hover:bg-accent-hover disabled:opacity-40 disabled:cursor-not-allowed
-               disabled:shadow-none">
-        @if (sending()) {
-          <ng-icon name="lucideRefreshCw" size="15" class="text-white animate-spin" />
-        } @else {
-          <ng-icon name="lucideArrowRight" size="15" class="text-white" />
-        }
-      </button>
+            <button (click)="send()" [disabled]="(!draft.trim() && !imagePreview()) || sending()"
+              class="w-8 h-8 rounded-xl bg-accent flex items-center justify-center shrink-0
+                     shadow-[0_0_12px_var(--color-accent-glow)] transition-all
+                     hover:bg-accent-hover disabled:opacity-30 disabled:cursor-not-allowed
+                     disabled:shadow-none">
+              @if (sending()) {
+                <ng-icon name="lucideRefreshCw" size="13" class="text-white animate-spin" />
+              } @else {
+                <ng-icon name="lucideArrowUp" size="13" class="text-white" />
+              }
+            </button>
+          </div>
+        </div>
+
+        <p class="text-[10px] text-text-muted text-center mt-1.5">
+          Enter para enviar · Shift+Enter para nueva línea
+        </p>
+      </div>
     </div>
   `,
 })
@@ -360,8 +420,8 @@ export class ChatDetailComponent implements OnInit, OnDestroy, AfterViewChecked 
   readonly emojis = EMOJIS;
   private shouldScroll = false;
 
-  isOwn     = (msg: MessageResponse) => msg.senderId === this.currentUserId();
-  isImage   = (content: string) => content.startsWith('data:image');
+  isOwn   = (msg: MessageResponse) => msg.senderId === this.currentUserId();
+  isImage = (content: string) => content.startsWith('data:image');
 
   filteredMessages = () => {
     const q = this.searchQuery.toLowerCase().trim();
