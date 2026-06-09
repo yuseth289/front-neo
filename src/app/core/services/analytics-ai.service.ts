@@ -11,9 +11,15 @@ export class AnalyticsAiService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = `${environment.apiUrl}/api/v1/ai/admin/analytics`;
 
-  analyticsQuery(query: string): Observable<AnalyticsResultResponse> {
+  analyticsQuery(query: string, adminId: string | null): Observable<AnalyticsResultResponse> {
     return this.http
-      .post<ApiResponse<AnalyticsResultResponse>>(`${this.baseUrl}/query`, { query })
+      .post<ApiResponse<AnalyticsResultResponse>>(`${this.baseUrl}/query`, {
+        query,
+        adminId,
+        reportType: 'adhoc',
+        dateFrom: null,
+        dateTo: null,
+      })
       .pipe(
         map(res => res.data),
         catchError(err => throwError(() => err)),
