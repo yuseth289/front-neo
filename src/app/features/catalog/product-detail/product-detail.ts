@@ -176,11 +176,27 @@ const PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9I
               }
 
               <!-- Price -->
-              <div>
-                <p class="font-display text-[40px] font-black leading-none tracking-[-0.02em] text-text-primary">
-                  {{ product()!.finalPrice | copCurrency }}
-                </p>
-                <p class="text-[12px] text-text-muted font-mono mt-1.5">
+              <div class="flex flex-col gap-1">
+                @if (product()!.activeDiscountPercent) {
+                  <div class="flex items-center gap-2">
+                    <span class="text-[13px] font-bold px-2 py-0.5 rounded-md"
+                          style="background:rgba(239,68,68,0.12);color:var(--color-error)">
+                      -{{ product()!.activeDiscountPercent }}%
+                    </span>
+                    <span class="text-[15px] text-text-muted line-through font-mono">
+                      {{ product()!.finalPrice | copCurrency }}
+                    </span>
+                  </div>
+                  <p class="font-display text-[40px] font-black leading-none tracking-[-0.02em]"
+                     style="color:var(--color-error)">
+                    {{ discountedPrice() | copCurrency }}
+                  </p>
+                } @else {
+                  <p class="font-display text-[40px] font-black leading-none tracking-[-0.02em] text-text-primary">
+                    {{ product()!.finalPrice | copCurrency }}
+                  </p>
+                }
+                <p class="text-[12px] text-text-muted font-mono mt-0.5">
                   Base: {{ product()!.basePrice | copCurrency }} + IVA {{ product()!.ivaPercent }}% · IVA incluido
                 </p>
               </div>
@@ -589,6 +605,12 @@ export class ProductDetailComponent implements OnInit {
     const specs = this.product()?.specifications;
     if (!specs) return [];
     return Object.entries(specs).filter(([, v]) => v?.trim()).map(([key, value]) => ({ key, value }));
+  });
+
+  discountedPrice = computed(() => {
+    const p = this.product();
+    if (!p?.activeDiscountPercent) return p?.finalPrice ?? 0;
+    return p.finalPrice * (1 - p.activeDiscountPercent / 100);
   });
 
   incQty(): void { this.qty.update(q => Math.min(q + 1, 99)); }
