@@ -213,9 +213,12 @@ const MAX_HISTORY = 20;
                                       placeholder:text-text-muted outline-none border-none min-w-0" />
                         <button type="submit" [disabled]="!clarification.trim()"
                                 class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0
-                                       bg-white/90 hover:bg-white disabled:opacity-25
-                                       disabled:cursor-not-allowed transition-all">
-                          <ng-icon name="lucideArrowUp" size="14" class="text-black" />
+                                       disabled:cursor-not-allowed transition-all duration-200"
+                                [style.background]="clarification.trim() ? 'var(--color-accent)' : 'var(--color-bg-base)'"
+                                [style.box-shadow]="clarification.trim() ? '0 0 10px var(--color-accent-glow)' : 'none'"
+                                [style.border]="clarification.trim() ? 'none' : '1px solid var(--color-border)'">
+                          <ng-icon name="lucideArrowUp" size="14"
+                                   [style.color]="clarification.trim() ? 'white' : 'var(--color-text-muted)'" />
                         </button>
                       </div>
                     </form>
@@ -268,9 +271,12 @@ const MAX_HISTORY = 20;
                                 disabled:opacity-50" />
                   <button type="submit" [disabled]="isLoading() || !query.trim()"
                           class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0
-                                 bg-white/90 hover:bg-white
-                                 disabled:opacity-25 disabled:cursor-not-allowed transition-all">
-                    <ng-icon name="lucideArrowUp" size="14" class="text-black" />
+                                 disabled:cursor-not-allowed transition-all duration-200"
+                          [style.background]="query.trim() && !isLoading() ? 'var(--color-accent)' : 'var(--color-bg-base)'"
+                          [style.box-shadow]="query.trim() && !isLoading() ? '0 0 10px var(--color-accent-glow)' : 'none'"
+                          [style.border]="query.trim() && !isLoading() ? 'none' : '1px solid var(--color-border)'">
+                    <ng-icon name="lucideArrowUp" size="14"
+                             [style.color]="query.trim() && !isLoading() ? 'white' : 'var(--color-text-muted)'" />
                   </button>
                 </div>
               </div>
