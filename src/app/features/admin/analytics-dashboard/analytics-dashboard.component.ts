@@ -38,7 +38,7 @@ const QUICK_QUERIES = [
   standalone: true,
   imports: [FormsModule, NgIcon, KpiCardComponent, AiTypingIndicatorComponent],
   template: `
-    <div class="relative flex bg-bg-base overflow-hidden" style="height: calc(100vh - 72px)">
+    <div class="relative flex bg-bg-base overflow-hidden -m-4 sm:-m-6" style="height: calc(100vh - 64px)">
 
       <!-- Expand sidebar button (visible when collapsed) -->
       @if (!sidebarOpen()) {
