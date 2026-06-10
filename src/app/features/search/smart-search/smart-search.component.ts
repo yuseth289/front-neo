@@ -156,13 +156,13 @@ const MAX_HISTORY = 20;
                   <p class="text-[10px] text-text-muted leading-relaxed">con micrófono, menos de 200 mil</p>
                 </button>
 
-                <button (click)="runSuggestedQuery('setup gamer completo con 1 millón de pesos')"
+                <button (click)="runSuggestedQuery('setup gamer completo más económico para juegos actuales')"
                         class="flex flex-col gap-1.5 p-3.5 rounded-xl border border-border/60 bg-bg-elevated
                                text-left hover:bg-bg-subtle hover:-translate-y-0.5 hover:border-border
                                transition-all duration-200">
                   <ng-icon name="lucideMonitor" size="15" class="text-yellow-400" />
                   <p class="text-[12px] font-medium text-text-primary">Setup completo</p>
-                  <p class="text-[10px] text-text-muted leading-relaxed">presupuesto 1 millón</p>
+                  <p class="text-[10px] text-text-muted leading-relaxed">más económico</p>
                 </button>
               </div>
             </div>
