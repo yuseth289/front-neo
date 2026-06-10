@@ -1,6 +1,5 @@
 import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
 import { NgIcon } from '@ng-icons/core';
 import { CopCurrencyPipe } from '../../shared/pipes/cop-currency.pipe';
 import { AnalyticsService, SellerDashboard } from '../../core/analytics/analytics.service';
@@ -20,7 +19,7 @@ const ACTIVITY_META: Record<string, { icon: string; color: string; label: string
 @Component({
   selector: 'app-seller-analytics',
   standalone: true,
-  imports: [CommonModule, RouterLink, NgIcon, CopCurrencyPipe],
+  imports: [CommonModule, NgIcon, CopCurrencyPipe],
   template: `
     <div class="relative">
       <div class="absolute inset-0 pointer-events-none overflow-hidden -z-[1]">
@@ -38,24 +37,6 @@ const ACTIVITY_META: Record<string, { icon: string; color: string; label: string
             Analíticas de tu tienda
           </h1>
         </div>
-
-        <!-- IA Banner -->
-        <a routerLink="/seller/analytics-ai"
-           class="neo-card-premium flex items-center gap-4 p-4 mb-7 hover:border-violet-500/40
-                  hover:bg-violet-500/5 transition-all group cursor-pointer">
-          <div class="w-10 h-10 rounded-xl bg-violet-500/10 border border-violet-500/20
-                      flex items-center justify-center shrink-0">
-            <ng-icon name="lucideBrainCircuit" size="20" class="text-violet-400" />
-          </div>
-          <div class="flex-1 min-w-0">
-            <p class="text-[14px] font-semibold text-text-primary">Asistente BI IA</p>
-            <p class="text-[12px] text-text-muted mt-0.5">
-              Consulta y analiza tus datos de ventas con inteligencia artificial
-            </p>
-          </div>
-          <ng-icon name="lucideArrowRight" size="16"
-                   class="text-text-muted group-hover:text-violet-400 transition-colors shrink-0" />
-        </a>
 
         <!-- Loading -->
         @if (loading()) {
