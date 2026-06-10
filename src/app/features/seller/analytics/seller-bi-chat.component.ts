@@ -38,7 +38,7 @@ const QUICK_QUESTIONS = [
   standalone: true,
   imports: [FormsModule, DecimalPipe, NgIcon, AiTypingIndicatorComponent],
   template: `
-    <div class="relative flex bg-bg-base overflow-hidden" style="height: calc(100vh - 72px)">
+    <div class="relative flex bg-bg-base overflow-hidden -m-6" style="height: calc(100vh - 64px)">
 
       <!-- Expand sidebar button (visible when sidebar is collapsed) -->
       @if (!sidebarOpen()) {
