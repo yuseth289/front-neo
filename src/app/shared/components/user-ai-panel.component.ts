@@ -23,7 +23,7 @@ const QUICK_QUERIES = [
   { icon: 'lucideMouse',      label: 'Mouse FPS',         desc: 'menos de $150.000',       query: 'mouse gamer para FPS menos de 150 mil' },
   { icon: 'lucideKeyboard',   label: 'Teclado mecánico',  desc: 'oficina, silencioso',      query: 'teclado mecánico para oficina silencioso' },
   { icon: 'lucideHeadphones', label: 'Audífonos gaming',  desc: 'con micrófono',            query: 'audífonos gaming con micrófono menos de 200 mil' },
-  { icon: 'lucideMonitor',    label: 'Setup completo',    desc: 'con $1.000.000',           query: 'setup gamer completo con 1 millón de pesos' },
+  { icon: 'lucideMonitor',    label: 'Setup completo',    desc: 'más económico',            query: 'setup gamer completo más económico para juegos actuales' },
 ];
 
 @Component({
