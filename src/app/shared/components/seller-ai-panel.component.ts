@@ -193,9 +193,12 @@ const QUICK_QUESTIONS = [
                             disabled:opacity-50" />
               <button type="submit" [disabled]="isLoading() || !input.trim()"
                       class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0
-                             disabled:opacity-25 disabled:cursor-not-allowed transition-all"
-                      style="background:white">
-                <ng-icon name="lucideArrowUp" size="13" style="color:black" />
+                             disabled:cursor-not-allowed transition-all duration-200"
+                      [style.background]="input.trim() && !isLoading() ? 'var(--color-accent)' : 'var(--color-bg-base)'"
+                      [style.box-shadow]="input.trim() && !isLoading() ? '0 0 10px var(--color-accent-glow)' : 'none'"
+                      [style.border]="input.trim() && !isLoading() ? 'none' : '1px solid var(--color-border)'">
+                <ng-icon name="lucideArrowUp" size="13"
+                         [style.color]="input.trim() && !isLoading() ? 'white' : 'var(--color-text-muted)'" />
               </button>
             </div>
           </form>

@@ -190,9 +190,12 @@ const QUICK_QUERIES = [
                             disabled:opacity-50" />
               <button type="submit" [disabled]="isLoading() || !query.trim()"
                       class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0
-                             disabled:opacity-25 disabled:cursor-not-allowed transition-all"
-                      style="background:white">
-                <ng-icon name="lucideArrowUp" size="13" style="color:black" />
+                             disabled:cursor-not-allowed transition-all duration-200"
+                      [style.background]="query.trim() && !isLoading() ? 'var(--color-accent)' : 'var(--color-bg-base)'"
+                      [style.box-shadow]="query.trim() && !isLoading() ? '0 0 10px var(--color-accent-glow)' : 'none'"
+                      [style.border]="query.trim() && !isLoading() ? 'none' : '1px solid var(--color-border)'">
+                <ng-icon name="lucideArrowUp" size="13"
+                         [style.color]="query.trim() && !isLoading() ? 'white' : 'var(--color-text-muted)'" />
               </button>
             </div>
           </form>
