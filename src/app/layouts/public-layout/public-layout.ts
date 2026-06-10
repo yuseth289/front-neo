@@ -9,11 +9,13 @@ import { selectIsAuthenticated, selectUser, selectRole } from '../../core/auth/s
 import { selectCartItems } from '../../core/cart/store/cart.selectors';
 import * as AuthActions from '../../core/auth/store/auth.actions';
 import { ThemeService } from '../../core/theme.service';
+import { NeoAiFabComponent } from '../../shared/components/neo-ai-fab.component';
+import { UserAiPanelComponent } from '../../shared/components/user-ai-panel.component';
 
 @Component({
   selector: 'app-public-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, FormsModule, NgIcon],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, FormsModule, NgIcon, NeoAiFabComponent, UserAiPanelComponent],
   templateUrl: './public-layout.html',
 })
 export class PublicLayoutComponent {
@@ -29,7 +31,10 @@ export class PublicLayoutComponent {
   cartCount$       = this.store.select(selectCartItems).pipe(map(items => items.reduce((s, it) => s + it.quantity, 0)));
 
   mobileOpen  = signal(false);
+  chatOpen    = signal(false);
   searchQuery = '';
+
+  toggleChat(): void { this.chatOpen.update(v => !v); }
 
   @ViewChild('searchInput') searchInput!: ElementRef<HTMLInputElement>;
 
