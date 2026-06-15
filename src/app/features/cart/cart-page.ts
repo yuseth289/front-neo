@@ -10,6 +10,7 @@ import {
   selectCartTotal,
   selectCartLoading,
   selectCartHasPriceChanges,
+  selectCartError,
 } from '../../core/cart/store/cart.selectors';
 
 @Component({
@@ -74,6 +75,15 @@ import {
                 </div>
               }
 
+              <!-- Stock error -->
+              @if (error$ | async; as cartError) {
+                <div class="flex items-center gap-2.5 rounded-[10px] bg-error/10 border border-error/30
+                            px-3.5 py-2.5 text-sm text-error">
+                  <ng-icon name="lucideCircleAlert" size="16" class="shrink-0" />
+                  {{ cartError }}
+                </div>
+              }
+
               <!-- Cart items -->
               @for (item of items$ | async; track item.id) {
                 <div class="neo-card-premium flex gap-4 p-4">
@@ -128,8 +138,10 @@ import {
                         </span>
                         <button
                           (click)="updateQty(item.id, item.quantity + 1)"
+                          [disabled]="item.availableStock > 0 && item.quantity >= item.availableStock"
                           class="w-8 h-8 flex items-center justify-center text-text-secondary
-                                 hover:bg-bg-elevated hover:text-text-primary transition-colors">
+                                 hover:bg-bg-elevated hover:text-text-primary transition-colors
+                                 disabled:opacity-30 disabled:cursor-not-allowed">
                           <ng-icon name="lucidePlus" size="13" />
                         </button>
                       </div>
@@ -213,10 +225,11 @@ import {
 export class CartPageComponent {
   private store = inject(Store);
 
-  items$          = this.store.select(selectCartItems);
-  total$          = this.store.select(selectCartTotal);
-  loading$        = this.store.select(selectCartLoading);
+  items$           = this.store.select(selectCartItems);
+  total$           = this.store.select(selectCartTotal);
+  loading$         = this.store.select(selectCartLoading);
   hasPriceChanges$ = this.store.select(selectCartHasPriceChanges);
+  error$           = this.store.select(selectCartError);
 
   updateQty(itemId: string, quantity: number): void {
     if (quantity < 1) return;

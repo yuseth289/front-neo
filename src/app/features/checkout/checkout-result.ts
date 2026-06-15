@@ -151,6 +151,8 @@ export class CheckoutResultComponent implements OnInit {
       this.store.dispatch(CartActions.loadCart());
     } else if (neoStatus === 'failed' || mpCollectionStatus === 'rejected') {
       this.status.set('failed');
+      // Pago fallido: recargar carrito desde backend (preserva los ítems para que el usuario pueda reintentar)
+      this.store.dispatch(CartActions.loadCart());
     }
     // En cualquier otro caso permanece 'pending' (PSE, Efecty en proceso)
   }

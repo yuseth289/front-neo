@@ -12,6 +12,7 @@ export const addItemFailure = createAction('[Cart] Add Item Failure', props<{ er
 
 export const updateItem = createAction('[Cart] Update Item', props<{ itemId: string; quantity: number }>());
 export const updateItemSuccess = createAction('[Cart] Update Item Success', props<{ cart: Cart }>());
+export const updateItemFailure = createAction('[Cart] Update Item Failure', props<{ error: string }>());
 
 export const removeItem = createAction('[Cart] Remove Item', props<{ itemId: string }>());
 export const removeItemSuccess = createAction('[Cart] Remove Item Success', props<{ cart: Cart }>());

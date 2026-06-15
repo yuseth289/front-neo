@@ -32,8 +32,9 @@ const PLACEHOLDER = 'https://placehold.co/400x400/1a1a2e/e2e8f0?text=Neo';
           <h3 class="text-[12px] font-semibold text-text-primary line-clamp-2 leading-snug flex-1 min-w-0">
             {{ recommendation.productName }}
           </h3>
-          <span class="shrink-0 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-violet-600/20 text-violet-300">
-            {{ pct }}%
+          <span class="shrink-0 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-violet-600/20 text-violet-300"
+                title="Nivel de coincidencia con tu búsqueda">
+            {{ pct }}% coincidencia
           </span>
         </div>
 

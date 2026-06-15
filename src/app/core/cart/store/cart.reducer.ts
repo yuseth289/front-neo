@@ -28,7 +28,8 @@ export const cartReducer = createReducer(
   on(CartActions.addItemSuccess, (state, { cart }) => ({ ...state, addingProductId: null, cart })),
   on(CartActions.addItemFailure, (state, { error }) => ({ ...state, addingProductId: null, error })),
 
-  on(CartActions.updateItemSuccess, (state, { cart }) => ({ ...state, cart })),
+  on(CartActions.updateItemSuccess, (state, { cart }) => ({ ...state, cart, error: null })),
+  on(CartActions.updateItemFailure, (state, { error }) => ({ ...state, error })),
   on(CartActions.removeItemSuccess, (state, { cart }) => ({ ...state, cart })),
 
   on(CartActions.clearCartSuccess, (state) => ({

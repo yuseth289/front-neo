@@ -662,15 +662,8 @@ export class SellerProductFormComponent implements OnInit {
 
   aiPanelOpen = signal(false);
 
-  aiProductInput = computed<AiProductChatInput>(() => {
-    const v = this.form.getRawValue();
-    return {
-      name: v.name,
-      description: v.description,
-      price: Number(v.basePrice) || 0,
-      category: this.getCategoryName(v.categoryId),
-      brand: v.brand,
-    };
+  aiProductInput = signal<AiProductChatInput>({
+    name: '', description: '', price: 0, category: '', brand: '',
   });
 
   checklist = computed(() => {
@@ -756,12 +749,25 @@ export class SellerProductFormComponent implements OnInit {
     return !!(c?.invalid && c?.touched);
   }
 
+  private syncAiInput(): void {
+    const v = this.form.getRawValue();
+    this.aiProductInput.set({
+      name:        v.name,
+      description: v.description,
+      price:       Number(v.basePrice) || 0,
+      category:    this.getCategoryName(v.categoryId),
+      brand:       v.brand,
+    });
+  }
+
   // ── lifecycle ─────────────────────────────────────────────
 
   ngOnInit(): void {
     this.categoryService.getTree().subscribe({
       next: (res) => this.categories.set(res.data),
     });
+
+    this.form.valueChanges.subscribe(() => this.syncAiInput());
 
     this.brandService.getActive().subscribe({
       next: (res) => this.availableBrands.set(res.data),

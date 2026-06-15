@@ -1,5 +1,6 @@
 import {
-  Component, Input, Output, EventEmitter, OnInit, inject, signal, computed,
+  Component, Input, Output, EventEmitter, OnInit, AfterViewChecked,
+  ViewChild, ElementRef, inject, signal, computed, NgZone,
 } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -520,7 +521,7 @@ const OP_CHIPS: { op: EnhancementOperation; label: string }[] = [
 
         <div class="rounded-2xl border border-border/60 bg-bg-elevated
                     focus-within:border-border transition-colors">
-          <div class="flex items-center gap-1.5 px-3 py-2.5">
+          <div class="flex items-end gap-1.5 px-3 py-2.5">
             <button type="button" (click)="imgFileRef.click()" [disabled]="loading() || enhancing()"
                     title="Subir imagen"
                     class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0
@@ -528,16 +529,22 @@ const OP_CHIPS: { op: EnhancementOperation; label: string }[] = [
                            disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
               <ng-icon name="lucidePaperclip" size="14" />
             </button>
-            <input type="text" [(ngModel)]="userMessage" (keydown.enter)="sendMessage()"
-                   [disabled]="loading() || enhancing()"
-                   placeholder="Pregunta sobre tu producto…"
-                   class="flex-1 bg-transparent text-[13px] text-text-primary placeholder:text-text-muted
-                          outline-none border-none min-w-0 disabled:opacity-50" />
+            <textarea [(ngModel)]="userMessage" (keydown.enter)="onEnterKey($event)"
+                      (input)="autoGrow($event)"
+                      [disabled]="loading() || enhancing()"
+                      placeholder="Pregunta sobre tu producto…"
+                      rows="1"
+                      class="flex-1 bg-transparent text-[13px] text-text-primary placeholder:text-text-muted
+                             outline-none border-none min-w-0 disabled:opacity-50 resize-none
+                             max-h-28 overflow-y-auto leading-[1.5]"></textarea>
             <button (click)="sendMessage()" [disabled]="loading() || enhancing() || !userMessage.trim()"
                     class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0
-                           bg-white/90 hover:bg-white
-                           disabled:opacity-25 disabled:cursor-not-allowed transition-all">
-              <ng-icon name="lucideArrowUp" size="14" class="text-black" />
+                           disabled:cursor-not-allowed transition-all duration-200"
+                    [style.background]="userMessage.trim() && !loading() && !enhancing() ? 'var(--color-accent)' : 'var(--color-bg-base)'"
+                    [style.box-shadow]="userMessage.trim() && !loading() && !enhancing() ? '0 0 10px var(--color-accent-glow)' : 'none'"
+                    [style.border]="userMessage.trim() && !loading() && !enhancing() ? 'none' : '1px solid var(--color-border)'">
+              <ng-icon name="lucideArrowUp" size="14"
+                       [style.color]="userMessage.trim() && !loading() && !enhancing() ? 'white' : 'var(--color-text-muted)'" />
             </button>
           </div>
         </div>
@@ -556,14 +563,19 @@ const OP_CHIPS: { op: EnhancementOperation; label: string }[] = [
     .animate-slide-in-right { animation: slide-in-right 0.22s cubic-bezier(0.16,1,0.3,1); }
   `],
 })
-export class AiProductChatComponent implements OnInit {
+export class AiProductChatComponent implements OnInit, AfterViewChecked {
   @Input() productInput: AiProductChatInput = { name: '', description: '', price: 0, category: '', brand: '' };
   @Input() productId?: string | null;
   @Output() close            = new EventEmitter<void>();
   @Output() applyContent     = new EventEmitter<ApplyDescriptionEvent>();
   @Output() saveImage        = new EventEmitter<string>();
 
+  @ViewChild('scrollRef') private scrollRef!: ElementRef<HTMLDivElement>;
+
   private readonly sellerAi = inject(SellerAiService);
+  private readonly zone     = inject(NgZone);
+
+  private shouldScroll = false;
 
   readonly messages        = signal<ChatMessage[]>([]);
   readonly loading         = signal(false);
@@ -593,6 +605,20 @@ export class AiProductChatComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadFromStorage();
+  }
+
+  ngAfterViewChecked(): void {
+    if (this.shouldScroll && this.scrollRef?.nativeElement) {
+      const el = this.scrollRef.nativeElement;
+      el.scrollTop = el.scrollHeight;
+      this.shouldScroll = false;
+    }
+  }
+
+  autoGrow(event: Event): void {
+    const el = event.target as HTMLTextAreaElement;
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 112) + 'px';
   }
 
   // ── Quick actions ──────────────────────────────────────────────────────
@@ -658,7 +684,7 @@ export class AiProductChatComponent implements OnInit {
     this.sellerAi
       .analyzeImages(name, [file], this.productInput.category, this.productInput.brand)
       .subscribe({
-        next: (result) => {
+        next: (result) => this.zone.run(() => {
           this.loading.set(false);
           const a = result.imageAnalysis?.[0];
           const scoreText = a ? ` Calidad: ${Math.round(a.qualityScore)}/100.` : '';
@@ -667,11 +693,11 @@ export class AiProductChatComponent implements OnInit {
             text: `Analicé tu imagen.${scoreText} Aquí está el detalle:`,
             result,
           });
-        },
-        error: (err) => {
+        }),
+        error: (err) => this.zone.run(() => {
           this.loading.set(false);
           this.error.set(err?.error?.message ?? 'Error al analizar la imagen.');
-        },
+        }),
       });
   }
 
@@ -698,7 +724,7 @@ export class AiProductChatComponent implements OnInit {
     const generatePromo = ops.includes('promotional_image');
 
     this.sellerAi.enhanceImages([file], ops, this.productInput.name, generatePromo).subscribe({
-      next: (result) => {
+      next: (result) => this.zone.run(() => {
         this.enhancing.set(false);
         const improvement = result.overallQualityImprovement.toFixed(0);
         this.addMessage({
@@ -707,11 +733,11 @@ export class AiProductChatComponent implements OnInit {
           enhancementResult: result,
         });
         this.currentImageBase64.set(null);
-      },
-      error: (err) => {
+      }),
+      error: (err) => this.zone.run(() => {
         this.enhancing.set(false);
         this.error.set(err?.error?.message ?? 'Error al procesar con Nano Banana. Intenta de nuevo.');
-      },
+      }),
     });
   }
 
@@ -767,6 +793,14 @@ export class AiProductChatComponent implements OnInit {
   private addMessage(msg: ChatMessage): void {
     this.messages.update(msgs => [...msgs, msg]);
     this.saveToStorage();
+    this.shouldScroll = true;
+  }
+
+  onEnterKey(event: Event): void {
+    if (!(event as KeyboardEvent).shiftKey) {
+      event.preventDefault();
+      this.sendMessage();
+    }
   }
 
   private callOptimizeAI(): void {
@@ -778,7 +812,7 @@ export class AiProductChatComponent implements OnInit {
       category:    this.productInput.category,
       brand:       this.productInput.brand,
     }).subscribe({
-      next: (result) => {
+      next: (result) => this.zone.run(() => {
         this.loading.set(false);
         const score = result.listingScore;
         const scoreTxt = score ? ` Puntaje actual: ${Math.round(score.totalScore)}/100.` : '';
@@ -787,25 +821,25 @@ export class AiProductChatComponent implements OnInit {
           text: `Aquí están mis sugerencias para "${this.productInput.name || 'tu producto'}".${scoreTxt}`,
           result,
         });
-      },
-      error: (err) => {
+      }),
+      error: (err) => this.zone.run(() => {
         this.loading.set(false);
         this.error.set(err?.error?.message ?? 'Error al conectar con la IA. Intenta de nuevo.');
-      },
+      }),
     });
   }
 
   private callBiQuery(query: string): void {
     this.loading.set(true);
     this.sellerAi.biQuery(query).subscribe({
-      next: (bi) => {
+      next: (bi) => this.zone.run(() => {
         this.loading.set(false);
         this.addMessage({ role: 'ai', text: '', biResponse: bi });
-      },
-      error: (err) => {
+      }),
+      error: (err) => this.zone.run(() => {
         this.loading.set(false);
         this.error.set(err?.error?.message ?? 'Error al consultar datos de ventas.');
-      },
+      }),
     });
   }
 

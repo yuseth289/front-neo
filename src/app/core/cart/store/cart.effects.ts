@@ -60,7 +60,9 @@ export class CartEffects {
       switchMap(({ itemId, quantity }) =>
         this.cartService.updateItem(itemId, quantity).pipe(
           map((res) => CartActions.updateItemSuccess({ cart: res.data })),
-          catchError(() => of(CartActions.loadCartFailure())),
+          catchError((err) =>
+            of(CartActions.updateItemFailure({ error: err.error?.message ?? 'No se pudo actualizar la cantidad' })),
+          ),
         ),
       ),
     ),

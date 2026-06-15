@@ -8,6 +8,7 @@ export interface CartItem {
   subtotal: number;
   priceChanged: boolean;
   currentPrice: number;
+  availableStock: number;
 }
 
 export interface Cart {

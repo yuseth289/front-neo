@@ -1,5 +1,5 @@
 import {
-  Component, inject, OnInit, signal, input, computed, HostListener,
+  Component, inject, OnInit, signal, input, computed, HostListener, NgZone,
 } from '@angular/core';
 import { CommonModule, NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -15,6 +15,7 @@ import { PublicSellerResponse } from '../../../shared/models/seller.models';
 import { ProductSummary } from '../../../shared/models/catalog.models';
 import { ProductCardComponent } from '../../../shared/components/product-card/product-card';
 import { selectIsAuthenticated, selectRole } from '../../../core/auth/store/auth.selectors';
+import * as CartActions from '../../../core/cart/store/cart.actions';
 
 @Component({
   selector: 'app-store-page',
@@ -383,6 +384,17 @@ import { selectIsAuthenticated, selectRole } from '../../../core/auth/store/auth
 
         <div class="h-16"></div>
       </div>
+
+      <!-- Cart error toast -->
+      @if (addToCartError()) {
+        <div class="fixed bottom-24 left-1/2 -translate-x-1/2 z-[9999] flex items-center gap-2.5
+                    px-4 py-3 rounded-[12px] shadow-2xl border border-error/30 animate-fade-in
+                    text-[13px] text-error"
+             style="background:var(--color-bg-surface)">
+          <ng-icon name="lucideCircleAlert" size="14" class="shrink-0" />
+          {{ addToCartError() }}
+        </div>
+      }
     }
   `,
 })
@@ -396,6 +408,7 @@ export class StorePageComponent implements OnInit {
   readonly wishlistState = inject(WishlistStateService);
   private ngrxStore      = inject(Store);
   private router         = inject(Router);
+  private zone           = inject(NgZone);
 
   store          = signal<PublicSellerResponse | null>(null);
   products       = signal<ProductSummary[]>([]);
@@ -407,12 +420,13 @@ export class StorePageComponent implements OnInit {
   totalElements  = signal(0);
   totalProducts  = signal(0);
 
-  chatOpen      = signal(false);
-  chatMessage   = '';
-  chatSending   = signal(false);
-  following     = signal(false);
-  followLoading = signal(false);
-  sortBy        = 'createdAt,desc';
+  chatOpen       = signal(false);
+  chatMessage    = '';
+  chatSending    = signal(false);
+  following      = signal(false);
+  followLoading  = signal(false);
+  addToCartError = signal<string | null>(null);
+  sortBy         = 'createdAt,desc';
 
   isAuthenticated = this.ngrxStore.selectSignal(selectIsAuthenticated);
   isBuyer = computed(() => this.ngrxStore.selectSignal(selectRole)() !== 'SELLER');
@@ -511,7 +525,17 @@ export class StorePageComponent implements OnInit {
 
   addProductToCart(product: ProductSummary): void {
     if (!this.isAuthenticated()) { this.router.navigate(['/login']); return; }
-    this.cartService.addItem({ productId: product.id, quantity: 1 }).subscribe();
+    this.addToCartError.set(null);
+    this.cartService.addItem({ productId: product.id, quantity: 1 }).subscribe({
+      next: (res) => this.zone.run(() => {
+        this.ngrxStore.dispatch(CartActions.addItemSuccess({ cart: res.data }));
+      }),
+      error: (err) => this.zone.run(() => {
+        const msg = err.error?.message ?? 'Error al agregar al carrito';
+        this.addToCartError.set(msg);
+        setTimeout(() => this.addToCartError.set(null), 4000);
+      }),
+    });
   }
 
   goToProduct(product: ProductSummary): void {
