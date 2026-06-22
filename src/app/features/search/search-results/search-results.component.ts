@@ -45,9 +45,9 @@ import { AiProductCardComponent } from './ai-product-card.component';
           <p class="text-[13px] text-text-primary">No encontramos productos</p>
         </div>
         @if (lastQuery()) {
-          <p class="text-[12px] text-text-muted leading-relaxed">
+          <p class="text-[12px] text-text-muted leading-relaxed break-words">
             Sin coincidencias para
-            <span class="text-violet-400">"{{ lastQuery() }}"</span>.
+            <span class="text-violet-400 break-all">"{{ lastQuery() }}"</span>.
             Prueba con otras palabras o vuelve pronto.
           </p>
         }

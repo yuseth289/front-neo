@@ -98,7 +98,8 @@ const QUICK_QUERIES = [
           <!-- User query bubble -->
           @if (activeQuery && (hasSearched() || isLoading())) {
             <div class="flex justify-end">
-              <div class="max-w-[80%] px-3 py-2 rounded-2xl rounded-br-sm text-[13px] text-text-primary"
+              <div class="max-w-[80%] px-3 py-2 rounded-2xl rounded-br-sm text-[13px] text-text-primary
+                          break-words overflow-hidden"
                    style="background:var(--color-bg-elevated);border:1px solid var(--color-border)">
                 {{ activeQuery }}
               </div>
@@ -127,19 +128,22 @@ const QUICK_QUERIES = [
                 <ng-icon name="lucideSparkles" size="11" style="color:#9B30FF" />
               </div>
               <div class="flex-1 flex flex-col gap-2.5 min-w-0">
-                <p class="text-[13px] text-text-primary leading-[1.65]">{{ clarificationQuestion() }}</p>
+                <p class="text-[13px] text-text-primary leading-[1.65] break-words">{{ clarificationQuestion() }}</p>
                 <form (ngSubmit)="onClarify()"
                       class="rounded-xl border border-border/60 bg-bg-elevated focus-within:border-border/80 transition-colors">
                   <div class="flex items-center gap-1.5 px-3 py-2">
                     <input type="text" [(ngModel)]="clarification" name="clarification"
-                           placeholder="Escribe tu respuesta…" autofocus
+                           placeholder="Escribe tu respuesta…" autofocus maxlength="300"
                            class="flex-1 bg-transparent text-[13px] text-text-primary
                                   placeholder:text-text-muted outline-none border-none min-w-0" />
                     <button type="submit" [disabled]="!clarification.trim()"
                             class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0
-                                   disabled:opacity-25 disabled:cursor-not-allowed transition-all"
-                            style="background:white">
-                      <ng-icon name="lucideArrowUp" size="13" style="color:black" />
+                                   disabled:cursor-not-allowed transition-all duration-200"
+                            [style.background]="clarification.trim() ? 'var(--color-accent)' : 'var(--color-bg-base)'"
+                            [style.box-shadow]="clarification.trim() ? '0 0 10px var(--color-accent-glow)' : 'none'"
+                            [style.border]="clarification.trim() ? 'none' : '1px solid var(--color-border)'">
+                      <ng-icon name="lucideArrowUp" size="13"
+                               [style.color]="clarification.trim() ? 'white' : 'var(--color-text-muted)'" />
                     </button>
                   </div>
                 </form>
@@ -163,7 +167,7 @@ const QUICK_QUERIES = [
                    style="background:rgba(155,48,255,0.15)">
                 <ng-icon name="lucideSparkles" size="11" style="color:#9B30FF" />
               </div>
-              <div class="flex-1 min-w-0">
+              <div class="flex-1 min-w-0 overflow-hidden">
                 <p class="text-[12px] text-text-muted mb-3">Aquí están los mejores resultados:</p>
                 <app-search-results />
                 <a routerLink="/search" [queryParams]="{ q: activeQuery }" (click)="close.emit()"
@@ -184,7 +188,7 @@ const QUICK_QUERIES = [
               <ng-icon name="lucideSparkles" size="13" class="text-violet-400 shrink-0" />
               <input type="text" [(ngModel)]="query" name="query"
                      placeholder="Describe lo que buscas…"
-                     [disabled]="isLoading()"
+                     [disabled]="isLoading()" maxlength="500"
                      class="flex-1 bg-transparent text-[13px] text-text-primary
                             placeholder:text-text-muted outline-none border-none min-w-0
                             disabled:opacity-50" />
@@ -225,6 +229,8 @@ export class UserAiPanelComponent implements AfterViewChecked {
   activeQuery   = '';
   readonly quickQueries = QUICK_QUERIES;
 
+  private shouldScroll = false;
+
   readonly isLoading           = toSignal(this.store.select(selectSearchIsLoading),       { initialValue: false });
   readonly clarificationNeeded = toSignal(this.store.select(selectClarificationNeeded),   { initialValue: false });
   readonly clarificationQuestion = toSignal(this.store.select(selectClarificationQuestion), { initialValue: null });
@@ -233,8 +239,11 @@ export class UserAiPanelComponent implements AfterViewChecked {
   readonly hasResults          = toSignal(this.store.select(selectHasResults),            { initialValue: false });
 
   ngAfterViewChecked(): void {
-    const el = this.messagesContainer?.nativeElement;
-    if (el) el.scrollTop = el.scrollHeight;
+    if (this.shouldScroll && this.messagesContainer?.nativeElement) {
+      const el = this.messagesContainer.nativeElement;
+      el.scrollTop = el.scrollHeight;
+      this.shouldScroll = false;
+    }
   }
 
   onSearch(): void {
@@ -242,11 +251,13 @@ export class UserAiPanelComponent implements AfterViewChecked {
     this.activeQuery = this.query.trim();
     this.store.dispatch(SearchAiActions.search({ query: this.activeQuery }));
     this.query = '';
+    this.shouldScroll = true;
   }
 
   runQuery(q: string): void {
     this.activeQuery = q;
     this.store.dispatch(SearchAiActions.search({ query: q }));
+    this.shouldScroll = true;
   }
 
   onClarify(): void {
@@ -256,6 +267,7 @@ export class UserAiPanelComponent implements AfterViewChecked {
       clarification: this.clarification.trim(),
     }));
     this.clarification = '';
+    this.shouldScroll = true;
   }
 
   newSearch(): void {

@@ -103,7 +103,7 @@ const MAX_HISTORY = 20;
 
           <!-- EMPTY STATE -->
           @if (!hasSearched() && !isLoading()) {
-            <div class="w-full max-w-2xl flex flex-col items-center justify-center gap-6 text-center py-16">
+            <div class="w-full max-w-2xl flex flex-col items-center justify-center gap-6 text-center py-8">
 
               <div class="flex flex-col items-center gap-4">
                 <div class="w-16 h-16 rounded-2xl bg-violet-500/10 border border-violet-500/20
@@ -177,7 +177,8 @@ const MAX_HISTORY = 20;
                 <div class="flex justify-end">
                   <div class="px-4 py-2.5 rounded-2xl rounded-br-sm
                               bg-bg-elevated border border-border/50
-                              text-[13px] text-text-primary max-w-[80%]">
+                              text-[13px] text-text-primary max-w-[80%]
+                              break-words overflow-hidden">
                     {{ activeQuery }}
                   </div>
                 </div>
@@ -203,12 +204,12 @@ const MAX_HISTORY = 20;
                     <ng-icon name="lucideSparkles" size="11" class="text-violet-400" />
                   </div>
                   <div class="flex-1 flex flex-col gap-3 min-w-0">
-                    <p class="text-[13px] text-text-primary leading-[1.65]">{{ clarificationQuestion() }}</p>
+                    <p class="text-[13px] text-text-primary leading-[1.65] break-words">{{ clarificationQuestion() }}</p>
                     <form (ngSubmit)="onClarify()"
                           class="rounded-2xl border border-border/60 bg-bg-elevated focus-within:border-border transition-colors">
                       <div class="flex items-center gap-1.5 px-3 py-2.5">
                         <input type="text" [(ngModel)]="clarification" name="clarification"
-                               placeholder="Escribe tu respuesta…" autofocus
+                               placeholder="Escribe tu respuesta…" autofocus maxlength="300"
                                class="flex-1 bg-transparent text-[13px] text-text-primary
                                       placeholder:text-text-muted outline-none border-none min-w-0" />
                         <button type="submit" [disabled]="!clarification.trim()"
@@ -242,7 +243,7 @@ const MAX_HISTORY = 20;
                   <div class="w-6 h-6 rounded-full bg-violet-500/15 flex items-center justify-center shrink-0 mt-0.5">
                     <ng-icon name="lucideSparkles" size="11" class="text-violet-400" />
                   </div>
-                  <div class="flex-1 min-w-0">
+                  <div class="flex-1 min-w-0 overflow-hidden">
                     <p class="text-[13px] text-text-primary leading-relaxed mb-4">
                       Aquí están los mejores resultados para tu búsqueda:
                     </p>
@@ -258,30 +259,42 @@ const MAX_HISTORY = 20;
         <!-- ── Bottom PromptInput ───────────────────────────────── -->
         <div class="sticky bottom-0 z-10 px-4 py-4 bg-bg-base/90 backdrop-blur-sm border-t border-border/40">
           <div class="max-w-2xl mx-auto">
-            <form (ngSubmit)="onSearch()">
-              <div class="rounded-2xl border border-border/60 bg-bg-elevated
-                          focus-within:border-border transition-colors">
-                <div class="flex items-center gap-1.5 px-3 py-2.5">
-                  <ng-icon name="lucideSparkles" size="14" class="text-violet-400 shrink-0" />
-                  <input type="text" [(ngModel)]="query" name="query"
-                         placeholder="Describe lo que buscas…"
-                         [disabled]="isLoading()"
-                         class="flex-1 bg-transparent text-[13px] text-text-primary
-                                placeholder:text-text-muted outline-none border-none min-w-0
-                                disabled:opacity-50" />
-                  <button type="submit" [disabled]="isLoading() || !query.trim()"
-                          class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0
-                                 disabled:cursor-not-allowed transition-all duration-200"
-                          [style.background]="query.trim() && !isLoading() ? 'var(--color-accent)' : 'var(--color-bg-base)'"
-                          [style.box-shadow]="query.trim() && !isLoading() ? '0 0 10px var(--color-accent-glow)' : 'none'"
-                          [style.border]="query.trim() && !isLoading() ? 'none' : '1px solid var(--color-border)'">
-                    <ng-icon name="lucideArrowUp" size="14"
-                             [style.color]="query.trim() && !isLoading() ? 'white' : 'var(--color-text-muted)'" />
-                  </button>
-                </div>
+
+            <!-- Cuando hay pregunta de aclaración pendiente: hint, no segundo input -->
+            @if (clarificationNeeded() && !isLoading()) {
+              <div class="flex items-center gap-2.5 px-4 py-3 rounded-2xl border border-violet-500/30
+                          bg-violet-500/5 text-[12px] text-violet-400">
+                <ng-icon name="lucideCornerLeftUp" size="14" class="shrink-0" />
+                Responde la pregunta de la IA para continuar
               </div>
-            </form>
-            <p class="text-[10px] text-text-muted text-center mt-1.5 opacity-60">Enter para buscar</p>
+            } @else {
+              <form (ngSubmit)="onSearch()">
+                <div class="rounded-2xl border border-border/60 bg-bg-elevated
+                            focus-within:border-border transition-colors">
+                  <div class="flex items-center gap-1.5 px-3 py-2.5">
+                    <ng-icon name="lucideSparkles" size="14" class="text-violet-400 shrink-0" />
+                    <input type="text" [(ngModel)]="query" name="query"
+                           placeholder="Describe lo que buscas…"
+                           maxlength="500"
+                           [disabled]="isLoading()"
+                           class="flex-1 bg-transparent text-[13px] text-text-primary
+                                  placeholder:text-text-muted outline-none border-none min-w-0
+                                  disabled:opacity-50" />
+                    <button type="submit" [disabled]="isLoading() || !query.trim()"
+                            class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0
+                                   disabled:cursor-not-allowed transition-all duration-200"
+                            [style.background]="query.trim() && !isLoading() ? 'var(--color-accent)' : 'var(--color-bg-base)'"
+                            [style.box-shadow]="query.trim() && !isLoading() ? '0 0 10px var(--color-accent-glow)' : 'none'"
+                            [style.border]="query.trim() && !isLoading() ? 'none' : '1px solid var(--color-border)'">
+                      <ng-icon name="lucideArrowUp" size="14"
+                               [style.color]="query.trim() && !isLoading() ? 'white' : 'var(--color-text-muted)'" />
+                    </button>
+                  </div>
+                </div>
+              </form>
+              <p class="text-[10px] text-text-muted text-center mt-1.5 opacity-60">Enter para buscar</p>
+            }
+
           </div>
         </div>
 
@@ -332,6 +345,7 @@ export class SmartSearchComponent implements OnInit, AfterViewChecked {
   onSearch(): void {
     if (!this.query.trim() || this.isLoading()) return;
     this.activeQuery = this.query.trim();
+    this.query = '';
     this.router.navigate([], { queryParams: { q: this.activeQuery }, replaceUrl: true });
     this.store.dispatch(SearchAiActions.search({ query: this.activeQuery }));
     this.saveToHistory(this.activeQuery);
