@@ -87,23 +87,47 @@ import {
               <!-- Cart items -->
               @for (item of items$ | async; track item.id) {
                 <div class="neo-card-premium flex gap-4 p-4">
-                  <!-- Image -->
-                  <div class="w-20 h-20 shrink-0 rounded-[10px] overflow-hidden bg-bg-elevated border border-border">
-                    @if (item.productImageUrl) {
-                      <img [src]="item.productImageUrl" [alt]="item.productName"
-                           class="w-full h-full object-cover" />
-                    } @else {
-                      <div class="w-full h-full flex items-center justify-center">
-                        <ng-icon name="lucidePackage" size="22" class="text-text-muted" />
-                      </div>
-                    }
-                  </div>
+                  <!-- Image — clicable si hay slug -->
+                  @if (item.productSlug) {
+                    <a [routerLink]="['/product', item.productSlug]"
+                       class="w-20 h-20 shrink-0 rounded-[10px] overflow-hidden bg-bg-elevated border border-border
+                              hover:border-accent/40 transition-colors block">
+                      @if (item.productImageUrl) {
+                        <img [src]="item.productImageUrl" [alt]="item.productName"
+                             class="w-full h-full object-cover hover:scale-105 transition-transform duration-300" />
+                      } @else {
+                        <div class="w-full h-full flex items-center justify-center">
+                          <ng-icon name="lucidePackage" size="22" class="text-text-muted" />
+                        </div>
+                      }
+                    </a>
+                  } @else {
+                    <div class="w-20 h-20 shrink-0 rounded-[10px] overflow-hidden bg-bg-elevated border border-border">
+                      @if (item.productImageUrl) {
+                        <img [src]="item.productImageUrl" [alt]="item.productName"
+                             class="w-full h-full object-cover" />
+                      } @else {
+                        <div class="w-full h-full flex items-center justify-center">
+                          <ng-icon name="lucidePackage" size="22" class="text-text-muted" />
+                        </div>
+                      }
+                    </div>
+                  }
 
                   <!-- Info -->
                   <div class="flex-1 min-w-0">
-                    <p class="text-sm font-medium text-text-primary line-clamp-2 leading-snug">
-                      {{ item.productName }}
-                    </p>
+                    <!-- Nombre clicable -->
+                    @if (item.productSlug) {
+                      <a [routerLink]="['/product', item.productSlug]"
+                         class="text-sm font-medium text-text-primary line-clamp-2 leading-snug
+                                hover:text-accent transition-colors">
+                        {{ item.productName }}
+                      </a>
+                    } @else {
+                      <p class="text-sm font-medium text-text-primary line-clamp-2 leading-snug">
+                        {{ item.productName }}
+                      </p>
+                    }
                     <div class="flex items-center gap-2 mt-1">
                       <p class="text-sm font-bold text-text-primary">
                         {{ item.unitPrice | copCurrency }}
@@ -122,7 +146,7 @@ import {
                       </p>
                     }
 
-                    <!-- Qty controls -->
+                    <!-- Qty controls + acciones -->
                     <div class="flex items-center gap-2 mt-2.5">
                       <div class="flex items-center rounded-[10px] border border-border overflow-hidden">
                         <button
@@ -149,6 +173,14 @@ import {
                         class="p-1.5 rounded-lg text-text-muted hover:text-error hover:bg-error/10 transition-colors ml-1">
                         <ng-icon name="lucideTrash2" size="14" />
                       </button>
+                      @if (item.productSlug) {
+                        <a [routerLink]="['/product', item.productSlug]"
+                           class="ml-auto flex items-center gap-1 text-[11px] text-text-muted
+                                  hover:text-accent transition-colors shrink-0">
+                          <ng-icon name="lucideExternalLink" size="11" />
+                          Ver producto
+                        </a>
+                      }
                     </div>
                   </div>
 

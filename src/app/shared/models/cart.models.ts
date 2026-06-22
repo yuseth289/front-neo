@@ -9,6 +9,7 @@ export interface CartItem {
   priceChanged: boolean;
   currentPrice: number;
   availableStock: number;
+  productSlug: string | null;
 }
 
 export interface Cart {
