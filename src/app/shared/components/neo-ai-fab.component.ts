@@ -6,7 +6,10 @@ import { NgIcon } from '@ng-icons/core';
   standalone: true,
   imports: [NgIcon],
   template: `
-    <div class="group fixed z-[9999]" style="bottom:24px;right:24px">
+    <div class="group fixed z-[9999] transition-all duration-200"
+         [style.opacity]="isOpen ? '0' : '1'"
+         [style.pointer-events]="isOpen ? 'none' : 'auto'"
+         style="bottom:24px;right:24px">
       <div class="absolute bottom-full right-0 mb-2 px-2.5 py-1 rounded-md
                   pointer-events-none whitespace-nowrap
                   opacity-0 group-hover:opacity-100 transition-opacity duration-200"
