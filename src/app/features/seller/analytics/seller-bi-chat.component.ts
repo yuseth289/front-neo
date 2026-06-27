@@ -263,8 +263,12 @@ const QUICK_QUESTIONS = [
                             placeholder:text-text-muted outline-none border-none min-w-0 disabled:opacity-50" />
               <button (click)="send()" [disabled]="loading() || !userInput.trim()"
                       class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0
-                             bg-white/90 hover:bg-white disabled:opacity-25 disabled:cursor-not-allowed transition-all">
-                <ng-icon name="lucideArrowUp" size="15" class="text-black" />
+                             disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200"
+                      [style.background]="userInput.trim() && !loading() ? 'var(--color-accent)' : 'var(--color-bg-base)'"
+                      [style.box-shadow]="userInput.trim() && !loading() ? '0 0 10px var(--color-accent-glow)' : 'none'"
+                      [style.border]="userInput.trim() && !loading() ? 'none' : '1px solid var(--color-border)'">
+                <ng-icon name="lucideArrowUp" size="15"
+                         [style.color]="userInput.trim() && !loading() ? 'white' : 'var(--color-text-muted)'" />
               </button>
             </div>
           </div>
