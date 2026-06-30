@@ -2,7 +2,7 @@ import {
   Component, Input, Output, EventEmitter, OnInit, AfterViewChecked,
   ViewChild, ElementRef, inject, signal, computed, NgZone,
 } from '@angular/core';
-import { DecimalPipe } from '@angular/common';
+import { DecimalPipe, NgTemplateOutlet } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NgIcon } from '@ng-icons/core';
 import { AiTypingIndicatorComponent } from '../../../shared/components/ai-typing-indicator.component';
@@ -74,67 +74,72 @@ const OP_CHIPS: { op: EnhancementOperation; label: string }[] = [
 @Component({
   selector: 'app-ai-product-chat',
   standalone: true,
-  imports: [DecimalPipe, FormsModule, NgIcon, AiTypingIndicatorComponent],
+  imports: [DecimalPipe, NgTemplateOutlet, FormsModule, NgIcon, AiTypingIndicatorComponent],
   template: `
     @if (!expanded()) {
       <!-- Overlay (solo en modo lateral) -->
       <div class="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm" (click)="close.emit()"></div>
     }
 
+    <!-- Contenido del sidebar de conversaciones — reutilizado en desktop y en el dropdown movil -->
+    <ng-template #convsList>
+      <div class="px-3 py-3 border-b border-border/40 shrink-0">
+        <button (click)="newConversation()"
+                class="w-full flex items-center gap-2 px-3 py-2 rounded-xl
+                       border border-border/60 bg-bg-elevated
+                       text-[12px] text-text-secondary hover:text-text-primary hover:border-border
+                       transition-colors">
+          <ng-icon name="lucidePlus" size="13" />
+          Nueva conversación
+        </button>
+      </div>
+      <div class="flex-1 overflow-y-auto px-2 py-2">
+        @if (conversations().length === 0) {
+          <p class="text-[11px] text-text-muted text-center py-6 leading-relaxed px-2">
+            Las conversaciones aparecerán aquí
+          </p>
+        } @else {
+          @if (viewingConv()) {
+            <button (click)="resumeLive()"
+                    class="w-full flex items-center gap-1.5 px-2 py-2 rounded-lg text-[11px] font-medium mb-1
+                           text-accent border transition-colors"
+                    style="border-color:rgba(155,48,255,0.4);background:rgba(155,48,255,0.08)">
+              <ng-icon name="lucideActivity" size="11" />En vivo
+            </button>
+          }
+          @for (conv of conversations(); track conv.id) {
+            <div class="group flex items-center gap-1.5 px-2 py-2 rounded-lg cursor-pointer
+                        hover:bg-bg-elevated transition-colors"
+                 [class.bg-bg-elevated]="viewingConv()?.id === conv.id"
+                 (click)="loadConversation(conv)">
+              <ng-icon name="lucideMessageCircle" size="11" class="text-text-muted shrink-0" />
+              <span class="flex-1 text-[11px] text-text-secondary truncate leading-snug">
+                {{ conv.title }}
+              </span>
+              <button (click)="$event.stopPropagation(); deleteConversation(conv.id)"
+                      class="opacity-0 group-hover:opacity-100 w-5 h-5 rounded flex items-center justify-center
+                             text-text-muted hover:text-red-400 transition-all shrink-0">
+                <ng-icon name="lucideX" size="10" />
+              </button>
+            </div>
+          }
+        }
+      </div>
+    </ng-template>
+
     <!-- Panel — lateral por defecto, pantalla completa al expandir -->
     <div [class]="panelClasses()">
 
-      <!-- ── Sidebar: conversaciones guardadas ────────────────── -->
+      <!-- ── Sidebar: conversaciones guardadas (oculto en movil, ver dropdown abajo) ── -->
       <div class="hidden sm:flex shrink-0 w-[210px] flex-col border-r border-border/40 bg-bg-surface">
-        <div class="px-3 py-3 border-b border-border/40 shrink-0">
-          <button (click)="newConversation()"
-                  class="w-full flex items-center gap-2 px-3 py-2 rounded-xl
-                         border border-border/60 bg-bg-elevated
-                         text-[12px] text-text-secondary hover:text-text-primary hover:border-border
-                         transition-colors">
-            <ng-icon name="lucidePlus" size="13" />
-            Nueva conversación
-          </button>
-        </div>
-        <div class="flex-1 overflow-y-auto px-2 py-2">
-          @if (conversations().length === 0) {
-            <p class="text-[11px] text-text-muted text-center py-6 leading-relaxed px-2">
-              Las conversaciones aparecerán aquí
-            </p>
-          } @else {
-            @if (viewingConv()) {
-              <button (click)="resumeLive()"
-                      class="w-full flex items-center gap-1.5 px-2 py-2 rounded-lg text-[11px] font-medium mb-1
-                             text-accent border transition-colors"
-                      style="border-color:rgba(155,48,255,0.4);background:rgba(155,48,255,0.08)">
-                <ng-icon name="lucideActivity" size="11" />En vivo
-              </button>
-            }
-            @for (conv of conversations(); track conv.id) {
-              <div class="group flex items-center gap-1.5 px-2 py-2 rounded-lg cursor-pointer
-                          hover:bg-bg-elevated transition-colors"
-                   [class.bg-bg-elevated]="viewingConv()?.id === conv.id"
-                   (click)="loadConversation(conv)">
-                <ng-icon name="lucideMessageCircle" size="11" class="text-text-muted shrink-0" />
-                <span class="flex-1 text-[11px] text-text-secondary truncate leading-snug">
-                  {{ conv.title }}
-                </span>
-                <button (click)="$event.stopPropagation(); deleteConversation(conv.id)"
-                        class="opacity-0 group-hover:opacity-100 w-5 h-5 rounded flex items-center justify-center
-                               text-text-muted hover:text-red-400 transition-all shrink-0">
-                  <ng-icon name="lucideX" size="10" />
-                </button>
-              </div>
-            }
-          }
-        </div>
+        <ng-container [ngTemplateOutlet]="convsList" />
       </div>
 
       <!-- ── Main column: header + messages + input ───────────── -->
       <div class="flex-1 flex flex-col min-w-0">
 
       <!-- ── Header ─────────────────────────────────────────── -->
-      <div class="border-b border-border/40 shrink-0 px-4 py-3">
+      <div class="relative border-b border-border/40 shrink-0 px-4 py-3">
         <div class="max-w-3xl mx-auto flex items-center justify-between">
           <div class="flex items-center gap-2">
             <div class="w-7 h-7 rounded-lg bg-violet-500/10 flex items-center justify-center">
@@ -148,6 +153,11 @@ const OP_CHIPS: { op: EnhancementOperation; label: string }[] = [
             }
           </div>
           <div class="flex items-center gap-1.5">
+            <button (click)="mobileHistoryOpen.update(v => !v)" title="Conversaciones"
+                    class="sm:hidden w-7 h-7 rounded-lg flex items-center justify-center
+                           text-text-muted hover:text-text-primary hover:bg-bg-elevated transition-colors">
+              <ng-icon name="lucideMessageCircle" size="14" />
+            </button>
             @if (displayMessages().length > 0) {
               <button (click)="newConversation()" title="Nueva conversación"
                       class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px]
@@ -168,6 +178,14 @@ const OP_CHIPS: { op: EnhancementOperation; label: string }[] = [
             </button>
           </div>
         </div>
+
+        <!-- Dropdown movil de conversaciones (el sidebar de la izquierda esta oculto en pantallas chicas) -->
+        @if (mobileHistoryOpen()) {
+          <div class="sm:hidden absolute top-full left-0 right-0 z-20 max-h-[60vh]
+                      bg-bg-surface border-b border-border/40 shadow-xl flex flex-col">
+            <ng-container [ngTemplateOutlet]="convsList" />
+          </div>
+        }
       </div>
 
       <!-- ── Messages scroll area ───────────────────────────── -->
@@ -663,6 +681,7 @@ export class AiProductChatComponent implements OnInit, AfterViewChecked {
   readonly opChips = OP_CHIPS;
 
   readonly expanded     = signal(false);
+  readonly mobileHistoryOpen = signal(false);
   readonly conversations = signal<SavedConv[]>([]);
   readonly viewingConv   = signal<SavedConv | null>(null);
 
@@ -899,16 +918,19 @@ export class AiProductChatComponent implements OnInit, AfterViewChecked {
     this.currentImageBase64.set(null);
     this.error.set(null);
     this.viewingConv.set(null);
+    this.mobileHistoryOpen.set(false);
     try { localStorage.removeItem(this.storageKey); } catch { /* quota */ }
   }
 
   loadConversation(conv: SavedConv): void {
     this.saveCurrentIfNonEmpty();
     this.viewingConv.set(conv);
+    this.mobileHistoryOpen.set(false);
   }
 
   resumeLive(): void {
     this.viewingConv.set(null);
+    this.mobileHistoryOpen.set(false);
   }
 
   deleteConversation(id: string): void {
