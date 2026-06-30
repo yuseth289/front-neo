@@ -59,7 +59,7 @@ const PLACEHOLDER = 'https://placehold.co/400x400/1a1a2e/e2e8f0?text=Neo';
         @if (recommendation.explanation) {
           <div class="flex items-start gap-1.5 mt-1.5 pt-1.5 border-t border-border/30">
             <ng-icon name="lucideSparkles" size="11" class="text-violet-400 shrink-0 mt-0.5" />
-            <p class="text-[11px] text-text-secondary leading-relaxed line-clamp-2">
+            <p class="text-[11px] text-text-secondary leading-relaxed">
               {{ recommendation.explanation }}
             </p>
           </div>
