@@ -32,6 +32,9 @@ export const searchAiReducer = createReducer(
     isLoading: true,
     error: null,
     lastQuery: query,
+    recommendations: [],
+    needsClarification: false,
+    clarificationQuestion: null,
   })),
 
   on(SearchAiActions.searchSuccess, (state, { result }) => ({
