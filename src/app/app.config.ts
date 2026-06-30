@@ -51,6 +51,7 @@ import {
   lucideArrowUp, lucidePenLine, lucideCopy, lucideAlertCircle,
   lucideImagePlus, lucideDownload,
   lucideBrainCircuit, lucideActivity, lucideCheckCheck, lucideXCircle,
+  lucideMaximize2, lucideMinimize2,
 } from '@ng-icons/lucide';
 import { routes } from './app.routes';
 import { environment } from '../environments/environment';
@@ -118,6 +119,7 @@ export const appConfig: ApplicationConfig = {
       lucideArrowUp, lucidePenLine, lucideCopy, lucideAlertCircle,
       lucideImagePlus, lucideDownload,
       lucideBrainCircuit, lucideActivity, lucideCheckCheck, lucideXCircle,
+      lucideMaximize2, lucideMinimize2,
     }),
   ],
 };
