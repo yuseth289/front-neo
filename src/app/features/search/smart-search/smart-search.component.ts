@@ -10,6 +10,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { NgIcon } from '@ng-icons/core';
 import * as SearchAiActions from '../../../core/store/search-ai/search-ai.actions';
 import {
+  selectGreeting,
   selectSearchIsLoading,
   selectClarificationNeeded,
   selectClarificationQuestion,
@@ -245,7 +246,7 @@ const MAX_HISTORY = 20;
                   </div>
                   <div class="flex-1 min-w-0 overflow-hidden">
                     <p class="text-[13px] text-text-primary leading-relaxed mb-4">
-                      Aquí están los mejores resultados para tu búsqueda:
+                      {{ greeting() ?? 'Aquí están los mejores resultados para tu búsqueda:' }}
                     </p>
                     <app-search-results />
                   </div>
@@ -317,6 +318,7 @@ export class SmartSearchComponent implements OnInit, AfterViewChecked {
 
   private shouldScrollToClarification = false;
 
+  readonly greeting             = toSignal(this.store.select(selectGreeting),              { initialValue: null });
   readonly isLoading            = toSignal(this.store.select(selectSearchIsLoading),       { initialValue: false });
   readonly clarificationNeeded  = toSignal(this.store.select(selectClarificationNeeded),   { initialValue: false });
   readonly clarificationQuestion = toSignal(this.store.select(selectClarificationQuestion), { initialValue: null });

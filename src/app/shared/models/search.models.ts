@@ -21,6 +21,7 @@ export interface ProductRecommendation {
 }
 
 export interface SearchResultResponse {
+  greeting: string | null;
   recommendations: ProductRecommendation[];
   structuredFilters: Record<string, unknown>;
   needsClarification: boolean;

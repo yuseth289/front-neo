@@ -3,6 +3,7 @@ import { ProductRecommendation } from '../../../shared/models/search.models';
 import * as SearchAiActions from './search-ai.actions';
 
 export interface SearchAiState {
+  greeting: string | null;
   recommendations: ProductRecommendation[];
   needsClarification: boolean;
   clarificationQuestion: string | null;
@@ -14,6 +15,7 @@ export interface SearchAiState {
 }
 
 const initialState: SearchAiState = {
+  greeting: null,
   recommendations: [],
   needsClarification: false,
   clarificationQuestion: null,
@@ -32,6 +34,7 @@ export const searchAiReducer = createReducer(
     isLoading: true,
     error: null,
     lastQuery: query,
+    greeting: null,
     recommendations: [],
     needsClarification: false,
     clarificationQuestion: null,
@@ -41,6 +44,7 @@ export const searchAiReducer = createReducer(
     ...state,
     isLoading: false,
     searched: true,
+    greeting: result.greeting,
     recommendations: result.recommendations,
     needsClarification: result.needsClarification,
     clarificationQuestion: result.clarificationQuestion,

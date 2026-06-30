@@ -3,6 +3,7 @@ import { SearchAiState } from './search-ai.reducer';
 
 export const selectSearchAiState = createFeatureSelector<SearchAiState>('searchAi');
 
+export const selectGreeting = createSelector(selectSearchAiState, s => s.greeting);
 export const selectRecommendations = createSelector(selectSearchAiState, s => s.recommendations);
 export const selectSearchIsLoading = createSelector(selectSearchAiState, s => s.isLoading);
 export const selectClarificationNeeded = createSelector(selectSearchAiState, s => s.needsClarification);
