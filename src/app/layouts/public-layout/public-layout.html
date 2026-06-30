@@ -264,10 +264,11 @@
     <router-outlet />
   </main>
 
-  <app-neo-ai-fab [isOpen]="chatOpen() || hideAiFab()" (toggle)="toggleChat()" />
+  <app-neo-ai-fab [isOpen]="chatOpen() || onAiSearchPage()" (toggle)="toggleChat()" />
   <app-user-ai-panel [isOpen]="chatOpen()" (close)="chatOpen.set(false)" />
 
   <!-- ── FOOTER ─────────────────────────────────────────────────── -->
+  @if (!onAiSearchPage()) {
   <footer class="border-t border-border bg-bg-surface relative pt-14 pb-10 px-6 mt-20">
     <div class="absolute inset-0 pointer-events-none
                 bg-[radial-gradient(ellipse_60%_80%_at_50%_0%,var(--color-accent-soft),transparent_60%)]"></div>
@@ -319,5 +320,6 @@
       <span>Bogotá, Colombia</span>
     </div>
   </footer>
+  }
 
 </div>

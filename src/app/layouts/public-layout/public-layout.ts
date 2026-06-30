@@ -43,8 +43,10 @@ export class PublicLayoutComponent {
     { initialValue: this.router.url },
   );
 
-  // La pagina /search ya es la interfaz de IA — el FAB flotante seria redundante ahi.
-  readonly hideAiFab = computed(() => this.currentUrl().startsWith('/search'));
+  // La pagina /search ya es la interfaz de IA — el FAB flotante y el footer
+  // (que obliga a scrollear la pagina entera) serian redundantes/molestos ahi,
+  // en cualquier estado (vacio, cargando, con resultados, aclaracion, etc).
+  readonly onAiSearchPage = computed(() => this.currentUrl().startsWith('/search'));
 
   toggleChat(): void { this.chatOpen.update(v => !v); }
 

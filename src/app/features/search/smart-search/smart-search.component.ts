@@ -36,7 +36,7 @@ const MAX_HISTORY = 20;
   standalone: true,
   imports: [FormsModule, NgIcon, SearchResultsComponent, AiTypingIndicatorComponent],
   template: `
-    <div class="flex bg-bg-base" style="min-height: calc(100vh - 72px)">
+    <div class="flex bg-bg-base" style="height: calc(100vh - 72px)">
 
       <!-- Ambient orbs -->
       <div class="neo-ambient pointer-events-none">
