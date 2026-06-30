@@ -170,10 +170,10 @@ const QUICK_QUERIES = [
                 <ng-icon name="lucideSparkles" size="11" style="color:#9B30FF" />
               </div>
               <div class="flex-1 min-w-0 overflow-hidden">
-                <p class="text-[12px] text-text-muted mb-3">{{ greeting() ?? 'Aquí están los mejores resultados:' }}</p>
+                <p class="text-[12px] text-text-primary mb-3">{{ greeting() ?? 'Aquí están los mejores resultados:' }}</p>
                 <app-search-results />
                 @if (closingMessage()) {
-                  <p class="text-[12px] font-semibold text-text-muted mt-3">{{ closingMessage() }}</p>
+                  <p class="text-[12px] font-semibold text-text-primary mt-3">{{ closingMessage() }}</p>
                 }
                 <a routerLink="/search" [queryParams]="{ q: activeQuery }" (click)="close.emit()"
                    class="inline-flex items-center gap-1 mt-3 text-[11px] text-text-muted hover:text-accent transition-colors">
