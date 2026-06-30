@@ -152,13 +152,15 @@ const OP_CHIPS: { op: EnhancementOperation; label: string }[] = [
                 <p class="text-[10px] text-text-muted leading-relaxed">Analiza qué mejorar</p>
               </button>
 
-              <button (click)="imgFileRef.click()"
+              <button (click)="requestAnalyzeImages()"
                       class="flex flex-col gap-1.5 p-3.5 rounded-xl border border-border/60 bg-bg-elevated
                              text-left hover:bg-bg-subtle hover:-translate-y-0.5 hover:border-border
                              transition-all duration-200">
                 <ng-icon name="lucideCamera" size="15" class="text-yellow-400" />
                 <p class="text-[12px] font-medium text-text-primary">Analizar imagen</p>
-                <p class="text-[10px] text-text-muted leading-relaxed">Calidad y mejoras con IA</p>
+                <p class="text-[10px] text-text-muted leading-relaxed">
+                  {{ galleryImageUrls.length ? 'Calidad de tus fotos actuales' : 'Calidad y mejoras con IA' }}
+                </p>
               </button>
 
               <button (click)="requestSalesQuery()"
@@ -567,11 +569,13 @@ const OP_CHIPS: { op: EnhancementOperation; label: string }[] = [
 export class AiProductChatComponent implements OnInit, AfterViewChecked {
   @Input() productInput: AiProductChatInput = { name: '', description: '', price: 0, category: '', brand: '' };
   @Input() productId?: string | null;
+  @Input() galleryImageUrls: string[] = [];
   @Output() close            = new EventEmitter<void>();
   @Output() applyContent     = new EventEmitter<ApplyDescriptionEvent>();
   @Output() saveImage        = new EventEmitter<string>();
 
   @ViewChild('scrollRef') private scrollRef!: ElementRef<HTMLDivElement>;
+  @ViewChild('imgFileRef') private imgFileRef!: ElementRef<HTMLInputElement>;
 
   private readonly sellerAi = inject(SellerAiService);
   private readonly zone     = inject(NgZone);
@@ -661,6 +665,38 @@ export class AiProductChatComponent implements OnInit, AfterViewChecked {
 
   // ── Image upload & analysis ────────────────────────────────────────────
 
+  /** Quick action: analiza las imagenes ya cargadas en la galeria del producto, o pide subir una si no hay. */
+  requestAnalyzeImages(): void {
+    if (!this.galleryImageUrls.length) {
+      this.imgFileRef.nativeElement.click();
+      return;
+    }
+    this.analyzeExistingGallery();
+  }
+
+  private async analyzeExistingGallery(): Promise<void> {
+    this.error.set(null);
+    this.loading.set(true);
+    try {
+      const files = await Promise.all(this.galleryImageUrls.map((url, i) => this.urlToFile(url, `producto-${i}.jpg`)));
+      this.addMessage({
+        role: 'user',
+        text: `Analiza las ${files.length} imágenes que ya tengo cargadas.`,
+        imagePreview: this.galleryImageUrls[0],
+      });
+      await this.analyzeFiles(files);
+    } catch {
+      this.loading.set(false);
+      this.error.set('No pude leer tus imágenes actuales. Intenta subir una manualmente.');
+    }
+  }
+
+  private async urlToFile(url: string, filename: string): Promise<File> {
+    const res = await fetch(url);
+    const blob = await res.blob();
+    return new File([blob], filename, { type: blob.type || 'image/jpeg' });
+  }
+
   onImageSelect(event: Event): void {
     const file = (event.target as HTMLInputElement).files?.[0];
     (event.target as HTMLInputElement).value = '';
@@ -669,31 +705,34 @@ export class AiProductChatComponent implements OnInit, AfterViewChecked {
       this.error.set('La imagen supera los 10 MB.');
       return;
     }
-    this.analyzeImage(file);
+    this.analyzeUploadedFile(file);
   }
 
-  private async analyzeImage(file: File): Promise<void> {
+  private async analyzeUploadedFile(file: File): Promise<void> {
     this.error.set(null);
-    const [thumb, base64] = await Promise.all([
-      this.resizeToThumbnail(file, 320),
-      this.fileToBase64(file),
-    ]);
-
-    this.currentImageBase64.set(base64);
+    const thumb = await this.resizeToThumbnail(file, 320);
     this.addMessage({ role: 'user', text: 'Analiza esta imagen de mi producto.', imagePreview: thumb });
-
     this.loading.set(true);
+    await this.analyzeFiles([file]);
+  }
+
+  private async analyzeFiles(files: File[]): Promise<void> {
+    const base64 = await this.fileToBase64(files[0]);
+    this.currentImageBase64.set(base64);
+
     const name = this.productInput.name || 'Producto';
     this.sellerAi
-      .analyzeImages(name, [file], this.productInput.category, this.productInput.brand)
+      .analyzeImages(name, files, this.productInput.category, this.productInput.brand)
       .subscribe({
         next: (result) => this.zone.run(() => {
           this.loading.set(false);
-          const a = result.imageAnalysis?.[0];
-          const scoreText = a ? ` Calidad: ${Math.round(a.qualityScore)}/100.` : '';
+          const scores = result.imageAnalysis?.map(a => Math.round(a.qualityScore)) ?? [];
+          const scoreText = scores.length === 1
+            ? ` Calidad: ${scores[0]}/100.`
+            : scores.length > 1 ? ` Calidad promedio: ${Math.round(scores.reduce((s, v) => s + v, 0) / scores.length)}/100.` : '';
           this.addMessage({
             role: 'ai',
-            text: `Analicé tu imagen.${scoreText} Aquí está el detalle:`,
+            text: `Analicé tu${files.length > 1 ? 's' : ''} imagen${files.length > 1 ? 'es' : ''}.${scoreText} Aquí está el detalle:`,
             result,
           });
         }),

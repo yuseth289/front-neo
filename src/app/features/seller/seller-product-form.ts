@@ -592,6 +592,7 @@ interface GalleryItem {
       <app-ai-product-chat
         [productInput]="aiProductInput()"
         [productId]="productId()"
+        [galleryImageUrls]="galleryImageUrls()"
         (close)="aiPanelOpen.set(false)"
         (applyContent)="onApplyContent($event)"
         (saveImage)="onSaveAiImage($event)"
@@ -645,6 +646,8 @@ export class SellerProductFormComponent implements OnInit {
     }
     return this.pendingImages();
   });
+
+  galleryImageUrls = computed(() => this.galleryItems().map(i => i.previewUrl));
 
   galleryCount = computed(() => this.galleryItems().length);
 

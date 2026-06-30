@@ -99,7 +99,7 @@
 
   </div>
 
-  <app-neo-ai-fab [isOpen]="chatOpen()" (toggle)="toggleChat()" />
+  <app-neo-ai-fab [isOpen]="chatOpen() || hideAiFab()" (toggle)="toggleChat()" />
   <app-seller-ai-panel [isOpen]="chatOpen()" (close)="chatOpen.set(false)" />
 
 </div>
