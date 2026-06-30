@@ -66,42 +66,38 @@ const OP_CHIPS: { op: EnhancementOperation; label: string }[] = [
   standalone: true,
   imports: [DecimalPipe, FormsModule, NgIcon, AiTypingIndicatorComponent],
   template: `
-    <!-- Overlay -->
-    <div class="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
-         (click)="close.emit()"></div>
-
-    <!-- Panel — full-height slide-in, bg-bg-base like Vercel's main chat area -->
-    <div class="fixed right-0 top-0 bottom-0 z-50 w-full max-w-[460px]
-                bg-bg-base flex flex-col animate-slide-in-right
-                border-l border-border/40">
+    <!-- Panel — full-screen takeover, bg-bg-base like Vercel's main chat area -->
+    <div class="fixed inset-0 z-50 bg-bg-base flex flex-col animate-slide-in-right">
 
       <!-- ── Header ─────────────────────────────────────────── -->
-      <div class="flex items-center justify-between px-4 py-3 border-b border-border/40 shrink-0">
-        <div class="flex items-center gap-2">
-          <div class="w-7 h-7 rounded-lg bg-violet-500/10 flex items-center justify-center">
-            <ng-icon name="lucideSparkles" size="13" class="text-violet-400" />
+      <div class="border-b border-border/40 shrink-0 px-4 py-3">
+        <div class="max-w-3xl mx-auto flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <div class="w-7 h-7 rounded-lg bg-violet-500/10 flex items-center justify-center">
+              <ng-icon name="lucideSparkles" size="13" class="text-violet-400" />
+            </div>
+            <span class="text-[13px] font-semibold text-text-primary">Asistente IA</span>
+            @if (productInput.name) {
+              <span class="hidden sm:block text-[11px] text-text-muted truncate max-w-[220px]">
+                · {{ productInput.name }}
+              </span>
+            }
           </div>
-          <span class="text-[13px] font-semibold text-text-primary">Asistente IA</span>
-          @if (productInput.name) {
-            <span class="hidden sm:block text-[11px] text-text-muted truncate max-w-[120px]">
-              · {{ productInput.name }}
-            </span>
-          }
-        </div>
-        <div class="flex items-center gap-1.5">
-          @if (messages().length > 0) {
-            <button (click)="clearHistory()" title="Volver a las consultas predeterminadas"
-                    class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px]
-                           text-text-secondary hover:text-text-primary hover:bg-bg-elevated
-                           border border-border/60 transition-colors">
-              <ng-icon name="lucidePlus" size="11" />Nueva
+          <div class="flex items-center gap-1.5">
+            @if (messages().length > 0) {
+              <button (click)="clearHistory()" title="Volver a las consultas predeterminadas"
+                      class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px]
+                             text-text-secondary hover:text-text-primary hover:bg-bg-elevated
+                             border border-border/60 transition-colors">
+                <ng-icon name="lucidePlus" size="11" />Nueva
+              </button>
+            }
+            <button (click)="close.emit()"
+                    class="w-7 h-7 rounded-lg flex items-center justify-center
+                           text-text-muted hover:text-text-primary hover:bg-bg-elevated transition-colors">
+              <ng-icon name="lucideX" size="14" />
             </button>
-          }
-          <button (click)="close.emit()"
-                  class="w-7 h-7 rounded-lg flex items-center justify-center
-                         text-text-muted hover:text-text-primary hover:bg-bg-elevated transition-colors">
-            <ng-icon name="lucideX" size="14" />
-          </button>
+          </div>
         </div>
       </div>
 
@@ -110,7 +106,7 @@ const OP_CHIPS: { op: EnhancementOperation; label: string }[] = [
 
         <!-- ── GREETING (empty state — like Vercel's "What can I help with?") -->
         @if (messages().length === 0 && !loading()) {
-          <div class="flex flex-col h-full px-5 py-6">
+          <div class="flex flex-col h-full max-w-3xl mx-auto px-5 py-6">
 
             <!-- Centered greeting text -->
             <div class="flex-1 flex flex-col items-center justify-center gap-3 text-center">
@@ -177,7 +173,7 @@ const OP_CHIPS: { op: EnhancementOperation; label: string }[] = [
 
         <!-- ── MESSAGES ────────────────────────────────────── -->
         @if (messages().length > 0 || loading()) {
-          <div class="px-5 py-5 flex flex-col gap-6">
+          <div class="max-w-3xl mx-auto px-5 py-5 flex flex-col gap-6">
 
             @for (msg of messages(); track $index) {
 
@@ -522,39 +518,41 @@ const OP_CHIPS: { op: EnhancementOperation; label: string }[] = [
         <input #imgFileRef type="file" accept="image/jpeg,image/png,image/webp" class="hidden"
                (change)="onImageSelect($event)" />
 
-        <div class="rounded-2xl border border-border/60 bg-bg-elevated
-                    focus-within:border-border transition-colors">
-          <div class="flex items-end gap-1.5 px-3 py-2.5">
-            <button type="button" (click)="imgFileRef.click()" [disabled]="loading() || enhancing()"
-                    title="Subir imagen"
-                    class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0
-                           text-text-muted hover:text-text-secondary hover:bg-bg-subtle
-                           disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
-              <ng-icon name="lucidePaperclip" size="14" />
-            </button>
-            <textarea [(ngModel)]="userMessage" (keydown.enter)="onEnterKey($event)"
-                      (input)="autoGrow($event)"
-                      [disabled]="loading() || enhancing()"
-                      placeholder="Pregunta sobre tu producto…"
-                      rows="1"
-                      class="flex-1 bg-transparent text-[13px] text-text-primary placeholder:text-text-muted
-                             outline-none border-none min-w-0 disabled:opacity-50 resize-none
-                             max-h-28 overflow-y-auto leading-[1.5]"></textarea>
-            <button (click)="sendMessage()" [disabled]="loading() || enhancing() || !userMessage.trim()"
-                    class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0
-                           disabled:cursor-not-allowed transition-all duration-200"
-                    [style.background]="userMessage.trim() && !loading() && !enhancing() ? 'var(--color-accent)' : 'var(--color-bg-base)'"
-                    [style.box-shadow]="userMessage.trim() && !loading() && !enhancing() ? '0 0 10px var(--color-accent-glow)' : 'none'"
-                    [style.border]="userMessage.trim() && !loading() && !enhancing() ? 'none' : '1px solid var(--color-border)'">
-              <ng-icon name="lucideArrowUp" size="14"
-                       [style.color]="userMessage.trim() && !loading() && !enhancing() ? 'white' : 'var(--color-text-muted)'" />
-            </button>
+        <div class="max-w-3xl mx-auto">
+          <div class="rounded-2xl border border-border/60 bg-bg-elevated
+                      focus-within:border-border transition-colors">
+            <div class="flex items-end gap-1.5 px-3 py-2.5">
+              <button type="button" (click)="imgFileRef.click()" [disabled]="loading() || enhancing()"
+                      title="Subir imagen"
+                      class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0
+                             text-text-muted hover:text-text-secondary hover:bg-bg-subtle
+                             disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                <ng-icon name="lucidePaperclip" size="14" />
+              </button>
+              <textarea [(ngModel)]="userMessage" (keydown.enter)="onEnterKey($event)"
+                        (input)="autoGrow($event)"
+                        [disabled]="loading() || enhancing()"
+                        placeholder="Pregunta sobre tu producto…"
+                        rows="1"
+                        class="flex-1 bg-transparent text-[13px] text-text-primary placeholder:text-text-muted
+                               outline-none border-none min-w-0 disabled:opacity-50 resize-none
+                               max-h-28 overflow-y-auto leading-[1.5]"></textarea>
+              <button (click)="sendMessage()" [disabled]="loading() || enhancing() || !userMessage.trim()"
+                      class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0
+                             disabled:cursor-not-allowed transition-all duration-200"
+                      [style.background]="userMessage.trim() && !loading() && !enhancing() ? 'var(--color-accent)' : 'var(--color-bg-base)'"
+                      [style.box-shadow]="userMessage.trim() && !loading() && !enhancing() ? '0 0 10px var(--color-accent-glow)' : 'none'"
+                      [style.border]="userMessage.trim() && !loading() && !enhancing() ? 'none' : '1px solid var(--color-border)'">
+                <ng-icon name="lucideArrowUp" size="14"
+                         [style.color]="userMessage.trim() && !loading() && !enhancing() ? 'white' : 'var(--color-text-muted)'" />
+              </button>
+            </div>
           </div>
-        </div>
 
-        <p class="text-[10px] text-text-muted text-center mt-1.5 opacity-60">
-          Enter para enviar
-        </p>
+          <p class="text-[10px] text-text-muted text-center mt-1.5 opacity-60">
+            Enter para enviar
+          </p>
+        </div>
       </div>
     </div>
   `,
