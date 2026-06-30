@@ -251,7 +251,7 @@ const MAX_HISTORY = 20;
                     </p>
                     <app-search-results />
                     @if (closingMessage()) {
-                      <p class="text-[12px] text-text-muted mt-3">{{ closingMessage() }}</p>
+                      <p class="text-[12px] font-semibold text-text-muted mt-3">{{ closingMessage() }}</p>
                     }
                   </div>
                 </div>
