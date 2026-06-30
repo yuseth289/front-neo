@@ -4,6 +4,7 @@ import * as SearchAiActions from './search-ai.actions';
 
 export interface SearchAiState {
   greeting: string | null;
+  closingMessage: string | null;
   recommendations: ProductRecommendation[];
   needsClarification: boolean;
   clarificationQuestion: string | null;
@@ -16,6 +17,7 @@ export interface SearchAiState {
 
 const initialState: SearchAiState = {
   greeting: null,
+  closingMessage: null,
   recommendations: [],
   needsClarification: false,
   clarificationQuestion: null,
@@ -35,6 +37,7 @@ export const searchAiReducer = createReducer(
     error: null,
     lastQuery: query,
     greeting: null,
+    closingMessage: null,
     recommendations: [],
     needsClarification: false,
     clarificationQuestion: null,
@@ -45,6 +48,7 @@ export const searchAiReducer = createReducer(
     isLoading: false,
     searched: true,
     greeting: result.greeting,
+    closingMessage: result.closingMessage,
     recommendations: result.recommendations,
     needsClarification: result.needsClarification,
     clarificationQuestion: result.clarificationQuestion,

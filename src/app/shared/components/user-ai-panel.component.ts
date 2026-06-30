@@ -10,6 +10,7 @@ import { NgIcon } from '@ng-icons/core';
 import * as SearchAiActions from '../../core/store/search-ai/search-ai.actions';
 import {
   selectGreeting,
+  selectClosingMessage,
   selectSearchIsLoading,
   selectClarificationNeeded,
   selectClarificationQuestion,
@@ -171,6 +172,9 @@ const QUICK_QUERIES = [
               <div class="flex-1 min-w-0 overflow-hidden">
                 <p class="text-[12px] text-text-muted mb-3">{{ greeting() ?? 'Aquí están los mejores resultados:' }}</p>
                 <app-search-results />
+                @if (closingMessage()) {
+                  <p class="text-[12px] text-text-muted mt-3">{{ closingMessage() }}</p>
+                }
                 <a routerLink="/search" [queryParams]="{ q: activeQuery }" (click)="close.emit()"
                    class="inline-flex items-center gap-1 mt-3 text-[11px] text-text-muted hover:text-accent transition-colors">
                   Ver búsqueda completa <ng-icon name="lucideArrowRight" size="11" />
@@ -233,6 +237,7 @@ export class UserAiPanelComponent implements AfterViewChecked {
   private shouldScroll = false;
 
   readonly greeting            = toSignal(this.store.select(selectGreeting),              { initialValue: null });
+  readonly closingMessage      = toSignal(this.store.select(selectClosingMessage),        { initialValue: null });
   readonly isLoading           = toSignal(this.store.select(selectSearchIsLoading),       { initialValue: false });
   readonly clarificationNeeded = toSignal(this.store.select(selectClarificationNeeded),   { initialValue: false });
   readonly clarificationQuestion = toSignal(this.store.select(selectClarificationQuestion), { initialValue: null });

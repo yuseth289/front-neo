@@ -22,6 +22,7 @@ export interface ProductRecommendation {
 
 export interface SearchResultResponse {
   greeting: string | null;
+  closingMessage: string | null;
   recommendations: ProductRecommendation[];
   structuredFilters: Record<string, unknown>;
   needsClarification: boolean;
