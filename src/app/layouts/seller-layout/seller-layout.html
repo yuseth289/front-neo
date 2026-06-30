@@ -1,49 +1,71 @@
 <div class="flex h-screen bg-bg-base text-text-primary overflow-hidden">
 
-  <aside class="w-60 bg-bg-surface border-r border-border flex flex-col shrink-0">
+  <!-- ── BACKDROP móvil ──────────────────────────────────────────── -->
+  @if (sidebarOpen()) {
+    <div class="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm lg:hidden"
+         (click)="closeSidebar()"></div>
+  }
 
-    <div class="h-16 flex items-center px-5 border-b border-border shrink-0">
+  <aside class="fixed inset-y-0 left-0 z-50 w-60 bg-bg-surface border-r border-border
+                flex flex-col shrink-0 transition-all duration-300 overflow-hidden
+                lg:static lg:translate-x-0"
+         [class.-translate-x-full]="!sidebarOpen()"
+         [class.sidebar-desktop-hidden]="!desktopOpen()">
+
+    <div class="h-16 flex items-center justify-between px-5 border-b border-border shrink-0">
       <a routerLink="/" class="font-black text-base tracking-tight select-none">
         NEO<span class="text-accent">GAMING</span>
         <span class="ml-2 text-xs font-medium text-neon-cyan bg-neon-cyan/10 px-1.5 py-0.5 rounded align-middle">
           Seller
         </span>
       </a>
+      <!-- Cerrar (solo móvil) -->
+      <button class="lg:hidden p-1.5 rounded-lg text-text-muted hover:text-text-primary
+                     hover:bg-bg-elevated transition-colors"
+              (click)="closeSidebar()" aria-label="Cerrar menú">
+        <ng-icon name="lucideX" size="18" />
+      </button>
     </div>
 
     <nav class="flex-1 p-3 space-y-0.5 overflow-y-auto">
       <a routerLink="/seller/dashboard"
          routerLinkActive="bg-bg-subtle text-text-primary border-l-2 border-accent"
+         (click)="closeSidebar()"
          class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-text-secondary hover:bg-bg-subtle hover:text-text-primary transition-colors">
         <ng-icon name="lucideLayoutDashboard" size="16" />
         Dashboard
       </a>
       <a routerLink="/seller/products"
          routerLinkActive="bg-bg-subtle text-text-primary border-l-2 border-accent"
+         (click)="closeSidebar()"
          class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-text-secondary hover:bg-bg-subtle hover:text-text-primary transition-colors">
         <ng-icon name="lucidePackage" size="16" />
         Productos
       </a>
       <a routerLink="/seller/orders"
          routerLinkActive="bg-bg-subtle text-text-primary border-l-2 border-accent"
+         (click)="closeSidebar()"
          class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-text-secondary hover:bg-bg-subtle hover:text-text-primary transition-colors">
         <ng-icon name="lucideClipboardList" size="16" />
         Órdenes
       </a>
       <a routerLink="/seller/analytics"
          routerLinkActive="bg-bg-subtle text-text-primary border-l-2 border-accent"
+         (click)="closeSidebar()"
          class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-text-secondary hover:bg-bg-subtle hover:text-text-primary transition-colors">
         <ng-icon name="lucideTrendingUp" size="16" />
         Analytics
       </a>
       <a routerLink="/seller/messages"
          routerLinkActive="bg-bg-subtle text-text-primary border-l-2 border-accent"
+         (click)="closeSidebar()"
          class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-text-secondary hover:bg-bg-subtle hover:text-text-primary transition-colors">
         <ng-icon name="lucideMail" size="16" />
         Mensajes
       </a>
       <a routerLink="/seller/discounts"
          routerLinkActive="bg-bg-subtle text-text-primary border-l-2 border-accent"
+         (click)="closeSidebar()"
          class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-text-secondary hover:bg-bg-subtle hover:text-text-primary transition-colors">
         <ng-icon name="lucideTag" size="16" />
         Descuentos
@@ -51,12 +73,14 @@
       <div class="border-t border-border pt-2 mt-2">
         <a routerLink="/seller/profile"
            routerLinkActive="bg-bg-subtle text-text-primary border-l-2 border-accent"
+           (click)="closeSidebar()"
            class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-text-secondary hover:bg-bg-subtle hover:text-text-primary transition-colors">
           <ng-icon name="lucideStore" size="16" />
           Mi tienda
         </a>
         <a routerLink="/seller/accounts"
            routerLinkActive="bg-bg-subtle text-text-primary border-l-2 border-accent"
+           (click)="closeSidebar()"
            class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-text-secondary hover:bg-bg-subtle hover:text-text-primary transition-colors">
           <ng-icon name="lucideCreditCard" size="16" />
           Cuentas bancarias
@@ -73,8 +97,22 @@
 
   <div class="flex flex-col flex-1 min-w-0">
 
-    <header class="h-16 bg-bg-surface border-b border-border flex items-center justify-between px-6 shrink-0">
-      <span class="text-sm font-medium text-text-secondary">Panel de vendedor</span>
+    <header class="h-16 bg-bg-surface border-b border-border flex items-center justify-between px-4 sm:px-6 shrink-0">
+      <div class="flex items-center gap-3">
+        <!-- Hamburger (móvil) -->
+        <button class="lg:hidden p-2 rounded-lg text-text-secondary hover:text-text-primary
+                       hover:bg-bg-subtle transition-colors"
+                (click)="sidebarOpen.set(true)" aria-label="Abrir menú">
+          <ng-icon name="lucideMenu" size="20" />
+        </button>
+        <!-- Toggle sidebar (escritorio) -->
+        <button class="hidden lg:flex p-2 rounded-lg text-text-secondary hover:text-text-primary
+                       hover:bg-bg-subtle transition-colors"
+                (click)="desktopOpen.set(!desktopOpen())" aria-label="Toggle sidebar">
+          <ng-icon name="lucideMenu" size="20" />
+        </button>
+        <span class="text-sm font-medium text-text-secondary">Panel de vendedor</span>
+      </div>
       <div class="flex items-center gap-3">
         <button (click)="theme.toggle()"
           class="flex items-center justify-center w-9 h-9 rounded-lg
@@ -87,13 +125,13 @@
             <ng-icon name="lucideMoon" size="18" />
           }
         </button>
-        <a routerLink="/" class="text-xs text-text-muted hover:text-text-secondary transition-colors">
+        <a routerLink="/" class="text-xs text-text-muted hover:text-text-secondary transition-colors hidden sm:inline">
           Ver tienda pública →
         </a>
       </div>
     </header>
 
-    <main class="flex-1 overflow-y-auto p-6">
+    <main class="flex-1 overflow-y-auto p-4 sm:p-6">
       <router-outlet />
     </main>
 

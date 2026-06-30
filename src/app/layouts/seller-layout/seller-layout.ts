@@ -1,4 +1,4 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NgIcon } from '@ng-icons/core';
@@ -15,12 +15,25 @@ const PRODUCT_FORM_ROUTE = /^\/seller\/products\/(new|[^/]+)$/;
   standalone: true,
   imports: [RouterOutlet, RouterLink, RouterLinkActive, NgIcon, NeoAiFabComponent, SellerAiPanelComponent],
   templateUrl: './seller-layout.html',
+  styles: [`
+    @media (min-width: 1024px) {
+      .sidebar-desktop-hidden {
+        width: 0 !important;
+        overflow: hidden;
+        border-right: none !important;
+      }
+    }
+  `],
 })
 export class SellerLayoutComponent {
   private readonly router  = inject(Router);
   private readonly aiTrigger = inject(SellerAiTriggerService);
-  readonly theme    = inject(ThemeService);
-  readonly chatOpen = this.aiTrigger.genericChatOpen;
+  readonly theme       = inject(ThemeService);
+  readonly chatOpen    = this.aiTrigger.genericChatOpen;
+  readonly sidebarOpen = signal(false);
+  readonly desktopOpen = signal(true);
+
+  closeSidebar(): void { this.sidebarOpen.set(false); }
 
   private readonly currentUrl = toSignal(
     this.router.events.pipe(
