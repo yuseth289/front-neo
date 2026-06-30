@@ -48,6 +48,10 @@ export class PublicLayoutComponent {
   // en cualquier estado (vacio, cargando, con resultados, aclaracion, etc).
   readonly onAiSearchPage = computed(() => this.currentUrl().startsWith('/search'));
 
+  // En una conversacion de mensajes, el FAB se superpone con la barra de
+  // escribir mensaje.
+  readonly onMessagesRoute = computed(() => this.currentUrl().startsWith('/messages'));
+
   toggleChat(): void { this.chatOpen.update(v => !v); }
 
   @ViewChild('searchInput') searchInput!: ElementRef<HTMLInputElement>;

@@ -45,6 +45,10 @@ export class SellerLayoutComponent {
 
   private readonly onProductFormRoute = computed(() => PRODUCT_FORM_ROUTE.test(this.currentUrl()));
 
+  // En una conversacion de mensajes, el FAB se superpone con la barra de
+  // escribir mensaje — se oculta ahi, igual que en /search.
+  readonly onMessagesRoute = computed(() => this.currentUrl().startsWith('/seller/messages'));
+
   // En crear/editar producto, el FAB sigue visible pero abre el Asistente IA
   // propio de esa pagina (mejora de contenido, puntaje, imagenes) en vez del
   // panel generico de Seller Analytics.
