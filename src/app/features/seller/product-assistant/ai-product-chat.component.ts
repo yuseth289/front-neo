@@ -88,12 +88,13 @@ const OP_CHIPS: { op: EnhancementOperation; label: string }[] = [
             </span>
           }
         </div>
-        <div class="flex items-center gap-0.5">
+        <div class="flex items-center gap-1.5">
           @if (messages().length > 0) {
-            <button (click)="clearHistory()" title="Limpiar conversación"
-                    class="w-7 h-7 rounded-lg flex items-center justify-center
-                           text-text-muted hover:text-red-400 hover:bg-red-500/10 transition-colors">
-              <ng-icon name="lucideTrash2" size="13" />
+            <button (click)="clearHistory()" title="Volver a las consultas predeterminadas"
+                    class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px]
+                           text-text-secondary hover:text-text-primary hover:bg-bg-elevated
+                           border border-border/60 transition-colors">
+              <ng-icon name="lucidePlus" size="11" />Nueva
             </button>
           }
           <button (click)="close.emit()"

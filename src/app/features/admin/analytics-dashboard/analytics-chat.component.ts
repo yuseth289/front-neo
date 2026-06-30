@@ -28,7 +28,7 @@ const MAX_CONVS = 20;
 const QUICK_QUERIES = [
   { icon: 'lucideDollarSign', label: 'GMV del mes',        desc: 'Facturación total',          query: '¿Cuál es el GMV y los ingresos totales de este mes?' },
   { icon: 'lucideUsers',      label: 'Usuarios nuevos',    desc: 'Crecimiento y tendencia',     query: '¿Cuántos usuarios nuevos se registraron este mes y cómo va el crecimiento?' },
-  { icon: 'lucideTrendingUp', label: 'Top productos',      desc: 'Más vendidos del marketplace',query: '¿Cuáles son los productos más vendidos del marketplace este mes?' },
+  { icon: 'lucideTrophy',     label: 'Top tiendas',        desc: 'Las mejores del marketplace', query: '¿Cuáles son las tiendas con mejor desempeño del marketplace este mes?' },
   { icon: 'lucideStore',      label: 'Vendedores activos', desc: 'Estado del ecosistema',       query: '¿Cuántos vendedores activos hay y cuál es su desempeño promedio?' },
 ];
 
