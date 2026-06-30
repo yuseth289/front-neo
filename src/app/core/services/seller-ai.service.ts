@@ -19,6 +19,7 @@ export class SellerAiService {
     brand?: string;
     features?: string[];
     imagesBase64?: string[];
+    instruction?: string;
   }): Observable<SellerAssistResultResponse> {
     const body = {
       name: data.name,
@@ -28,6 +29,7 @@ export class SellerAiService {
       brand: data.brand || null,
       features: data.features ?? [],
       imagesBase64: data.imagesBase64 ?? [],
+      instruction: data.instruction || null,
     };
     return this.http
       .post<ApiResponse<SellerAssistResultResponse>>(`${this.baseUrl}/optimize`, body)

@@ -624,13 +624,15 @@ export class AiProductChatComponent implements OnInit, AfterViewChecked {
   // ── Quick actions ──────────────────────────────────────────────────────
 
   requestOptimize(): void {
-    this.addUserMsg('Mejora la descripción y el título de mi producto');
-    this.callOptimizeAI();
+    const instruction = 'Mejora la descripción y el título de mi producto';
+    this.addUserMsg(instruction);
+    this.callOptimizeAI(instruction);
   }
 
   requestScore(): void {
-    this.addUserMsg('Puntúa mi listing actual y dime cómo mejorar');
-    this.callOptimizeAI();
+    const instruction = 'Puntúa mi listing actual y dime cómo mejorar';
+    this.addUserMsg(instruction);
+    this.callOptimizeAI(instruction);
   }
 
   requestSalesQuery(): void {
@@ -647,7 +649,7 @@ export class AiProductChatComponent implements OnInit, AfterViewChecked {
     if (this.isBiQuery(text)) {
       this.callBiQuery(text);
     } else {
-      this.callOptimizeAI();
+      this.callOptimizeAI(text);
     }
   }
 
@@ -803,7 +805,7 @@ export class AiProductChatComponent implements OnInit, AfterViewChecked {
     }
   }
 
-  private callOptimizeAI(): void {
+  private callOptimizeAI(instruction?: string): void {
     this.loading.set(true);
     this.sellerAi.optimizeProduct({
       name:        this.productInput.name || 'Producto sin nombre',
@@ -811,6 +813,7 @@ export class AiProductChatComponent implements OnInit, AfterViewChecked {
       price:       this.productInput.price,
       category:    this.productInput.category,
       brand:       this.productInput.brand,
+      instruction,
     }).subscribe({
       next: (result) => this.zone.run(() => {
         this.loading.set(false);
