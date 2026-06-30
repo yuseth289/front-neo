@@ -264,7 +264,7 @@
     <router-outlet />
   </main>
 
-  <app-neo-ai-fab [isOpen]="chatOpen()" (toggle)="toggleChat()" />
+  <app-neo-ai-fab [isOpen]="chatOpen() || hideAiFab()" (toggle)="toggleChat()" />
   <app-user-ai-panel [isOpen]="chatOpen()" (close)="chatOpen.set(false)" />
 
   <!-- ── FOOTER ─────────────────────────────────────────────────── -->

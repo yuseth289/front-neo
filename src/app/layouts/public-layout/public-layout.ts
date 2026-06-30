@@ -1,10 +1,11 @@
-import { Component, ElementRef, HostListener, ViewChild, inject, signal } from '@angular/core';
+import { Component, ElementRef, HostListener, ViewChild, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { Store } from '@ngrx/store';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { NgIcon } from '@ng-icons/core';
-import { map } from 'rxjs';
+import { filter, map } from 'rxjs';
 import { selectIsAuthenticated, selectUser, selectRole } from '../../core/auth/store/auth.selectors';
 import { selectCartItems } from '../../core/cart/store/cart.selectors';
 import * as AuthActions from '../../core/auth/store/auth.actions';
@@ -33,6 +34,17 @@ export class PublicLayoutComponent {
   mobileOpen  = signal(false);
   chatOpen    = signal(false);
   searchQuery = '';
+
+  private readonly currentUrl = toSignal(
+    this.router.events.pipe(
+      filter((e): e is NavigationEnd => e instanceof NavigationEnd),
+      map(e => e.urlAfterRedirects),
+    ),
+    { initialValue: this.router.url },
+  );
+
+  // La pagina /search ya es la interfaz de IA — el FAB flotante seria redundante ahi.
+  readonly hideAiFab = computed(() => this.currentUrl().startsWith('/search'));
 
   toggleChat(): void { this.chatOpen.update(v => !v); }
 
