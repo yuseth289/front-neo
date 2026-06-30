@@ -1,9 +1,10 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NgIcon } from '@ng-icons/core';
 import { filter, map } from 'rxjs';
 import { ThemeService } from '../../core/theme.service';
+import { SellerAiTriggerService } from '../../core/services/seller-ai-trigger.service';
 import { NeoAiFabComponent } from '../../shared/components/neo-ai-fab.component';
 import { SellerAiPanelComponent } from '../../shared/components/seller-ai-panel.component';
 
@@ -16,9 +17,10 @@ const PRODUCT_FORM_ROUTE = /^\/seller\/products\/(new|[^/]+)$/;
   templateUrl: './seller-layout.html',
 })
 export class SellerLayoutComponent {
-  private readonly router = inject(Router);
+  private readonly router  = inject(Router);
+  private readonly aiTrigger = inject(SellerAiTriggerService);
   readonly theme    = inject(ThemeService);
-  readonly chatOpen = signal(false);
+  readonly chatOpen = this.aiTrigger.genericChatOpen;
 
   private readonly currentUrl = toSignal(
     this.router.events.pipe(
@@ -28,9 +30,16 @@ export class SellerLayoutComponent {
     { initialValue: this.router.url },
   );
 
-  // Crear/editar producto ya tiene su propio Asistente IA (mejora de contenido,
-  // puntaje, imagenes) — el FAB generico de Seller Analytics seria redundante y confuso ahi.
-  readonly hideAiFab = computed(() => PRODUCT_FORM_ROUTE.test(this.currentUrl()));
+  private readonly onProductFormRoute = computed(() => PRODUCT_FORM_ROUTE.test(this.currentUrl()));
 
-  toggleChat(): void { this.chatOpen.update(v => !v); }
+  // En crear/editar producto, el FAB sigue visible pero abre el Asistente IA
+  // propio de esa pagina (mejora de contenido, puntaje, imagenes) en vez del
+  // panel generico de Seller Analytics.
+  toggleChat(): void {
+    if (this.onProductFormRoute()) {
+      this.aiTrigger.requestProductChat();
+      return;
+    }
+    this.aiTrigger.toggleGenericChat();
+  }
 }

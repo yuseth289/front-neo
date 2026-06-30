@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal, computed } from '@angular/core';
+import { Component, inject, OnInit, signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, FormControl, Validators } from '@angular/forms';
@@ -11,6 +11,7 @@ import { BrandService } from '../../core/catalog/brand.service';
 import { Category, Brand } from '../../shared/models/catalog.models';
 import { ProductImageResponse } from '../../shared/models/product.models';
 import { AiProductChatComponent, AiProductChatInput, ApplyDescriptionEvent } from './product-assistant/ai-product-chat.component';
+import { SellerAiTriggerService } from '../../core/services/seller-ai-trigger.service';
 
 type Condition = 'NUEVO' | 'USADO' | 'REACONDICIONADO';
 
@@ -607,6 +608,15 @@ export class SellerProductFormComponent implements OnInit {
   private categoryService = inject(CategoryService);
   private brandService    = inject(BrandService);
   private fb              = inject(FormBuilder);
+  private aiTrigger       = inject(SellerAiTriggerService);
+
+  // El FAB global del layout dispara esto en vez del panel generico de Seller Analytics
+  // cuando la ruta actual es este formulario (ver SellerLayoutComponent).
+  private readonly openAiPanelOnFabRequest = effect(() => {
+    if (this.aiTrigger.productChatRequested() > 0) {
+      this.aiPanelOpen.set(true);
+    }
+  });
 
   productId       = signal<string | null>(null);
   categories      = signal<Category[]>([]);
