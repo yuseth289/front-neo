@@ -29,7 +29,8 @@ export class SellerLayoutComponent {
   private readonly router  = inject(Router);
   private readonly aiTrigger = inject(SellerAiTriggerService);
   readonly theme       = inject(ThemeService);
-  readonly chatOpen    = this.aiTrigger.genericChatOpen;
+  readonly chatOpen        = this.aiTrigger.genericChatOpen;
+  readonly productChatOpen = this.aiTrigger.productChatOpen;
   readonly sidebarOpen = signal(false);
   readonly desktopOpen = signal(true);
 

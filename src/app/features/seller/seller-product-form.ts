@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal, computed, effect } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, FormControl, Validators } from '@angular/forms';
@@ -601,7 +601,7 @@ interface GalleryItem {
     }
   `,
 })
-export class SellerProductFormComponent implements OnInit {
+export class SellerProductFormComponent implements OnInit, OnDestroy {
   private route           = inject(ActivatedRoute);
   private router          = inject(Router);
   private productService  = inject(SellerProductService);
@@ -617,6 +617,16 @@ export class SellerProductFormComponent implements OnInit {
       this.aiPanelOpen.set(true);
     }
   });
+
+  // Sincroniza el estado abierto/cerrado del panel al servicio para que el
+  // layout pueda ocultar el FAB mientras el panel de producto está visible.
+  private readonly syncPanelState = effect(() => {
+    this.aiTrigger.setProductChatOpen(this.aiPanelOpen());
+  });
+
+  ngOnDestroy(): void {
+    this.aiTrigger.setProductChatOpen(false);
+  }
 
   productId       = signal<string | null>(null);
   categories      = signal<Category[]>([]);

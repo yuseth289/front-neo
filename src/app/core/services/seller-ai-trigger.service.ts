@@ -10,7 +10,8 @@ import { Injectable, signal } from '@angular/core';
  */
 @Injectable({ providedIn: 'root' })
 export class SellerAiTriggerService {
-  readonly genericChatOpen = signal(false);
+  readonly genericChatOpen  = signal(false);
+  readonly productChatOpen  = signal(false);
   private readonly productChatRequests = signal(0);
 
   toggleGenericChat(): void {
@@ -19,6 +20,10 @@ export class SellerAiTriggerService {
 
   requestProductChat(): void {
     this.productChatRequests.update(v => v + 1);
+  }
+
+  setProductChatOpen(open: boolean): void {
+    this.productChatOpen.set(open);
   }
 
   readonly productChatRequested = this.productChatRequests.asReadonly();
